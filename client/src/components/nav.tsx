@@ -1,18 +1,14 @@
-import { Link, useLocation } from "wouter";
-import { Bookmark, Menu, X } from "lucide-react";
+import { Link } from "wouter";
+import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 
 interface NavProps {
   variant?: "transparent" | "solid";
 }
 
 export function Nav({ variant = "solid" }: NavProps) {
-  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   const isTransparent = variant === "transparent";
 
   function handleLogin() {
@@ -44,27 +40,6 @@ export function Nav({ variant = "solid" }: NavProps) {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/">
-            <span
-              className={`text-xs tracking-[0.2em] uppercase font-medium cursor-pointer transition-opacity hover:opacity-70 ${
-                isTransparent ? "text-white/90" : "text-muted-foreground"
-              }`}
-            >
-              Destinations
-            </span>
-          </Link>
-          <Link href="/">
-            <span
-              className={`text-xs tracking-[0.2em] uppercase font-medium cursor-pointer transition-opacity hover:opacity-70 ${
-                isTransparent ? "text-white/90" : "text-muted-foreground"
-              }`}
-            >
-              Journal
-            </span>
-          </Link>
-        </div>
-
         <div className="flex items-center gap-3">
           <Button
             size="icon"
@@ -89,47 +64,8 @@ export function Nav({ variant = "solid" }: NavProps) {
           >
             Log in
           </Button>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            className={`md:hidden ${isTransparent ? "text-white hover:bg-white/10" : ""}`}
-            onClick={() => setMobileOpen(!mobileOpen)}
-            data-testid="button-menu"
-          >
-            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </Button>
         </div>
       </div>
-
-      {mobileOpen && (
-        <div
-          className={`md:hidden border-t px-6 py-4 flex flex-col gap-4 ${
-            isTransparent
-              ? "bg-black/80 backdrop-blur-md border-white/10"
-              : "bg-background border-border"
-          }`}
-        >
-          <Link href="/" onClick={() => setMobileOpen(false)}>
-            <span
-              className={`text-xs tracking-[0.2em] uppercase font-medium cursor-pointer ${
-                isTransparent ? "text-white/90" : "text-muted-foreground"
-              }`}
-            >
-              Destinations
-            </span>
-          </Link>
-          <Link href="/" onClick={() => setMobileOpen(false)}>
-            <span
-              className={`text-xs tracking-[0.2em] uppercase font-medium cursor-pointer ${
-                isTransparent ? "text-white/90" : "text-muted-foreground"
-              }`}
-            >
-              Journal
-            </span>
-          </Link>
-        </div>
-      )}
     </nav>
   );
 }

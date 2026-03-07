@@ -74,7 +74,7 @@ export const STOCK_IMAGES: Record<string, string> = {
   "bar": "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",
   "architecture": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80",
   "hotel-rest": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80",
-  "london-market": "https://images.unsplash.com/photo-1548143290-b8ece0fbe9b4?w=800&q=80",
+  "london-market": "https://images.unsplash.com/photo-1487530811015-780780169993?w=800&q=80",
   "london-museum": "https://images.unsplash.com/photo-1576541210886-8e2c95fe09bb?w=800&q=80",
   "london-pub": "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&q=80",
   "london-cafe": "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&q=80",

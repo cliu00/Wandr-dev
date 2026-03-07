@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Map, X } from "lucide-react";
+import { ArrowLeft, Share2, Map, X, Bed } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Nav } from "@/components/nav";
 import { ActivityCard } from "@/components/activity-card";
 import { ItineraryMap } from "@/components/itinerary-map";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
@@ -12,6 +11,7 @@ export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [showMobileMap, setShowMobileMap] = useState(false);
+  const [showRestBlocks, setShowRestBlocks] = useState(false);
 
   const itinerary = MOCK_ITINERARY;
 
@@ -31,6 +31,13 @@ export default function ItineraryView() {
       setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
     }
   }
+
+  const filteredDays = itinerary.days.map((day) => ({
+    ...day,
+    blocks: showRestBlocks
+      ? day.blocks
+      : day.blocks.filter((b) => b.timeSlot !== "rest"),
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,20 +87,41 @@ export default function ItineraryView() {
       <div className="max-w-7xl mx-auto flex">
         {/* Left — Itinerary */}
         <div className="flex-1 min-w-0 px-4 md:px-8 py-8 md:max-w-[58%]">
-          {/* Participants */}
-          {itinerary.groupType !== "solo" && (
-            <div className="mb-6 p-4 rounded-2xl bg-muted/50 border border-border">
+          {/* Controls row */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            {itinerary.groupType !== "solo" && (
               <p className="text-sm text-muted-foreground">
                 Curated for{" "}
                 <span className="font-medium text-foreground">
                   {itinerary.participants.join(" & ")}
                 </span>
-                {" "}· Each card shows who it's tailored for.
               </p>
-            </div>
-          )}
+            )}
+            {itinerary.groupType === "solo" && <div />}
 
-          {itinerary.days.map((day) => (
+            {/* Rest blocks toggle */}
+            <button
+              onClick={() => setShowRestBlocks((v) => !v)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-full border text-xs font-medium transition-all ${
+                showRestBlocks
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-card border-border text-muted-foreground hover:border-primary/30"
+              }`}
+              data-testid="button-toggle-rest"
+            >
+              <Bed className="w-3.5 h-3.5" />
+              Rest blocks
+              <span className={`w-7 h-4 rounded-full transition-colors relative flex-shrink-0 ${
+                showRestBlocks ? "bg-primary" : "bg-muted-foreground/30"
+              }`}>
+                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
+                  showRestBlocks ? "translate-x-3.5" : "translate-x-0.5"
+                }`} />
+              </span>
+            </button>
+          </div>
+
+          {filteredDays.map((day) => (
             <div key={day.dayNumber} className="mb-10">
               <div className="flex items-baseline gap-3 mb-5">
                 <h2 className="font-serif text-2xl font-bold text-foreground">

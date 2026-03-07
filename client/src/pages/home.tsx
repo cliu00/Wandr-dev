@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { MapPin, Users, Sparkles, Search, Compass, Utensils, Mountain, ArrowRight, Clock, Star } from "lucide-react";
+import { MapPin, Users, User, Sparkles, Compass, ArrowRight, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { CURATED_ESCAPES } from "@/lib/mock-data";
-
-const CATEGORIES = ["Culture", "Adventure", "Relaxation", "Dining", "History"];
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [destination, setDestination] = useState("");
   const [isGroup, setIsGroup] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   function handleCurate() {
     const params = new URLSearchParams();
@@ -40,18 +37,18 @@ export default function Home() {
 
         <div className="relative z-10 w-full max-w-4xl mx-auto px-6 flex flex-col items-center text-center">
           <h1
-            className="font-serif text-5xl md:text-7xl font-bold text-white leading-[1.1] mb-2"
+            className="font-serif text-6xl md:text-8xl font-light text-white leading-[1.05] mb-2 tracking-wide"
             data-testid="text-hero-headline"
           >
             Quick Getaways,
             <br />
-            <span className="italic">Masterfully Planned.</span>
+            <em className="font-normal">Masterfully Planned.</em>
           </h1>
 
-          <div className="w-32 h-0.5 bg-accent my-5 mx-auto" />
+          <div className="w-24 h-px bg-accent my-6 mx-auto" />
 
-          <p className="text-white/80 text-lg md:text-xl mb-10 max-w-lg leading-relaxed">
-            Specializing in curated 2–4 day escapes for individuals and groups.
+          <p className="text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed tracking-wide">
+            Curated 2–4 day escapes for individuals and groups.
           </p>
 
           {/* Search Bar */}
@@ -63,7 +60,7 @@ export default function Home() {
               <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Destination (e.g. Paris, Tokyo)"
+                placeholder="Where to? (Paris, Tokyo, London...)"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCurate()}
@@ -72,18 +69,33 @@ export default function Home() {
               />
             </div>
 
-            <button
-              onClick={() => setIsGroup(!isGroup)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                isGroup
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-muted-foreground border-border"
-              }`}
-              data-testid="button-group-toggle"
-            >
-              <Users className="w-3.5 h-3.5" />
-              Group
-            </button>
+            {/* Solo / Group segmented toggle */}
+            <div className="flex items-center rounded-full border border-border bg-muted p-0.5 flex-shrink-0">
+              <button
+                onClick={() => setIsGroup(false)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  !isGroup
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+                data-testid="button-solo-toggle"
+              >
+                <User className="w-3 h-3" />
+                Solo
+              </button>
+              <button
+                onClick={() => setIsGroup(true)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  isGroup
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+                data-testid="button-group-toggle"
+              >
+                <Users className="w-3 h-3" />
+                Group
+              </button>
+            </div>
 
             <Button
               onClick={handleCurate}
@@ -91,31 +103,13 @@ export default function Home() {
               data-testid="button-curate-escape"
             >
               <Sparkles className="w-4 h-4" />
-              Curate Escape
+              Curate
             </Button>
-          </div>
-
-          {/* Category Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                className={`px-4 py-1.5 rounded-full text-xs tracking-widest uppercase font-medium border transition-colors ${
-                  activeCategory === cat
-                    ? "bg-white text-foreground border-white"
-                    : "bg-transparent text-white/80 border-white/30 hover:border-white/60"
-                }`}
-                data-testid={`button-category-${cat.toLowerCase()}`}
-              >
-                {cat}
-              </button>
-            ))}
           </div>
         </div>
 
         {/* Scroll hint */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40">
           <div className="w-px h-10 bg-white/20" />
           <span className="text-xs tracking-widest uppercase">Explore</span>
         </div>
@@ -125,15 +119,15 @@ export default function Home() {
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-10">
-            <h2 className="font-serif text-4xl font-bold text-foreground mb-2">
+            <h2 className="font-serif text-5xl font-light text-foreground mb-2 tracking-wide">
               Curated escapes
             </h2>
-            <p className="text-muted-foreground text-lg">
-              Hand-picked itineraries ready to go. Just tap and customize.
+            <p className="text-muted-foreground text-base">
+              Hand-picked itineraries ready to go. Just tap and customise.
             </p>
           </div>
 
-          <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
             {CURATED_ESCAPES.map((escape) => (
               <div
                 key={escape.id}
@@ -149,19 +143,17 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                  {/* Price badge */}
                   <div className="absolute top-3 right-3">
                     <span className="bg-white/95 backdrop-blur-sm text-foreground text-xs font-semibold px-3 py-1.5 rounded-full">
                       from ${escape.pricePerDay}/day
                     </span>
                   </div>
 
-                  {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="font-serif text-white text-2xl font-bold leading-tight">
+                    <h3 className="font-serif text-white text-2xl font-normal leading-tight">
                       {escape.destination}
                     </h3>
-                    <p className="text-white/75 text-sm mt-0.5 leading-snug">
+                    <p className="text-white/70 text-sm mt-0.5 leading-snug">
                       {escape.tagline}
                     </p>
                   </div>
@@ -184,10 +176,10 @@ export default function Home() {
       {/* How It Works Section */}
       <section className="py-20 px-6 bg-muted/50">
         <div className="max-w-5xl mx-auto text-center">
-          <h2 className="font-serif text-4xl font-bold text-foreground mb-3">
+          <h2 className="font-serif text-5xl font-light text-foreground mb-3 tracking-wide">
             How it works
           </h2>
-          <p className="text-muted-foreground text-lg mb-16 max-w-xl mx-auto">
+          <p className="text-muted-foreground text-base mb-16 max-w-xl mx-auto">
             From blank canvas to bespoke itinerary in under a minute.
           </p>
 
@@ -197,13 +189,13 @@ export default function Home() {
                 icon: <Compass className="w-6 h-6" />,
                 step: "01",
                 title: "Tell us your style",
-                desc: "Answer 8 quick questions about your energy, budget, food preferences, and who's coming.",
+                desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
               },
               {
                 icon: <Sparkles className="w-6 h-6" />,
                 step: "02",
                 title: "We curate your escape",
-                desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalized.",
+                desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
               },
               {
                 icon: <Star className="w-6 h-6" />,
@@ -218,7 +210,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-xs text-accent font-semibold tracking-widest mb-1">{item.step}</div>
-                  <h3 className="font-serif text-xl font-semibold mb-2">{item.title}</h3>
+                  <h3 className="font-serif text-2xl font-light mb-2 tracking-wide">{item.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
@@ -240,7 +232,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-10 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-serif text-lg font-bold tracking-widest text-foreground">48HRS</span>
+          <span className="font-serif text-lg font-light tracking-widest text-foreground">48HRS</span>
           <p className="text-muted-foreground text-sm text-center">
             Bespoke escapes, masterfully planned.
           </p>
