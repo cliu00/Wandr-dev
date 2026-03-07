@@ -1,21 +1,21 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { useLocation } from "wouter";
+import { EmptyState } from "@/components/empty-state";
+import { Nav } from "@/components/nav";
 
 export default function NotFound() {
+  const [, navigate] = useLocation();
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-background">
+      <Nav variant="solid" />
+      <div className="pt-20 px-6">
+        <EmptyState
+          headline="This escape couldn't be found."
+          subheading="The itinerary you're looking for may have been moved or doesn't exist."
+          ctaLabel="Back to home"
+          onCta={() => navigate("/")}
+          imageUrl="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"
+        />
+      </div>
     </div>
   );
 }
