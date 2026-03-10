@@ -10,16 +10,14 @@ import "react-day-picker/dist/style.css";
 
 interface IntakeState {
   destination: string;
-  startDate: Date | undefined;
   duration: number | null;
+  startDate: Date | undefined;
   groupType: "solo" | "partner" | "small" | "big" | null;
   energy: number;
   budget: string | null;
   activityTypes: string[];
   food: string | null;
 }
-
-const TOTAL_STEPS = 7;
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
@@ -31,19 +29,31 @@ export default function Intake() {
   const [, navigate] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const prefillDestination = searchParams.get("destination") || "";
+  const isGroupFromHome = searchParams.get("group") === "true";
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [state, setState] = useState<IntakeState>({
     destination: prefillDestination,
-    startDate: undefined,
     duration: null,
-    groupType: null,
+    startDate: undefined,
+    // Pre-set groupType based on home toggle; null means Q3 will be shown if group
+    groupType: isGroupFromHome ? null : "solo",
     energy: 50,
     budget: null,
     activityTypes: [],
     food: null,
   });
+
+  // Build the step list dynamically
+  // Solo path skips Q3 (group size) since already declared on home
+  // Group path keeps Q3 repurposed as "How big is your group?" (excludes "Just me")
+  const STEPS = isGroupFromHome
+    ? ["duration", "date", "groupSize", "energy", "budget", "activities", "food"]
+    : ["duration", "date", "energy", "budget", "activities", "food"];
+
+  const totalSteps = STEPS.length;
+  const currentStepKey = STEPS[step - 1];
 
   function goNext() {
     setDirection(1);
@@ -59,34 +69,45 @@ export default function Intake() {
     setStep((s) => s - 1);
   }
 
+  function skip() {
+    goNext();
+  }
+
   function handleSubmit() {
-    if (state.groupType !== "solo") {
+    const isGroup = state.groupType !== "solo" && state.groupType !== null;
+    if (isGroup) {
       navigate("/survey/invite");
     } else {
       navigate("/generating");
     }
   }
 
-  const isLastStep = step === TOTAL_STEPS;
+  const isLastStep = step === totalSteps;
 
   function canContinue(): boolean {
-    switch (step) {
-      case 1: return state.startDate !== undefined;
-      case 2: return state.duration !== null;
-      case 3: return state.groupType !== null;
-      case 4: return true;
-      case 5: return state.budget !== null;
-      case 6: return state.activityTypes.length > 0;
-      case 7: return state.food !== null;
+    switch (currentStepKey) {
+      case "duration": return state.duration !== null;
+      case "date": return true; // optional
+      case "groupSize": return state.groupType !== null;
+      case "energy": return true; // optional
+      case "budget": return true; // optional
+      case "activities": return true; // optional
+      case "food": return true; // optional
       default: return false;
     }
   }
 
-  const endDate = state.startDate && state.duration
-    ? addDays(state.startDate, (state.duration === 5 ? 4 : state.duration) - 1)
-    : null;
+  // Steps that can be skipped (everything except duration)
+  const isSkippable = currentStepKey !== "duration";
 
-  const progress = (step / TOTAL_STEPS) * 100;
+  const endDate =
+    state.startDate && state.duration
+      ? addDays(state.startDate, (state.duration === 5 ? 4 : state.duration) - 1)
+      : null;
+
+  const progress = (step / totalSteps) * 100;
+
+  const isGroupTrip = state.groupType !== null && state.groupType !== "solo";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -112,13 +133,13 @@ export default function Intake() {
             </span>
           )}
           <span className="text-sm text-muted-foreground font-medium" data-testid="text-step-counter">
-            {step}/{TOTAL_STEPS}
+            {step}/{totalSteps}
           </span>
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="flex-1 flex flex-col pt-20 pb-28">
+      <div className="flex-1 flex flex-col pt-20 pb-32">
         <div className="flex-1 max-w-2xl w-full mx-auto px-6 py-8 overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -130,47 +151,139 @@ export default function Intake() {
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {step === 1 && <StepStartDate state={state} setState={setState} />}
-              {step === 2 && <StepDuration state={state} setState={setState} endDate={endDate} />}
-              {step === 3 && <StepGroup state={state} setState={setState} />}
-              {step === 4 && <StepEnergy state={state} setState={setState} />}
-              {step === 5 && <StepBudget state={state} setState={setState} />}
-              {step === 6 && <StepActivities state={state} setState={setState} />}
-              {step === 7 && <StepFood state={state} setState={setState} />}
+              {currentStepKey === "duration" && (
+                <StepDuration state={state} setState={setState} endDate={endDate} />
+              )}
+              {currentStepKey === "date" && (
+                <StepStartDate state={state} setState={setState} endDate={endDate} />
+              )}
+              {currentStepKey === "groupSize" && (
+                <StepGroupSize state={state} setState={setState} />
+              )}
+              {currentStepKey === "energy" && (
+                <StepEnergy state={state} setState={setState} />
+              )}
+              {currentStepKey === "budget" && (
+                <StepBudget state={state} setState={setState} />
+              )}
+              {currentStepKey === "activities" && (
+                <StepActivities state={state} setState={setState} />
+              )}
+              {currentStepKey === "food" && (
+                <StepFood state={state} setState={setState} />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 p-4">
-        <div className="max-w-2xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 px-4 pt-4 pb-5">
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-2">
           <Button
             size="lg"
-            className="w-full rounded-full text-base font-medium gap-2"
+            className="w-full rounded-full text-base font-medium"
             disabled={!canContinue()}
             onClick={isLastStep ? handleSubmit : goNext}
             data-testid="button-continue"
           >
             {isLastStep
-              ? state.groupType !== "solo"
+              ? isGroupTrip
                 ? "Invite My Crew →"
                 : "Curate My Escape →"
               : "Continue"}
           </Button>
+
+          {isSkippable && !isLastStep && (
+            <button
+              onClick={skip}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+              data-testid="button-skip"
+            >
+              Skip this question
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function StepStartDate({ state, setState }: { state: IntakeState; setState: any }) {
+function StepDuration({
+  state,
+  setState,
+  endDate,
+}: {
+  state: IntakeState;
+  setState: any;
+  endDate: Date | null;
+}) {
+  const options = [
+    { value: 2, label: "2 days", sub: "A sharp weekend away" },
+    { value: 3, label: "3 days", sub: "The sweet spot" },
+    { value: 4, label: "4 days", sub: "Room to breathe" },
+    { value: 5, label: "4+ days", sub: "Longer stay" },
+  ];
+
+  return (
+    <div>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        How long is your escape?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        We'll pace your itinerary accordingly.
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setState((s: IntakeState) => ({ ...s, duration: opt.value }))}
+            className={`p-5 rounded-2xl border-2 text-left transition-all ${
+              state.duration === opt.value
+                ? "border-primary bg-primary/8"
+                : "border-border bg-card hover:border-primary/40"
+            }`}
+            data-testid={`button-duration-${opt.value}`}
+          >
+            <div
+              className={`font-semibold text-lg ${
+                state.duration === opt.value ? "text-primary" : "text-foreground"
+              }`}
+            >
+              {opt.label}
+            </div>
+            <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
+          </button>
+        ))}
+      </div>
+      {state.startDate && endDate && state.duration && (
+        <p className="text-center text-sm text-primary font-medium mt-5">
+          {format(state.startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function StepStartDate({
+  state,
+  setState,
+  endDate,
+}: {
+  state: IntakeState;
+  setState: any;
+  endDate: Date | null;
+}) {
   const today = new Date();
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">When do you want to leave?</h2>
-      <p className="text-muted-foreground mb-6 text-sm">Pick your departure date — we'll work the rest out together.</p>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        When do you want to leave?
+      </h2>
+      <p className="text-muted-foreground mb-6 text-sm">
+        Optional — you can always decide later.
+      </p>
       <div className="flex justify-center">
         <style>{`
           .rdp-day_selected {
@@ -193,77 +306,50 @@ function StepStartDate({ state, setState }: { state: IntakeState; setState: any 
         <DayPicker
           mode="single"
           selected={state.startDate}
-          onSelect={(date) => setState((s: IntakeState) => ({ ...s, startDate: date || undefined }))}
+          onSelect={(date) =>
+            setState((s: IntakeState) => ({ ...s, startDate: date || undefined }))
+          }
           fromDate={today}
           numberOfMonths={1}
         />
       </div>
-      {state.startDate && (
+      {state.startDate && endDate ? (
+        <p className="text-center text-sm text-primary font-medium mt-1">
+          {format(state.startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")} ·{" "}
+          {state.duration === 5 ? "4+" : state.duration} days
+        </p>
+      ) : state.startDate ? (
         <p className="text-center text-sm text-primary font-medium mt-1">
           Departing {format(state.startDate, "EEEE, MMMM d, yyyy")}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }
 
-function StepDuration({ state, setState, endDate }: { state: IntakeState; setState: any; endDate: Date | null }) {
+function StepGroupSize({ state, setState }: { state: IntakeState; setState: any }) {
+  // "Just me" is excluded here — user already indicated Group on home page
   const options = [
-    { value: 2, label: "2 days", sub: "A sharp weekend away" },
-    { value: 3, label: "3 days", sub: "The sweet spot" },
-    { value: 4, label: "4 days", sub: "Room to breathe" },
-    { value: 5, label: "4+ days", sub: "Longer stay" },
-  ];
-
-  return (
-    <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">How long is your escape?</h2>
-      <p className="text-muted-foreground mb-8 text-sm">We'll pace your itinerary accordingly.</p>
-      <div className="grid grid-cols-2 gap-3">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setState((s: IntakeState) => ({ ...s, duration: opt.value }))}
-            className={`p-5 rounded-2xl border-2 text-left transition-all ${
-              state.duration === opt.value
-                ? "border-primary bg-primary/8"
-                : "border-border bg-card hover:border-primary/40"
-            }`}
-            data-testid={`button-duration-${opt.value}`}
-          >
-            <div className={`font-semibold text-lg ${state.duration === opt.value ? "text-primary" : "text-foreground"}`}>
-              {opt.label}
-            </div>
-            <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
-          </button>
-        ))}
-      </div>
-      {state.startDate && endDate && state.duration && (
-        <p className="text-center text-sm text-primary font-medium mt-5">
-          {format(state.startDate, "MMM d")} – {format(endDate, "MMM d, yyyy")}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function StepGroup({ state, setState }: { state: IntakeState; setState: any }) {
-  const options = [
-    { value: "solo", icon: <User className="w-5 h-5" />, label: "Just me", sub: "Solo traveller" },
-    { value: "partner", icon: <Heart className="w-5 h-5" />, label: "Me + partner", sub: "Two of us" },
+    { value: "partner", icon: <Heart className="w-5 h-5" />, label: "Two of us", sub: "Me + partner" },
     { value: "small", icon: <Users className="w-5 h-5" />, label: "Small group (3–4)", sub: "Friends or family" },
     { value: "big", icon: <PartyPopper className="w-5 h-5" />, label: "Big group (5+)", sub: "The whole crew" },
   ];
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">Who's coming?</h2>
-      <p className="text-muted-foreground mb-8 text-sm">We'll adjust recommendations for your crew.</p>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        How big is your group?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        We'll tailor recommendations to your group size.
+      </p>
       <div className="flex flex-col gap-3">
         {options.map((opt) => (
           <button
             key={opt.value}
-            onClick={() => setState((s: IntakeState) => ({ ...s, groupType: opt.value as any }))}
+            onClick={() =>
+              setState((s: IntakeState) => ({ ...s, groupType: opt.value as any }))
+            }
             className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
               state.groupType === opt.value
                 ? "border-primary bg-primary/8"
@@ -271,7 +357,11 @@ function StepGroup({ state, setState }: { state: IntakeState; setState: any }) {
             }`}
             data-testid={`button-group-${opt.value}`}
           >
-            <span className={`${state.groupType === opt.value ? "text-primary" : "text-muted-foreground"}`}>
+            <span
+              className={`${
+                state.groupType === opt.value ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
               {opt.icon}
             </span>
             <div>
@@ -288,7 +378,9 @@ function StepGroup({ state, setState }: { state: IntakeState; setState: any }) {
 function StepEnergy({ state, setState }: { state: IntakeState; setState: any }) {
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">What's your energy this trip?</h2>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        What's your energy this trip?
+      </h2>
       <p className="text-muted-foreground mb-12 text-sm">From full chill to full throttle.</p>
       <div className="px-2">
         <Slider
@@ -308,7 +400,11 @@ function StepEnergy({ state, setState }: { state: IntakeState; setState: any }) 
       </div>
       <div className="mt-10 text-center">
         <div className="inline-block px-5 py-2 rounded-full bg-muted text-sm text-foreground font-medium">
-          {state.energy < 33 ? "Relaxed pace" : state.energy < 66 ? "Balanced mix" : "Action-packed"}
+          {state.energy < 33
+            ? "Relaxed pace"
+            : state.energy < 66
+            ? "Balanced mix"
+            : "Action-packed"}
         </div>
       </div>
     </div>
@@ -325,8 +421,12 @@ function StepBudget({ state, setState }: { state: IntakeState; setState: any }) 
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">Daily budget per person?</h2>
-      <p className="text-muted-foreground mb-8 text-sm">So we know what to recommend before you fall in love with a plan.</p>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        Daily budget per person?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        So we know what to recommend before you fall in love with a plan.
+      </p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => (
           <button
@@ -339,7 +439,11 @@ function StepBudget({ state, setState }: { state: IntakeState; setState: any }) 
             }`}
             data-testid={`button-budget-${opt.value}`}
           >
-            <div className={`font-semibold text-lg ${state.budget === opt.value ? "text-primary" : "text-foreground"}`}>
+            <div
+              className={`font-semibold text-lg ${
+                state.budget === opt.value ? "text-primary" : "text-foreground"
+              }`}
+            >
               {opt.label}
             </div>
             <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
@@ -373,7 +477,9 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">What kind of finds do you want?</h2>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        What kind of finds do you want?
+      </h2>
       <p className="text-muted-foreground mb-8 text-sm">Pick all that excite you.</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
@@ -422,7 +528,9 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">How do you feel about food?</h2>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        How do you feel about food?
+      </h2>
       <p className="text-muted-foreground mb-8 text-sm">Helps us prioritise your days right.</p>
       <div className="flex flex-col gap-3">
         {options.map((opt) => (
@@ -436,7 +544,11 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
             }`}
             data-testid={`button-food-${opt.value}`}
           >
-            <span className={`flex-shrink-0 ${state.food === opt.value ? "text-primary" : "text-muted-foreground"}`}>
+            <span
+              className={`flex-shrink-0 ${
+                state.food === opt.value ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
               {opt.icon}
             </span>
             <div>

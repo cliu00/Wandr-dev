@@ -13,12 +13,14 @@ export default function Home() {
   function handleCurate() {
     const params = new URLSearchParams();
     if (destination) params.set("destination", destination);
-    if (isGroup) params.set("group", "true");
+    params.set("group", String(isGroup));
     navigate(`/intake?${params.toString()}`);
   }
 
   function handleEscapeClick(escape: typeof CURATED_ESCAPES[0]) {
-    navigate(`/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}`);
+    navigate(
+      `/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}&group=${isGroup}`
+    );
   }
 
   return (
@@ -30,12 +32,12 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90)`,
+            backgroundImage: `url(https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=90)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-black/75" />
 
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 flex flex-col items-center text-center">
+        <div className="relative z-10 w-full max-w-3xl mx-auto px-6 flex flex-col items-center text-center">
           <h1
             className="font-serif text-6xl md:text-8xl font-light text-white leading-[1.05] mb-2 tracking-wide"
             data-testid="text-hero-headline"
@@ -47,20 +49,48 @@ export default function Home() {
 
           <div className="w-24 h-px bg-accent my-6 mx-auto" />
 
-          <p className="text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed tracking-wide">
-            Curated 2–4 day escapes for individuals and groups.
+          <p className="text-white/75 text-base md:text-lg mb-8 max-w-md leading-relaxed tracking-wide">
+            Curated 2–4 day Canadian escapes for individuals and groups.
           </p>
 
-          {/* Search Bar */}
+          {/* Solo / Group mode selector — sits above the search bar */}
+          <div className="flex items-center gap-1 mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
+            <button
+              onClick={() => setIsGroup(false)}
+              className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                !isGroup
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-white/75 hover:text-white"
+              }`}
+              data-testid="button-solo-toggle"
+            >
+              <User className="w-3.5 h-3.5" />
+              Solo
+            </button>
+            <button
+              onClick={() => setIsGroup(true)}
+              className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                isGroup
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-white/75 hover:text-white"
+              }`}
+              data-testid="button-group-toggle"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Group
+            </button>
+          </div>
+
+          {/* Search bar — Curate is the clear primary CTA */}
           <div
-            className="w-full max-w-2xl bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
+            className="w-full max-w-xl bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
             data-testid="search-bar"
           >
             <div className="flex items-center gap-2 flex-1 px-4">
               <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Where to? (Paris, Tokyo, London...)"
+                placeholder="Where in Canada? (Vancouver, Toronto…)"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCurate()}
@@ -68,35 +98,6 @@ export default function Home() {
                 data-testid="input-destination"
               />
             </div>
-
-            {/* Solo / Group segmented toggle */}
-            <div className="flex items-center rounded-full border border-border bg-muted p-0.5 flex-shrink-0">
-              <button
-                onClick={() => setIsGroup(false)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !isGroup
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground"
-                }`}
-                data-testid="button-solo-toggle"
-              >
-                <User className="w-3 h-3" />
-                Solo
-              </button>
-              <button
-                onClick={() => setIsGroup(true)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  isGroup
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground"
-                }`}
-                data-testid="button-group-toggle"
-              >
-                <Users className="w-3 h-3" />
-                Group
-              </button>
-            </div>
-
             <Button
               onClick={handleCurate}
               className="rounded-full px-6 gap-2 flex-shrink-0"
@@ -123,11 +124,14 @@ export default function Home() {
               Curated escapes
             </h2>
             <p className="text-muted-foreground text-base">
-              Hand-picked itineraries ready to go. Just tap and customise.
+              Hand-picked Canadian itineraries. Just tap to start planning.
             </p>
           </div>
 
-          <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
+          <div
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none" }}
+          >
             {CURATED_ESCAPES.map((escape) => (
               <div
                 key={escape.id}

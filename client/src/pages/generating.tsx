@@ -10,7 +10,7 @@ const MESSAGES = [
   "Adding the finishing touches...",
 ];
 
-const HERO_IMAGE = "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=1920&q=90";
+const HERO_IMAGE = "https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=90";
 
 export default function Generating() {
   const [, navigate] = useLocation();
@@ -43,7 +43,7 @@ export default function Generating() {
   // Phase transitions
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(2), 4000);
-    const t2 = setTimeout(() => navigate("/itinerary/london-2day"), 6500);
+    const t2 = setTimeout(() => navigate("/itinerary/vancouver-2day"), 6500);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -71,7 +71,7 @@ export default function Generating() {
             {/* Content */}
             <div className="relative z-10 text-center px-6 max-w-2xl">
               <h1 className="font-serif text-6xl md:text-8xl font-bold text-white mb-3 tracking-tight">
-                London
+                Vancouver
               </h1>
               <p className="text-white/60 text-lg mb-16 tracking-widest uppercase text-sm">
                 2-day escape
