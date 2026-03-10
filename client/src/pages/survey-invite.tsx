@@ -4,7 +4,7 @@ import { ArrowLeft, Copy, Mail, MessageCircle, Check, Users, ChevronRight } from
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const FAKE_LINK = "https://48hrs.app/survey/join/london-x7k9m";
+const FAKE_LINK = "https://48hrs.app/survey/join/vancouver-x7k9m";
 
 export default function SurveyInvite() {
   const [, navigate] = useLocation();
@@ -49,7 +49,7 @@ export default function SurveyInvite() {
             Invite your crew
           </h1>
           <p className="text-muted-foreground">
-            Planning London · Apr 18–20, 2 days
+            Planning Vancouver · Apr 18–20
           </p>
         </div>
 

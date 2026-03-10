@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, User, Check, MapPin } from "lucide-react";
+import { ArrowLeft, Check, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Star, Utensils, Timer } from "lucide-react";
+import { Star, Utensils, Timer, Users } from "lucide-react";
 
 type JoinStep = "identity" | "energy" | "budget" | "activities" | "food" | "done";
 
@@ -27,7 +27,7 @@ export default function SurveyJoin() {
 
   const STEPS: JoinStep[] = ["identity", "energy", "budget", "activities", "food", "done"];
   const currentIndex = STEPS.indexOf(step);
-  const progress = ((currentIndex) / (STEPS.length - 1)) * 100;
+  const progress = (currentIndex / (STEPS.length - 1)) * 100;
 
   function goNext() {
     const idx = STEPS.indexOf(step);
@@ -37,7 +37,7 @@ export default function SurveyJoin() {
   function goBack() {
     const idx = STEPS.indexOf(step);
     if (idx === 0) {
-      navigate("/survey/invite");
+      window.history.back();
       return;
     }
     setStep(STEPS[idx - 1]);
@@ -55,15 +55,17 @@ export default function SurveyJoin() {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center relative px-6"
-        style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8))" }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=1920&q=90)`, zIndex: -1 }}
+          style={{
+            backgroundImage: `url(https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=90)`,
+            zIndex: -1,
+          }}
         />
         <div className="absolute inset-0 bg-black/65" style={{ zIndex: -1 }} />
 
-        <div className="text-center max-w-sm">
+        <div className="text-center max-w-sm w-full">
           <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-white" />
           </div>
@@ -71,25 +73,38 @@ export default function SurveyJoin() {
             Thanks, {name}!
           </h1>
           <p className="text-white/75 text-lg mb-8 leading-relaxed">
-            Your preferences have been added to the London group plan.
+            Your preferences have been added to the Vancouver group plan.
           </p>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-left mb-8">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-left mb-6">
             <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
               <MapPin className="w-4 h-4" />
-              <span>London · Apr 18–20</span>
+              <span>Vancouver · Apr 18–20</span>
             </div>
             <p className="text-white text-sm">
-              The organiser will generate the final itinerary once everyone responds.
+              The organiser will generate the final itinerary once everyone responds. We'll notify you when it's ready.
             </p>
           </div>
-          <Button
-            variant="outline"
-            className="rounded-full border-white/30 text-white bg-white/10"
-            onClick={() => navigate("/")}
-            data-testid="button-back-home"
-          >
-            Back to 48HRS
-          </Button>
+
+          {/* Two clear next actions — not a dead end */}
+          <div className="flex flex-col gap-3">
+            <Button
+              className="rounded-full gap-2 bg-white text-foreground hover:bg-white/90"
+              onClick={() => navigate("/survey/status")}
+              data-testid="button-view-status"
+            >
+              <Users className="w-4 h-4" />
+              View group status
+            </Button>
+            <Button
+              variant="ghost"
+              className="rounded-full border-white/30 text-white/80 hover:text-white hover:bg-white/10"
+              onClick={() => navigate("/")}
+              data-testid="button-back-home"
+            >
+              Back to 48HRS
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -115,7 +130,7 @@ export default function SurveyJoin() {
           </button>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin className="w-3 h-3" />
-            <span>London Group Trip · Apr 18–20</span>
+            <span>Vancouver Group Trip · Apr 18–20</span>
           </div>
           <div />
         </div>
@@ -171,13 +186,17 @@ export default function SurveyJoin() {
 
               {step === "energy" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">What's your energy for this trip, {name}?</h2>
+                  <h2 className="font-serif text-3xl font-bold mb-2">
+                    What's your energy for this trip, {name}?
+                  </h2>
                   <p className="text-muted-foreground mb-12">From full chill to full throttle.</p>
                   <div className="px-2">
                     <Slider
                       value={[energy]}
                       onValueChange={([v]) => setEnergy(v)}
-                      min={0} max={100} step={1}
+                      min={0}
+                      max={100}
+                      step={1}
                       className="mb-6"
                     />
                     <div className="flex justify-between text-sm text-muted-foreground">
@@ -197,7 +216,9 @@ export default function SurveyJoin() {
               {step === "budget" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">Your daily budget per person?</h2>
-                  <p className="text-muted-foreground mb-8">We'll find the sweet spot for the whole group.</p>
+                  <p className="text-muted-foreground mb-8">
+                    We'll find the sweet spot for the whole group.
+                  </p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { value: "under-100", label: "Under $100", sub: "Budget-friendly" },
@@ -228,14 +249,29 @@ export default function SurveyJoin() {
                   <h2 className="font-serif text-3xl font-bold mb-2">What excites you most?</h2>
                   <p className="text-muted-foreground mb-8">Pick all that apply.</p>
                   <div className="grid grid-cols-2 gap-3">
-                    {["Hidden gems", "Iconic landmarks", "Street art & murals", "Markets & shopping", "Nature & parks", "Nightlife", "Wellness & spas", "Architecture"].map((opt) => {
+                    {[
+                      "Hidden gems",
+                      "Iconic landmarks",
+                      "Street art & murals",
+                      "Markets & shopping",
+                      "Nature & parks",
+                      "Nightlife",
+                      "Wellness & spas",
+                      "Architecture",
+                    ].map((opt) => {
                       const active = activities.includes(opt);
                       return (
                         <button
                           key={opt}
-                          onClick={() => setActivities(a => active ? a.filter(x => x !== opt) : [...a, opt])}
+                          onClick={() =>
+                            setActivities((a) =>
+                              active ? a.filter((x) => x !== opt) : [...a, opt]
+                            )
+                          }
                           className={`p-4 rounded-2xl border-2 text-sm font-medium text-center transition-all ${
-                            active ? "border-primary bg-primary/8 text-primary" : "border-border bg-card hover:border-primary/40"
+                            active
+                              ? "border-primary bg-primary/8 text-primary"
+                              : "border-border bg-card hover:border-primary/40"
                           }`}
                         >
                           {opt}
@@ -249,21 +285,42 @@ export default function SurveyJoin() {
               {step === "food" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">How do you feel about food?</h2>
-                  <p className="text-muted-foreground mb-8">Helps calibrate the group's dining priorities.</p>
+                  <p className="text-muted-foreground mb-8">
+                    Helps calibrate the group's dining priorities.
+                  </p>
                   <div className="flex flex-col gap-3">
                     {[
-                      { value: "food-is-trip", icon: <Utensils className="w-5 h-5" />, label: "Food IS the trip", sub: "Plan meals first, build the day around them" },
-                      { value: "great-meals", icon: <Star className="w-5 h-5" />, label: "Great meals, won't rearrange", sub: "Quality matters, but so does flexibility" },
-                      { value: "just-fed", icon: <Timer className="w-5 h-5" />, label: "Just keep me fed", sub: "Quick, easy, then on to activities" },
+                      {
+                        value: "food-is-trip",
+                        icon: <Utensils className="w-5 h-5" />,
+                        label: "Food IS the trip",
+                        sub: "Plan meals first, build the day around them",
+                      },
+                      {
+                        value: "great-meals",
+                        icon: <Star className="w-5 h-5" />,
+                        label: "Great meals, won't rearrange",
+                        sub: "Quality matters, but so does flexibility",
+                      },
+                      {
+                        value: "just-fed",
+                        icon: <Timer className="w-5 h-5" />,
+                        label: "Just keep me fed",
+                        sub: "Quick, easy, then on to activities",
+                      },
                     ].map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => setFood(opt.value)}
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
-                          food === opt.value ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+                          food === opt.value
+                            ? "border-primary bg-primary/8"
+                            : "border-border bg-card hover:border-primary/40"
                         }`}
                       >
-                        <span className={food === opt.value ? "text-primary" : "text-muted-foreground"}>{opt.icon}</span>
+                        <span className={food === opt.value ? "text-primary" : "text-muted-foreground"}>
+                          {opt.icon}
+                        </span>
                         <div>
                           <div className="font-semibold">{opt.label}</div>
                           <div className="text-sm text-muted-foreground">{opt.sub}</div>
@@ -288,7 +345,7 @@ export default function SurveyJoin() {
             onClick={goNext}
             data-testid="button-continue"
           >
-            {step === "food" ? "Submit my preferences" : "Continue"} →
+            {step === "food" ? "Submit my preferences →" : "Continue"}
           </Button>
         </div>
       </div>

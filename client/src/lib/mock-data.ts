@@ -49,12 +49,20 @@ export interface CuratedEscape {
   tags: string[];
 }
 
+export interface SurveyPreferences {
+  energy: string;
+  budget: string;
+  activities: string[];
+  food: string;
+}
+
 export interface SurveyParticipant {
   id: string;
   name: string;
   email?: string;
   completedAt?: string;
   status: "completed" | "pending";
+  preferences?: SurveyPreferences;
 }
 
 export const STOCK_IMAGES: Record<string, string> = {
@@ -305,6 +313,12 @@ export const MOCK_PARTICIPANTS: SurveyParticipant[] = [
     email: "alice@example.com",
     completedAt: "2h ago",
     status: "completed",
+    preferences: {
+      energy: "Relaxed pace",
+      budget: "$200–350",
+      activities: ["Hidden gems", "Markets & shopping", "Wellness & spas"],
+      food: "Food IS the trip",
+    },
   },
   {
     id: "2",
@@ -312,6 +326,12 @@ export const MOCK_PARTICIPANTS: SurveyParticipant[] = [
     email: "bob@example.com",
     completedAt: "45 min ago",
     status: "completed",
+    preferences: {
+      energy: "Balanced mix",
+      budget: "$100–200",
+      activities: ["Iconic landmarks", "Architecture", "Nature & parks"],
+      food: "Great meals, won't rearrange",
+    },
   },
   {
     id: "3",
