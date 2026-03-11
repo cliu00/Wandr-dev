@@ -185,7 +185,7 @@ export default function ItineraryView() {
               >
                 <span
                   className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
-                    showRestBlocks ? "translate-x-0.5" : "translate-x-3.5"
+                    showRestBlocks ? "translate-x-0.5" : "translate-x-3"
                   }`}
                 />
               </span>
