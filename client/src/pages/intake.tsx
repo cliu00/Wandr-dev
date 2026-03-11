@@ -455,14 +455,14 @@ function StepBudget({ state, setState }: { state: IntakeState; setState: any }) 
 
 function StepActivities({ state, setState }: { state: IntakeState; setState: any }) {
   const options = [
-    "Hidden gems",
-    "Iconic landmarks",
-    "Street art & murals",
-    "Markets & shopping",
-    "Nature & parks",
+    "Hidden Gems",
+    "Iconic Landmarks",
+    "Food & Drink",
+    "History & Museums",
+    "Nature & Parks",
+    "Markets & Shopping",
     "Nightlife",
-    "Wellness & spas",
-    "Architecture",
+    "Art & Culture",
   ];
 
   function toggle(opt: string) {
