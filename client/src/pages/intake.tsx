@@ -48,8 +48,8 @@ export default function Intake() {
   // Solo: durationDate, energy, budget, activities, food = 5 steps
   // Group: durationDate, groupSize, energy, budget, activities, food = 6 steps
   const STEPS = isGroupFromHome
-    ? ["durationDate", "groupSize", "energy", "budget", "activities", "food"]
-    : ["durationDate", "energy", "budget", "activities", "food"];
+    ? ["durationDate", "groupSize", "energy", "budget", "food"]
+    : ["durationDate", "energy", "budget", "food"];
 
   const totalSteps = STEPS.length;
   const currentStepKey = STEPS[step - 1];
