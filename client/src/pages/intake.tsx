@@ -100,7 +100,7 @@ export default function Intake() {
 
   const endDate =
     state.startDate && state.duration
-      ? addDays(state.startDate, (state.duration === 5 ? 4 : state.duration) - 1)
+      ? addDays(state.startDate, state.duration - 1)
       : null;
 
   const progress = (step / totalSteps) * 100;
@@ -219,7 +219,6 @@ function StepDurationDate({
     { value: 2, label: "2 days", sub: "A sharp weekend away" },
     { value: 3, label: "3 days", sub: "The sweet spot" },
     { value: 4, label: "4 days", sub: "Room to breathe" },
-    { value: 5, label: "4+ days", sub: "Longer stay" },
   ];
 
   return (
@@ -231,7 +230,7 @@ function StepDurationDate({
         We'll pace your itinerary accordingly.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {options.map((opt) => (
           <button
             key={opt.value}
