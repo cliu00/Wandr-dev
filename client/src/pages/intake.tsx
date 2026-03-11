@@ -398,11 +398,6 @@ function StepEnergy({ state, setState }: { state: IntakeState; setState: any }) 
           <span>Pack it in</span>
         </div>
       </div>
-      <div className="mt-10 text-center">
-        <div className="inline-block px-5 py-2 rounded-full bg-muted text-sm text-foreground font-medium">
-          {state.energy < 33 ? "Relaxed pace" : state.energy < 66 ? "Balanced mix" : "Action-packed"}
-        </div>
-      </div>
     </div>
   );
 }

@@ -205,11 +205,6 @@ export default function SurveyJoin() {
                       <span>Pack it all in</span>
                     </div>
                   </div>
-                  <div className="mt-10 text-center">
-                    <div className="inline-block px-5 py-2 rounded-full bg-muted text-sm font-medium">
-                      {energy < 33 ? "Relaxed pace" : energy < 66 ? "Balanced mix" : "Action-packed"}
-                    </div>
-                  </div>
                 </div>
               )}
 
