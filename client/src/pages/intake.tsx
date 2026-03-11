@@ -14,7 +14,7 @@ interface IntakeState {
   startDate: Date | undefined;
   groupType: "solo" | "partner" | "small" | "big" | null;
   energy: number;
-  budget: string | null;
+  budget: string[];
   activityTypes: string[];
   food: string | null;
 }
@@ -39,7 +39,7 @@ export default function Intake() {
     startDate: undefined,
     groupType: isGroupFromHome ? null : "solo",
     energy: 50,
-    budget: null,
+    budget: [],
     activityTypes: [],
     food: null,
   });
@@ -410,32 +410,44 @@ function StepBudget({ state, setState }: { state: IntakeState; setState: any }) 
     { value: "350-plus", label: "$350+", sub: "Luxury" },
   ];
 
+  function toggle(value: string) {
+    setState((s: IntakeState) => ({
+      ...s,
+      budget: s.budget.includes(value)
+        ? s.budget.filter((b) => b !== value)
+        : [...s.budget, value],
+    }));
+  }
+
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
         Daily budget per person?
       </h2>
       <p className="text-muted-foreground mb-8 text-sm">
-        So we know what to recommend before you fall in love with a plan.
+        Select all that apply — we'll find the sweet spot.
       </p>
       <div className="grid grid-cols-2 gap-3">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setState((s: IntakeState) => ({ ...s, budget: opt.value }))}
-            className={`p-5 rounded-2xl border-2 text-left transition-all ${
-              state.budget === opt.value
-                ? "border-primary bg-primary/8"
-                : "border-border bg-card hover:border-primary/40"
-            }`}
-            data-testid={`button-budget-${opt.value}`}
-          >
-            <div className={`font-semibold text-lg ${state.budget === opt.value ? "text-primary" : "text-foreground"}`}>
-              {opt.label}
-            </div>
-            <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
-          </button>
-        ))}
+        {options.map((opt) => {
+          const active = state.budget.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                active
+                  ? "border-primary bg-primary/8"
+                  : "border-border bg-card hover:border-primary/40"
+              }`}
+              data-testid={`button-budget-${opt.value}`}
+            >
+              <div className={`font-semibold text-lg ${active ? "text-primary" : "text-foreground"}`}>
+                {opt.label}
+              </div>
+              <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
