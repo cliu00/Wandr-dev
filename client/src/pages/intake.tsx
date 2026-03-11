@@ -477,7 +477,7 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        What kind of finds do you want?
+        What kinds of experiences are you looking for?
       </h2>
       <p className="text-muted-foreground mb-8 text-sm">Pick all that excite you.</p>
       <div className="grid grid-cols-2 gap-3">
