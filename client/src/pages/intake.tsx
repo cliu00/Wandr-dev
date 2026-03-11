@@ -47,7 +47,7 @@ export default function Intake() {
   // Duration + Date are now ONE combined step
   // Solo: durationDate, energy, budget, activities, food = 5 steps
   // Group: durationDate, groupSize, energy, budget, activities, food = 6 steps
-  const STEPS = ["durationDate", "energy", "budget", "food"];
+  const STEPS = ["durationDate", "energy", "budget", "activities", "food"];
 
   const totalSteps = STEPS.length;
   const currentStepKey = STEPS[step - 1];
