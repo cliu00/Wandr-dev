@@ -637,8 +637,8 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
     {
       value: "cocktail-wine-bars",
       icon: <Wine className="w-4 h-4" />,
-      label: "Cocktail & wine bars",
-      sub: "Craft cocktails, natural wine, great atmosphere",
+      label: "Craft drinks & bars",
+      sub: "Natural wine, craft beer, creative cocktails",
     },
     {
       value: "street-food-markets",
@@ -672,9 +672,9 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        What are your dining preferences?
+        How do you like to eat and drink?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">Select all that interest you — we'll build your meals around them.</p>
+      <p className="text-muted-foreground mb-8 text-sm">From morning coffee to late-night cocktails — pick everything that fits.</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
           const active = state.food.includes(opt.value);
