@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Heart, PartyPopper, Star, Utensils, Timer, CalendarDays, ChevronDown, MapPin } from "lucide-react";
+import { ArrowLeft, Users, Heart, PartyPopper, Utensils, Timer, CalendarDays, ChevronDown, MapPin, Wine, Coffee, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DayPicker } from "react-day-picker";
@@ -16,7 +16,7 @@ interface IntakeState {
   energy: number;
   budget: string[];
   activityTypes: string[];
-  food: string | null;
+  food: string[];
   dietaryNotes: string;
 }
 
@@ -50,7 +50,7 @@ export default function Intake() {
     energy: 50,
     budget: [],
     activityTypes: [],
-    food: null,
+    food: [],
     dietaryNotes: "",
   });
 
@@ -522,58 +522,82 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
 function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   const options = [
     {
-      value: "fine-dining",
-      icon: <Utensils className="w-5 h-5" />,
-      label: "Fine dining & reservations",
-      sub: "The best tables in the city — booked in advance",
+      value: "neighbourhood-gems",
+      icon: <MapPin className="w-4 h-4" />,
+      label: "Neighbourhood gems",
+      sub: "Local spots, cafés, and hidden finds",
     },
     {
-      value: "great-meals",
-      icon: <Star className="w-5 h-5" />,
-      label: "Great restaurants, no fuss",
-      sub: "Quality food without the tasting-menu commitment",
+      value: "chef-driven",
+      icon: <Utensils className="w-4 h-4" />,
+      label: "Chef-driven restaurants",
+      sub: "Creative menus, local ingredients, memorable meals",
     },
     {
-      value: "local-casual",
-      icon: <MapPin className="w-5 h-5" />,
-      label: "Local gems & casual spots",
-      sub: "Neighbourhood favourites, cafés, and hidden finds",
+      value: "cocktail-wine-bars",
+      icon: <Wine className="w-4 h-4" />,
+      label: "Cocktail & wine bars",
+      sub: "Craft cocktails, natural wine, great atmosphere",
     },
     {
-      value: "just-fed",
-      icon: <Timer className="w-5 h-5" />,
-      label: "Quick bites, keep moving",
-      sub: "Fuel up fast — dining isn't the focus",
+      value: "street-food-markets",
+      icon: <ShoppingBag className="w-4 h-4" />,
+      label: "Street food & markets",
+      sub: "Food halls, vendors, eat-as-you-explore",
+    },
+    {
+      value: "brunch-coffee",
+      icon: <Coffee className="w-4 h-4" />,
+      label: "Brunch & coffee culture",
+      sub: "Leisurely mornings, specialty coffee, great plates",
+    },
+    {
+      value: "quick-casual",
+      icon: <Timer className="w-4 h-4" />,
+      label: "Quick & casual",
+      sub: "Grab and go — food isn't the main event",
     },
   ];
+
+  function toggle(value: string) {
+    setState((s: IntakeState) => ({
+      ...s,
+      food: s.food.includes(value)
+        ? s.food.filter((f) => f !== value)
+        : [...s.food, value],
+    }));
+  }
 
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        Where do you like to eat?
+        What's your food & drink vibe?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">We'll tailor your restaurant picks to match.</p>
-      <div className="flex flex-col gap-3">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setState((s: IntakeState) => ({ ...s, food: opt.value }))}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
-              state.food === opt.value
-                ? "border-primary bg-primary/8"
-                : "border-border bg-card hover:border-primary/40"
-            }`}
-            data-testid={`button-food-${opt.value}`}
-          >
-            <span className={`flex-shrink-0 ${state.food === opt.value ? "text-primary" : "text-muted-foreground"}`}>
-              {opt.icon}
-            </span>
-            <div>
-              <div className="font-semibold text-foreground">{opt.label}</div>
-              <div className="text-sm text-muted-foreground">{opt.sub}</div>
-            </div>
-          </button>
-        ))}
+      <p className="text-muted-foreground mb-8 text-sm">Pick everything that appeals — we'll plan around it.</p>
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((opt) => {
+          const active = state.food.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                active
+                  ? "border-primary bg-primary/8"
+                  : "border-border bg-card hover:border-primary/40"
+              }`}
+              data-testid={`button-food-${opt.value}`}
+            >
+              <span className={`block mb-2 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                {opt.icon}
+              </span>
+              <div className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>
+                {opt.label}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{opt.sub}</div>
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-6">
