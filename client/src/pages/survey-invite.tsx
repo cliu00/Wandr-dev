@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft, Copy, Mail, Check, Users, ChevronRight, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 
 const FAKE_LINK = "https://wandr.app/survey/join/vancouver-x7k9m";
 
@@ -22,24 +23,48 @@ export default function SurveyInvite() {
   const [names, setNames] = useState<string[]>(["", ""]);
   const [nameInput, setNameInput] = useState("");
 
-  function handleCopyLink() {
-    navigator.clipboard.writeText(FAKE_LINK).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast({ title: "Link copied", description: "Share it with your crew." });
+  async function handleCopyLink() {
+    const ok = await copyToClipboard(FAKE_LINK);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({ title: "Link copied", description: "Share it with your crew." });
+    } else {
+      toast({
+        title: "Couldn't copy automatically",
+        description: "Select the link above and copy it manually.",
+        variant: "destructive",
+      });
+    }
   }
 
-  function handleCopyScript() {
-    navigator.clipboard.writeText(EMAIL_SCRIPT).catch(() => {});
-    setScriptCopied(true);
-    setTimeout(() => setScriptCopied(false), 2500);
-    toast({ title: "Email copied", description: "Paste it into any email client." });
+  async function handleCopyScript() {
+    const ok = await copyToClipboard(EMAIL_SCRIPT);
+    if (ok) {
+      setScriptCopied(true);
+      setTimeout(() => setScriptCopied(false), 2500);
+      toast({ title: "Email copied", description: "Paste it into any email client." });
+    } else {
+      toast({
+        title: "Couldn't copy automatically",
+        description: "Select the message text above and copy it manually.",
+        variant: "destructive",
+      });
+    }
   }
 
   function handleEmailVia() {
     const subject = encodeURIComponent("Help plan our trip!");
     const body = encodeURIComponent(EMAIL_SCRIPT);
-    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+    try {
+      window.open(`mailto:?subject=${subject}&body=${body}`, "_self");
+    } catch {
+      toast({
+        title: "Couldn't open email client",
+        description: "Copy the message above and paste it into your email app.",
+        variant: "destructive",
+      });
+    }
   }
 
   function addName() {
@@ -189,6 +214,9 @@ export default function SurveyInvite() {
               Open in email
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            If your email app didn't open, use "Copy message" instead.
+          </p>
         </div>
 
         {/* Info note */}

@@ -37,7 +37,7 @@ export default function SurveyJoin() {
   function goBack() {
     const idx = STEPS.indexOf(step);
     if (idx === 0) {
-      window.history.back();
+      navigate("/");
       return;
     }
     setStep(STEPS[idx - 1]);

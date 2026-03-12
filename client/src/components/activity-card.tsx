@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sun, Sunset, Moon, Bed, RefreshCw, Star, Coffee } from "lucide-react";
+import { Sun, Sunset, Moon, Bed, RefreshCw, Star, Coffee, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ActivityBlock } from "@/lib/mock-data";
@@ -21,6 +21,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
   const [swapped, setSwapped] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [isRested, setIsRested] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const isBaseRest = block.timeSlot === "rest";
   const timeConfig = TIME_CONFIG[block.timeSlot];
@@ -81,9 +82,14 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
       }`}
     >
       {!isBaseRest && (
-        <div className="relative h-44 overflow-hidden">
+        <div className="relative h-44 overflow-hidden bg-muted">
           {swapping ? (
             <Skeleton className="w-full h-full" />
+          ) : imgError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/50">
+              <ImageOff className="w-8 h-8" />
+              <span className="text-xs">Image unavailable</span>
+            </div>
           ) : (
             <img
               src={activity.imageUrl}
@@ -92,6 +98,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
               loading="lazy"
               width={640}
               height={176}
+              onError={() => setImgError(true)}
             />
           )}
         </div>

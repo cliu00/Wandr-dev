@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, AlertCircle } from "lucide-react";
 
 const MESSAGES = [
   "Scanning local favorites…",
@@ -18,6 +20,7 @@ export default function Generating() {
   const [phase, setPhase] = useState<1 | 2>(1);
   const [msgIndex, setMsgIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [stuck, setStuck] = useState(false);
 
   // Cycle messages in phase 1
   useEffect(() => {
@@ -45,9 +48,11 @@ export default function Generating() {
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(2), 4000);
     const t2 = setTimeout(() => navigate("/itinerary/vancouver-2day"), 6500);
+    const t3 = setTimeout(() => setStuck(true), 11000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [navigate]);
 
@@ -121,6 +126,30 @@ export default function Generating() {
             className="absolute inset-0 bg-background overflow-y-auto"
           >
             <div className="max-w-2xl mx-auto px-6 py-12">
+              {/* Stuck fallback banner — only visible if navigation didn't fire */}
+              {stuck && (
+                <div className="mb-8 flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                      Taking longer than expected
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                      Your itinerary is ready — the page may not have navigated automatically.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate("/itinerary/vancouver-2day")}
+                      className="gap-1.5 rounded-full"
+                      data-testid="button-go-to-itinerary"
+                    >
+                      View your itinerary
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Header skeleton */}
               <div className="text-center mb-10">
                 <Skeleton className="h-8 w-32 mx-auto mb-2" />

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export default function ItineraryView() {
   const [, navigate] = useLocation();
@@ -27,14 +28,17 @@ export default function ItineraryView() {
     }
   }
 
-  function handleShare() {
-    navigator.clipboard
-      .writeText("https://wandr.app/itinerary/share/vancouver-abc123")
-      .catch(() => {});
-    toast({
-      title: "Link copied",
-      description: "Share this link with your crew.",
-    });
+  async function handleShare() {
+    const ok = await copyToClipboard("https://wandr.app/itinerary/share/vancouver-abc123");
+    if (ok) {
+      toast({ title: "Link copied", description: "Share this link with your crew." });
+    } else {
+      toast({
+        title: "Couldn't copy automatically",
+        description: "Copy this link manually: wandr.app/itinerary/share/vancouver-abc123",
+        variant: "destructive",
+      });
+    }
   }
 
   function handleInvite() {
