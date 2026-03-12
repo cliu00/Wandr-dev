@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Star, Share2, Baby } from "lucide-react";
+import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { CURATED_ESCAPES } from "@/lib/mock-data";
@@ -69,25 +69,19 @@ export default function Home() {
       icon: <Compass className="w-6 h-6" />,
       step: "01",
       title: "Tell us your style",
-      desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
+      desc: "Answer a few quick questions — who's coming, your energy level, and how you like to spend.",
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
       step: "02",
-      title: "AI builds your itinerary",
-      desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
-    },
-    {
-      icon: <Star className="w-6 h-6" />,
-      step: "03",
-      title: "Adjust until perfect",
-      desc: "Swap any activity with one tap. Every recommendation explains exactly why it was chosen for you.",
+      title: "Your itinerary, instantly",
+      desc: "Wandr builds a day-by-day plan with morning, afternoon, and evening blocks — tailored entirely to you.",
     },
     {
       icon: <Share2 className="w-6 h-6" />,
-      step: "04",
-      title: "Save or share your trip",
-      desc: "Save your itinerary for later, or share a link with your crew before you go.",
+      step: "03",
+      title: "Save or share",
+      desc: "Keep it for yourself or share it with your companions — your escape, ready to go.",
     },
   ];
 
@@ -203,7 +197,7 @@ export default function Home() {
             From blank canvas to bespoke itinerary in under a minute.
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-3xl mx-auto">
             {HOW_IT_WORKS.map((item) => (
               <div key={item.step} className="flex flex-col items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
