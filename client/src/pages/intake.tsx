@@ -38,11 +38,17 @@ interface IntakeState {
 }
 
 // ─── Step sequences per persona ───────────────────────────────────────────────
+// All 4 flows share the same 5-slot structure:
+//   1. Duration + dates  (universal)
+//   2. Persona identity  (solo vibe / duo style / group dynamic / kids ages)
+//   3. Energy            (universal, persona-adapted copy)
+//   4. Budget            (universal, persona-adapted copy)
+//   5. Persona closer    (solo → activities | duo → food | group → activities | family → familyNeeds)
 const STEP_SEQUENCES: Record<GroupType, string[]> = {
-  solo:   ["durationDate", "soloVibe",     "activities", "anchor",      "food"],
-  duo:    ["durationDate", "duoStyle",     "energy",     "budget",      "food"],
-  group:  ["durationDate", "groupDynamic", "energy",     "budget",      "activities"],
-  family: ["durationDate", "kidsAges",     "energy",     "activities",  "familyNeeds"],
+  solo:   ["durationDate", "soloVibe",     "energy", "budget", "activities"],
+  duo:    ["durationDate", "duoStyle",     "energy", "budget", "food"],
+  group:  ["durationDate", "groupDynamic", "energy", "budget", "activities"],
+  family: ["durationDate", "kidsAges",     "energy", "budget", "familyNeeds"],
 };
 
 // Steps where "Skip" is not available
@@ -811,9 +817,9 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
     : allOptions;
 
   const placeholders: Record<GroupType, string> = {
-    solo:   "e.g. Whale watching, a cooking class, somewhere with live jazz…",
-    duo:    "e.g. A wine tasting, rooftop bar, couples cooking class…",
-    group:  "e.g. A group boat tour, escape room, something active together…",
+    solo:   "e.g. Whale watching, live jazz bar, dinner at Alo Saturday, morning hike at Grouse Mountain…",
+    duo:    "e.g. A wine tasting, rooftop bar, couples cooking class, dinner reservation Friday…",
+    group:  "e.g. A group boat tour, escape room, something active together, concert on Saturday…",
     family: "e.g. Science centre, mini-golf, something hands-on for the kids…",
   };
 
@@ -855,7 +861,9 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
 
       <div className="mt-5">
         <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
-          Anything else on your must-do list?
+          {groupType === "solo" || groupType === "duo"
+            ? "Anything specific to plan around — activities, reservations, or must-dos?"
+            : "Anything else on your group's must-do list?"}
         </label>
         <textarea
           placeholder={placeholders[groupType]}
