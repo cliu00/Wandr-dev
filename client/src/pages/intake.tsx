@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Heart, PartyPopper, Utensils, Timer, CalendarDays, ChevronDown, MapPin, Wine, Coffee, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowLeft, X, Users, Heart, PartyPopper, Utensils, Timer, CalendarDays, ChevronDown, MapPin, Wine, Coffee, ShoppingBag, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DayPicker } from "react-day-picker";
@@ -137,9 +137,10 @@ export default function Intake() {
           <button
             onClick={goBack}
             className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            title={step === 1 ? "Exit quiz" : "Previous question"}
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4" />
+            {step === 1 ? <X className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
           </button>
           {prefillDestination && (
             <span className="text-xs text-muted-foreground tracking-wide">
