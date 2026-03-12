@@ -116,6 +116,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section className="py-20 px-6 bg-muted/50">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="font-serif text-5xl font-light text-foreground mb-3 tracking-wide">
+            How it works
+          </h2>
+          <p className="text-muted-foreground text-base mb-16 max-w-xl mx-auto">
+            From blank canvas to bespoke itinerary in under a minute.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {[
+              {
+                icon: <Compass className="w-6 h-6" />,
+                step: "01",
+                title: "Tell us your style",
+                desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
+              },
+              {
+                icon: <Sparkles className="w-6 h-6" />,
+                step: "02",
+                title: "We curate your escape",
+                desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
+              },
+              {
+                icon: <Star className="w-6 h-6" />,
+                step: "03",
+                title: "Adjust until perfect",
+                desc: "Swap any activity with one tap. Every recommendation explains exactly why it was chosen for you.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="flex flex-col items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  {item.icon}
+                </div>
+                <div>
+                  <div className="text-xs text-accent font-semibold tracking-widest mb-1">{item.step}</div>
+                  <h3 className="font-serif text-2xl font-light mb-2 tracking-wide">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            size="lg"
+            className="mt-14 gap-2 rounded-full px-8"
+            onClick={handleCurate}
+            data-testid="button-start-planning"
+          >
+            Start Planning
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </section>
+
       {/* Curated Escapes Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
@@ -174,62 +230,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-20 px-6 bg-muted/50">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="font-serif text-5xl font-light text-foreground mb-3 tracking-wide">
-            How it works
-          </h2>
-          <p className="text-muted-foreground text-base mb-16 max-w-xl mx-auto">
-            From blank canvas to bespoke itinerary in under a minute.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              {
-                icon: <Compass className="w-6 h-6" />,
-                step: "01",
-                title: "Tell us your style",
-                desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
-              },
-              {
-                icon: <Sparkles className="w-6 h-6" />,
-                step: "02",
-                title: "We curate your escape",
-                desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
-              },
-              {
-                icon: <Star className="w-6 h-6" />,
-                step: "03",
-                title: "Adjust until perfect",
-                desc: "Swap any activity with one tap. Every recommendation explains exactly why it was chosen for you.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="flex flex-col items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  {item.icon}
-                </div>
-                <div>
-                  <div className="text-xs text-accent font-semibold tracking-widest mb-1">{item.step}</div>
-                  <h3 className="font-serif text-2xl font-light mb-2 tracking-wide">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <Button
-            size="lg"
-            className="mt-14 gap-2 rounded-full px-8"
-            onClick={handleCurate}
-            data-testid="button-start-planning"
-          >
-            Start Planning
-            <ArrowRight className="w-4 h-4" />
-          </Button>
         </div>
       </section>
 
