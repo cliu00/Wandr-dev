@@ -262,13 +262,10 @@ export default function Home() {
       <footer className="py-12 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <svg width="18" height="13" viewBox="0 0 22 16" fill="none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path
-                d="M1 15L5.5 2L11 11.5L16.5 2L21 15"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
+                fill="hsl(var(--primary))"
               />
             </svg>
             <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
