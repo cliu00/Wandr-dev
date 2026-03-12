@@ -236,7 +236,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-10 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-serif text-lg font-light tracking-widest text-foreground">48HRS</span>
+          <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
           <p className="text-muted-foreground text-sm text-center">
             Bespoke escapes, masterfully planned.
           </p>

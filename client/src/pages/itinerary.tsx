@@ -26,7 +26,7 @@ export default function ItineraryView() {
 
   function handleShare() {
     navigator.clipboard
-      .writeText("https://48hrs.app/itinerary/share/vancouver-abc123")
+      .writeText("https://wandr.app/itinerary/share/vancouver-abc123")
       .catch(() => {});
     toast({
       title: "Link copied",

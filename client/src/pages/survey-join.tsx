@@ -101,7 +101,7 @@ export default function SurveyJoin() {
               onClick={() => navigate("/")}
               data-testid="button-back-home"
             >
-              Back to 48HRS
+              Back to Wandr
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>

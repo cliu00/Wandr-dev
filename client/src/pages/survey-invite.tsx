@@ -4,7 +4,7 @@ import { ArrowLeft, Copy, Mail, MessageCircle, Check, Users, ChevronRight } from
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const FAKE_LINK = "https://48hrs.app/survey/join/vancouver-x7k9m";
+const FAKE_LINK = "https://wandr.app/survey/join/vancouver-x7k9m";
 
 export default function SurveyInvite() {
   const [, navigate] = useLocation();

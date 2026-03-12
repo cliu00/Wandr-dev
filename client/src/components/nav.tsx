@@ -36,7 +36,7 @@ export function Nav({ variant = "solid" }: NavProps) {
             }`}
             data-testid="logo"
           >
-            48HRS
+            Wandr
           </span>
         </Link>
 
