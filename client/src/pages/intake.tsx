@@ -17,6 +17,7 @@ interface IntakeState {
   budget: string[];
   activityTypes: string[];
   food: string | null;
+  dietaryNotes: string;
 }
 
 const slideVariants = {
@@ -50,6 +51,7 @@ export default function Intake() {
     budget: [],
     activityTypes: [],
     food: null,
+    dietaryNotes: "",
   });
 
   // Duration + Date are now ONE combined step
@@ -466,22 +468,22 @@ function StepBudget({ state, setState }: { state: IntakeState; setState: any }) 
 
 function StepActivities({ state, setState }: { state: IntakeState; setState: any }) {
   const options = [
-    "Hidden Gems",
-    "Iconic Landmarks",
-    "Food & Drink",
-    "History & Museums",
-    "Nature & Parks",
-    "Markets & Shopping",
-    "Nightlife",
-    "Art & Culture",
+    { label: "Hidden Gems", sub: "Off-the-beaten-path spots locals love" },
+    { label: "Iconic Landmarks", sub: "The must-sees, done right" },
+    { label: "Food & Drink", sub: "Food tours • markets • local specialties" },
+    { label: "History & Museums", sub: "Museums • historic sites • architecture" },
+    { label: "Nature & Parks", sub: "Parks • viewpoints • scenic walks" },
+    { label: "Markets & Shopping", sub: "Local markets • boutiques • vintage finds" },
+    { label: "Nightlife", sub: "Bars • live music • late-night spots" },
+    { label: "Art & Culture", sub: "Galleries • street art • performances" },
   ];
 
-  function toggle(opt: string) {
+  function toggle(label: string) {
     setState((s: IntakeState) => ({
       ...s,
-      activityTypes: s.activityTypes.includes(opt)
-        ? s.activityTypes.filter((a) => a !== opt)
-        : [...s.activityTypes, opt],
+      activityTypes: s.activityTypes.includes(label)
+        ? s.activityTypes.filter((a) => a !== label)
+        : [...s.activityTypes, label],
     }));
   }
 
@@ -493,19 +495,22 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
       <p className="text-muted-foreground mb-8 text-sm">Pick all that excite you.</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
-          const active = state.activityTypes.includes(opt);
+          const active = state.activityTypes.includes(opt.label);
           return (
             <button
-              key={opt}
-              onClick={() => toggle(opt)}
-              className={`p-4 rounded-2xl border-2 text-sm font-medium text-center transition-all ${
+              key={opt.label}
+              onClick={() => toggle(opt.label)}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
                 active
-                  ? "border-primary bg-primary/8 text-primary"
-                  : "border-border bg-card text-foreground hover:border-primary/40"
+                  ? "border-primary bg-primary/8"
+                  : "border-border bg-card hover:border-primary/40"
               }`}
-              data-testid={`button-activity-${opt.toLowerCase().replace(/[^a-z]/g, "-")}`}
+              data-testid={`button-activity-${opt.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
             >
-              {opt}
+              <div className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>
+                {opt.label}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{opt.sub}</div>
             </button>
           );
         })}
@@ -545,9 +550,9 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        What's your dining style?
+        Where do you like to eat?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">We'll match your restaurant recommendations to fit.</p>
+      <p className="text-muted-foreground mb-8 text-sm">We'll tailor your restaurant picks to match.</p>
       <div className="flex flex-col gap-3">
         {options.map((opt) => (
           <button
@@ -569,6 +574,26 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
             </div>
           </button>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <label className="text-sm text-muted-foreground mb-2 block">
+          Any dietary preferences we should keep in mind?{" "}
+          <span className="text-muted-foreground/60">(optional)</span>
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. Vegetarian, Gluten-free, Halal…"
+          value={state.dietaryNotes}
+          onChange={(e) => setState((s: IntakeState) => ({ ...s, dietaryNotes: e.target.value }))}
+          className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+          data-testid="input-dietary"
+        />
+        {state.dietaryNotes.trim().length > 0 && (
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Very specific requirements may limit suggestions slightly.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MESSAGES = [
-  "Mapping your destination...",
-  "Discovering hidden gems locals love...",
-  "Balancing your schedule...",
-  "Adding the finishing touches...",
+  "Scanning local favorites…",
+  "Mapping your perfect day…",
+  "Finding hidden gems…",
+  "Checking the best food spots…",
+  "Almost ready…",
 ];
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=90";
@@ -77,6 +78,18 @@ export default function Generating() {
                 2-day escape
               </p>
 
+              {/* Animated dots */}
+              <div className="flex justify-center items-center gap-1.5 mb-5">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-accent"
+                    animate={{ opacity: [0.25, 1, 0.25] }}
+                    transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.35, ease: "easeInOut" }}
+                  />
+                ))}
+              </div>
+
               <AnimatePresence mode="wait">
                 <motion.p
                   key={msgIndex}
@@ -84,7 +97,7 @@ export default function Generating() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.4 }}
-                  className="text-white/80 text-xl font-light"
+                  className="text-white/75 text-lg font-light tracking-wide"
                 >
                   {MESSAGES[msgIndex]}
                 </motion.p>
