@@ -116,7 +116,7 @@ export default function Home() {
           >
             Quick Getaways,
             <br />
-            <em className="font-normal">Masterfully Planned.</em>
+            Masterfully Planned.
           </h1>
 
           <div className="w-24 h-px bg-accent my-7 mx-auto" />
