@@ -160,15 +160,6 @@ export default function Home() {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            className="mt-14 gap-2 rounded-full px-8"
-            onClick={handleCurate}
-            data-testid="button-start-planning"
-          >
-            Start Planning
-            <ArrowRight className="w-4 h-4" />
-          </Button>
         </div>
       </section>
 
