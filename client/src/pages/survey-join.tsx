@@ -279,29 +279,35 @@ export default function SurveyJoin() {
 
               {step === "food" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">How do you feel about food?</h2>
+                  <h2 className="font-serif text-3xl font-bold mb-2">What's your dining style?</h2>
                   <p className="text-muted-foreground mb-8">
-                    Helps calibrate the group's dining priorities.
+                    Helps us calibrate the group's restaurant picks.
                   </p>
                   <div className="flex flex-col gap-3">
                     {[
                       {
-                        value: "food-is-trip",
+                        value: "fine-dining",
                         icon: <Utensils className="w-5 h-5" />,
-                        label: "Food IS the trip",
-                        sub: "Plan meals first, build the day around them",
+                        label: "Fine dining & reservations",
+                        sub: "The best tables in the city — booked in advance",
                       },
                       {
                         value: "great-meals",
                         icon: <Star className="w-5 h-5" />,
-                        label: "Great meals, won't rearrange",
-                        sub: "Quality matters, but so does flexibility",
+                        label: "Great restaurants, no fuss",
+                        sub: "Quality food without the tasting-menu commitment",
+                      },
+                      {
+                        value: "local-casual",
+                        icon: <MapPin className="w-5 h-5" />,
+                        label: "Local gems & casual spots",
+                        sub: "Neighbourhood favourites, cafés, and hidden finds",
                       },
                       {
                         value: "just-fed",
                         icon: <Timer className="w-5 h-5" />,
-                        label: "Just keep me fed",
-                        sub: "Quick, easy, then on to activities",
+                        label: "Quick bites, keep moving",
+                        sub: "Fuel up fast — dining isn't the focus",
                       },
                     ].map((opt) => (
                       <button

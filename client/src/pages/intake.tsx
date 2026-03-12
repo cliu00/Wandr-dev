@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Heart, PartyPopper, Star, Utensils, Timer, CalendarDays, ChevronDown } from "lucide-react";
+import { ArrowLeft, Users, Heart, PartyPopper, Star, Utensils, Timer, CalendarDays, ChevronDown, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DayPicker } from "react-day-picker";
@@ -505,31 +505,37 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
 function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   const options = [
     {
-      value: "food-is-trip",
+      value: "fine-dining",
       icon: <Utensils className="w-5 h-5" />,
-      label: "Food IS the trip",
-      sub: "Plan meals first, build the day around them",
+      label: "Fine dining & reservations",
+      sub: "The best tables in the city — booked in advance",
     },
     {
       value: "great-meals",
       icon: <Star className="w-5 h-5" />,
-      label: "Great meals, won't rearrange for them",
-      sub: "Quality matters, but so does flexibility",
+      label: "Great restaurants, no fuss",
+      sub: "Quality food without the tasting-menu commitment",
+    },
+    {
+      value: "local-casual",
+      icon: <MapPin className="w-5 h-5" />,
+      label: "Local gems & casual spots",
+      sub: "Neighbourhood favourites, cafés, and hidden finds",
     },
     {
       value: "just-fed",
       icon: <Timer className="w-5 h-5" />,
-      label: "Just keep me fed",
-      sub: "Quick, easy, then on to activities",
+      label: "Quick bites, keep moving",
+      sub: "Fuel up fast — dining isn't the focus",
     },
   ];
 
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        How do you feel about food?
+        What's your dining style?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">Helps us prioritise your days right.</p>
+      <p className="text-muted-foreground mb-8 text-sm">We'll match your restaurant recommendations to fit.</p>
       <div className="flex flex-col gap-3">
         {options.map((opt) => (
           <button
