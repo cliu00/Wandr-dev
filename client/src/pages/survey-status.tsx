@@ -1,18 +1,49 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Check, Clock, Users, ChevronRight, Sparkles, Bell, Zap, Utensils, DollarSign, Heart, Wrench, RefreshCw, Info } from "lucide-react";
+import { ArrowLeft, Check, Clock, Users, ChevronRight, Sparkles, Bell, Heart, Wrench, RefreshCw, Sun, Sunset, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_PARTICIPANTS } from "@/lib/mock-data";
+import { MOCK_PARTICIPANTS, MOCK_ITINERARY } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 
 type Tab = "itinerary" | "preferences";
 type Feedback = "love" | "tweaks" | "startover" | null;
 
+const PERSON_COLORS: Record<string, string> = {
+  Alice: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+  Bob: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
+  Charlie: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+};
+
+const TIME_LABEL: Record<string, { label: string; icon: JSX.Element }> = {
+  morning: { label: "Morning", icon: <Sun className="w-3 h-3" /> },
+  afternoon: { label: "Afternoon", icon: <Sunset className="w-3 h-3" /> },
+  evening: { label: "Evening", icon: <Moon className="w-3 h-3" /> },
+  rest: { label: "Rest", icon: <Moon className="w-3 h-3" /> },
+};
+
+const BALANCE_INSIGHTS = [
+  {
+    emoji: "💰",
+    title: "Budget range varies",
+    desc: "Alice prefers occasional splurges; Bob keeps it moderate. We've mixed great-value spots with a treat-yourself pick.",
+  },
+  {
+    emoji: "⚡",
+    title: "Energy levels differ",
+    desc: "Different paces in the group — rest blocks keep the itinerary comfortable without slowing anyone down.",
+  },
+  {
+    emoji: "🍽️",
+    title: "Evening consensus",
+    desc: "Everyone aligns on food-focused evenings. We've leaned into memorable dinners and cocktail bars.",
+  },
+];
+
 const MATCH_COUNTS: Record<string, { matched: number; total: number }> = {
   alice: { matched: 4, total: 5 },
   bob: { matched: 3, total: 5 },
-  carol: { matched: 4, total: 5 },
+  charlie: { matched: 4, total: 5 },
 };
 
 export default function SurveyStatus() {
@@ -26,6 +57,17 @@ export default function SurveyStatus() {
   const pending = MOCK_PARTICIPANTS.filter((p) => p.status === "pending");
   const total = MOCK_PARTICIPANTS.length;
   const canGenerate = completed >= 2;
+
+  const activityRows = MOCK_ITINERARY.days.flatMap((day) =>
+    day.blocks
+      .filter((b) => b.groupAttribution.length > 0)
+      .map((b) => ({
+        dayLabel: `Day ${day.dayNumber}`,
+        timeSlot: b.timeSlot,
+        name: b.primary.name,
+        attribution: b.groupAttribution,
+      }))
+  );
 
   function sendReminder(id: string, name: string) {
     setReminded((prev) => new Set([...prev, id]));
@@ -46,7 +88,6 @@ export default function SurveyStatus() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 border-b border-border">
         <Button
           variant="ghost"
@@ -61,34 +102,13 @@ export default function SurveyStatus() {
       </header>
 
       <div className="flex-1 max-w-xl mx-auto w-full px-6 py-8">
-        {/* Heading */}
-        <div className="mb-5">
+        <div className="mb-6">
           <h1 className="font-serif text-3xl font-bold text-foreground mb-1">Who's in?</h1>
           <p className="text-muted-foreground text-sm">Vancouver · Apr 18–20 · 2 days</p>
         </div>
 
-        {/* Response count — no progress bar */}
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card mb-5">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">
-              {completed} of {total} responded
-            </span>
-          </div>
-          {pending.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              Waiting on {pending.length} {pending.length === 1 ? "person" : "people"}
-            </span>
-          )}
-          {pending.length === 0 && (
-            <Badge className="rounded-full text-xs bg-primary/15 text-primary border-0">
-              Everyone's in
-            </Badge>
-          )}
-        </div>
-
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-muted rounded-xl mb-5">
+        <div className="flex gap-1 p-1 bg-muted rounded-xl mb-6">
           <button
             onClick={() => setTab("itinerary")}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -116,7 +136,6 @@ export default function SurveyStatus() {
         {/* Tab: Itinerary */}
         {tab === "itinerary" && (
           <>
-            {/* Participant List */}
             <div className="flex flex-col gap-3 mb-5">
               {MOCK_PARTICIPANTS.map((p) => (
                 <div
@@ -183,7 +202,6 @@ export default function SurveyStatus() {
               ))}
             </div>
 
-            {/* Batch remind */}
             {pending.length > 1 && (
               <button
                 onClick={sendAllReminders}
@@ -226,68 +244,39 @@ export default function SurveyStatus() {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
-            {/* Feedback section */}
+            {/* Feedback */}
             <div className="border border-border rounded-2xl p-5">
               <h3 className="font-medium text-foreground text-sm mb-0.5">
                 Does this feel like your kind of trip?
               </h3>
               <p className="text-xs text-muted-foreground mb-4">Your feedback helps us improve.</p>
               <div className="flex gap-2">
-                <button
-                  onClick={() => setFeedback("love")}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium border transition-all ${
-                    feedback === "love"
-                      ? "border-primary bg-primary/8 text-primary"
-                      : "border-border text-foreground hover:border-primary/30"
-                  }`}
-                  data-testid="button-feedback-love"
-                >
-                  <Heart className={`w-4 h-4 ${feedback === "love" ? "fill-primary" : ""}`} />
-                  Love it
-                </button>
-                <button
-                  onClick={() => setFeedback("tweaks")}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium border transition-all ${
-                    feedback === "tweaks"
-                      ? "border-primary bg-primary/8 text-primary"
-                      : "border-border text-foreground hover:border-primary/30"
-                  }`}
-                  data-testid="button-feedback-tweaks"
-                >
-                  <Wrench className="w-4 h-4" />
-                  Needs tweaks
-                </button>
-                <button
-                  onClick={() => setFeedback("startover")}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium border transition-all ${
-                    feedback === "startover"
-                      ? "border-primary bg-primary/8 text-primary"
-                      : "border-border text-foreground hover:border-primary/30"
-                  }`}
-                  data-testid="button-feedback-startover"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Start over
-                </button>
+                {[
+                  { key: "love" as const, icon: <Heart className={`w-4 h-4 ${feedback === "love" ? "fill-primary" : ""}`} />, label: "Love it" },
+                  { key: "tweaks" as const, icon: <Wrench className="w-4 h-4" />, label: "Needs tweaks" },
+                  { key: "startover" as const, icon: <RefreshCw className="w-4 h-4" />, label: "Start over" },
+                ].map(({ key, icon, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setFeedback(key)}
+                    className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium border transition-all ${
+                      feedback === key
+                        ? "border-primary bg-primary/8 text-primary"
+                        : "border-border text-foreground hover:border-primary/30"
+                    }`}
+                    data-testid={`button-feedback-${key}`}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
               </div>
-              {feedback === "love" && (
-                <p className="text-xs text-primary mt-3 text-center">
-                  Glad to hear it — enjoy the trip!
-                </p>
-              )}
-              {feedback === "tweaks" && (
-                <p className="text-xs text-muted-foreground mt-3 text-center">
-                  Got it. Swap individual activities or adjust preferences to fine-tune.
-                </p>
-              )}
+              {feedback === "love" && <p className="text-xs text-primary mt-3 text-center">Glad to hear it — enjoy the trip!</p>}
+              {feedback === "tweaks" && <p className="text-xs text-muted-foreground mt-3 text-center">Got it. Swap individual activities or adjust preferences to fine-tune.</p>}
               {feedback === "startover" && (
                 <p className="text-xs text-muted-foreground mt-3 text-center">
                   No problem.{" "}
-                  <button
-                    onClick={() => navigate("/")}
-                    className="underline hover:text-foreground transition-colors"
-                    data-testid="button-startover-confirm"
-                  >
+                  <button onClick={() => navigate("/")} className="underline hover:text-foreground transition-colors" data-testid="button-startover-confirm">
                     Start fresh →
                   </button>
                 </p>
@@ -298,112 +287,156 @@ export default function SurveyStatus() {
 
         {/* Tab: Group Preferences */}
         {tab === "preferences" && (
-          <div className="flex flex-col gap-4">
-            {/* How we balanced it */}
-            <div className="bg-muted/50 rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                  How we balanced it
-                </span>
+          <div className="flex flex-col gap-8">
+
+            {/* How we balanced it — Image 2 style */}
+            <div>
+              <h2 className="text-sm font-semibold text-foreground mb-3">How we balanced it</h2>
+              <div className="flex flex-col gap-2.5">
+                {BALANCE_INSIGHTS.map((insight) => (
+                  <div
+                    key={insight.title}
+                    className="flex items-start gap-4 p-4 rounded-2xl bg-muted/40"
+                  >
+                    <span className="text-xl leading-none mt-0.5 flex-shrink-0">{insight.emoji}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground mb-0.5">{insight.title}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{insight.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Where preferences overlapped, we went deeper. Where they differed, we alternated picks so each person gets their top priority. No one got everything — but everyone got what matters most.
-              </p>
             </div>
 
-            {MOCK_PARTICIPANTS.filter((p) => p.status === "completed" && p.preferences).map((p) => {
-              const match = MATCH_COUNTS[p.id] ?? { matched: 3, total: 5 };
-              return (
-                <div
-                  key={p.id}
-                  className="rounded-2xl border border-border bg-card p-5"
-                  data-testid={`preferences-${p.id}`}
-                >
-                  <div className="flex items-center justify-between gap-3 mb-4">
+            {/* Who each pick satisfies — Image 1 style */}
+            <div>
+              <h2 className="text-sm font-semibold text-foreground mb-3">Who each pick satisfies</h2>
+              <div className="flex flex-col gap-2">
+                {activityRows.map((row, i) => {
+                  const time = TIME_LABEL[row.timeSlot] ?? TIME_LABEL.morning;
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-muted/40"
+                      data-testid={`attribution-row-${i}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-muted-foreground flex-shrink-0">{time.icon}</span>
+                        <div className="min-w-0">
+                          <div className="text-[10px] text-muted-foreground uppercase tracking-wide leading-none mb-0.5">
+                            {row.dayLabel} {time.label}
+                          </div>
+                          <div className="text-sm font-medium text-foreground truncate">{row.name}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {row.attribution.map((name) => (
+                          <span
+                            key={name}
+                            className={`text-xs font-medium px-2.5 py-1 rounded-full ${PERSON_COLORS[name] ?? "bg-muted text-muted-foreground"}`}
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Individual preference cards — airy grid */}
+            <div>
+              <h2 className="text-sm font-semibold text-foreground mb-4">Individual preferences</h2>
+              <div className="flex flex-col gap-8">
+                {MOCK_PARTICIPANTS.filter((p) => p.status === "completed" && p.preferences).map((p) => {
+                  const match = MATCH_COUNTS[p.id] ?? { matched: 3, total: 5 };
+                  return (
+                    <div key={p.id} data-testid={`preferences-${p.id}`}>
+                      {/* Person header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/15 text-primary flex items-center justify-center text-sm font-bold">
+                            {p.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-foreground">{p.name}</div>
+                            <div className="text-xs text-muted-foreground">Responded {p.completedAt}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-primary">{match.matched}/{match.total}</div>
+                          <div className="text-[10px] text-muted-foreground leading-tight">picks<br/>included</div>
+                        </div>
+                      </div>
+
+                      {/* Stat grid */}
+                      <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+                        <div className="bg-muted/40 rounded-2xl p-4">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Energy</div>
+                          <div className="text-sm font-medium text-foreground leading-snug">{p.preferences!.energy}</div>
+                        </div>
+                        <div className="bg-muted/40 rounded-2xl p-4">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Budget</div>
+                          <div className="text-sm font-medium text-foreground leading-snug">{p.preferences!.budget}<span className="text-muted-foreground font-normal"> /day</span></div>
+                        </div>
+                        <div className="bg-muted/40 rounded-2xl p-4 col-span-2">
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Food & Drink</div>
+                          <div className="text-sm font-medium text-foreground leading-snug">{p.preferences!.food}</div>
+                        </div>
+                      </div>
+
+                      {/* Activity tags */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.preferences!.activities.map((act) => (
+                          <span
+                            key={act}
+                            className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground"
+                          >
+                            {act}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Pending */}
+                {MOCK_PARTICIPANTS.filter((p) => p.status === "pending").map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between py-4 border-t border-dashed border-border"
+                    data-testid={`preferences-pending-${p.id}`}
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center text-sm font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
                         {p.name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-semibold text-foreground text-sm">{p.name}</div>
-                        <div className="text-xs text-muted-foreground">Responded {p.completedAt}</div>
+                        <div className="font-medium text-muted-foreground text-sm">{p.name}</div>
+                        <div className="text-xs text-muted-foreground">Hasn't responded yet</div>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-xs font-semibold text-primary">{match.matched}/{match.total}</div>
-                      <div className="text-[10px] text-muted-foreground leading-tight">top picks<br/>included</div>
-                    </div>
+                    <button
+                      onClick={() => sendReminder(p.id, p.name)}
+                      disabled={reminded.has(p.id)}
+                      className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${
+                        reminded.has(p.id)
+                          ? "border-border text-muted-foreground cursor-default"
+                          : "border-primary/40 text-primary hover:bg-primary/5"
+                      }`}
+                      data-testid={`button-remind-pref-${p.id}`}
+                    >
+                      <Bell className="w-3 h-3" />
+                      {reminded.has(p.id) ? "Sent" : "Remind"}
+                    </button>
                   </div>
-
-                  <div className="flex flex-col gap-2.5 mb-3">
-                    <div className="flex items-start gap-2.5 text-sm">
-                      <Zap className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground">{p.preferences!.energy}</span>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-sm">
-                      <DollarSign className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground">{p.preferences!.budget} / day</span>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-sm">
-                      <Utensils className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground">{p.preferences!.food}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {p.preferences!.activities.map((act) => (
-                        <span
-                          key={act}
-                          className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground"
-                        >
-                          {act}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-border/60">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{match.matched} of their picks</span> made the final itinerary.
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Pending members */}
-            {MOCK_PARTICIPANTS.filter((p) => p.status === "pending").map((p) => (
-              <div
-                key={p.id}
-                className="rounded-2xl border border-dashed border-border bg-card/50 p-5 flex items-center justify-between"
-                data-testid={`preferences-pending-${p.id}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
-                    {p.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="font-medium text-muted-foreground text-sm">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">Hasn't responded yet</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => sendReminder(p.id, p.name)}
-                  disabled={reminded.has(p.id)}
-                  className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${
-                    reminded.has(p.id)
-                      ? "border-border text-muted-foreground cursor-default"
-                      : "border-primary/40 text-primary hover:bg-primary/5"
-                  }`}
-                  data-testid={`button-remind-pref-${p.id}`}
-                >
-                  <Bell className="w-3 h-3" />
-                  {reminded.has(p.id) ? "Sent" : "Remind"}
-                </button>
+                ))}
               </div>
-            ))}
+            </div>
 
             <Button
-              className="w-full rounded-full gap-2 mt-2"
+              className="w-full rounded-full gap-2"
               disabled={!canGenerate}
               onClick={() => navigate("/generating")}
               data-testid="button-generate-from-prefs"
