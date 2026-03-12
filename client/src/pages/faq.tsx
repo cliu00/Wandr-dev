@@ -21,6 +21,26 @@ const FAQS = [
     a: "Yes — that's one of Wandr's strengths. Invite your crew via a shared link. Each person completes a short preferences survey on their own device. Wandr then blends everyone's input and generates a single itinerary that satisfies the group, with notes on which picks cater to whom.",
   },
   {
+    q: "How does the group itinerary process work, start to finish?",
+    a: "It works in four steps. First, you plan your own trip through the usual quiz. Second, you open the invite screen and enter the names of your travel companions — Wandr generates a unique survey link for the group. Third, each person follows that link and answers their own short preference survey (energy level, budget, food style, favourite activities). Fourth, once enough people have responded, you tap 'Generate Group Itinerary' and Wandr builds a single day-by-day plan that balances everyone's input automatically.",
+  },
+  {
+    q: "How do I invite friends to add their preferences?",
+    a: "After you've completed your own quiz and reached the itinerary screen, tap 'Invite Crew'. You'll see a unique group link you can copy and share however you like — by text, WhatsApp, email, or any other app. There's also a pre-written email message you can copy or open directly in your mail client. Each person who opens the link gets their own short survey, separate from yours. You don't need everyone's email address upfront.",
+  },
+  {
+    q: "How does the itinerary update as each person responds?",
+    a: "The itinerary regenerates each time you tap 'Generate Group Itinerary' — it always reflects the preferences of everyone who has responded at that point. You can track who has submitted on the Group Status screen, send reminders to anyone still pending, and regenerate as more people come in. The final version should be generated once the whole group has responded for the most balanced result, but you're never blocked from generating early.",
+  },
+  {
+    q: "What if one person's preferences clash badly with everyone else's?",
+    a: "Wandr's balancing engine weighs preferences across the group and finds the highest-overlap activities first. Where genuine conflicts exist — say, one person wants a packed schedule and another needs a slow pace — we build in rest blocks and offer backup options so each person has flexibility. The Group Preferences tab on the status screen also shows exactly which activity picks are driven by which group members, so you can make informed swap decisions.",
+  },
+  {
+    q: "Is there a limit to how many people can join a group trip?",
+    a: "There's no hard cap during the prototype. In practice, groups of two to eight work best — beyond that, the preference spread tends to be wide enough that some activities will feel like a compromise for someone. We're working on smarter balancing for larger groups.",
+  },
+  {
     q: "Can I change my itinerary after it's generated?",
     a: "Absolutely. Every activity block has a backup option you can swap in with one tap, and you can replace any block with free time whenever you need a break. If the whole plan feels off, regenerate with adjusted preferences.",
   },
