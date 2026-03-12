@@ -67,17 +67,6 @@ export default function SurveyStatus() {
           <p className="text-muted-foreground text-sm">Vancouver · Apr 18–20 · 2 days</p>
         </div>
 
-        {/* Group planning explainer */}
-        <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/6 border border-primary/15 mb-5">
-          <Users className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-foreground mb-0.5">Traveling with others?</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Share a link so everyone adds their preferences. We'll blend them automatically — no compromises, just a smarter mix.
-            </p>
-          </div>
-        </div>
-
         {/* Response count — no progress bar */}
         <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card mb-5">
           <div className="flex items-center gap-2">

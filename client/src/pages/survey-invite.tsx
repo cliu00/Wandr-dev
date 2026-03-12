@@ -75,7 +75,7 @@ export default function SurveyInvite() {
 
       <div className="flex-1 max-w-xl mx-auto w-full px-6 py-10">
         {/* Hero */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-6">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Users className="w-7 h-7 text-primary" />
           </div>
@@ -85,6 +85,17 @@ export default function SurveyInvite() {
           <p className="text-muted-foreground text-sm">
             Planning Vancouver · Apr 18–20
           </p>
+        </div>
+
+        {/* Group planning explainer */}
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/6 border border-primary/15 mb-8">
+          <Users className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-foreground mb-0.5">Traveling with others?</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Share a link so everyone adds their preferences. We'll blend them automatically — no compromises, just a smarter mix.
+            </p>
+          </div>
         </div>
 
         {/* Step 1: Who's coming */}
