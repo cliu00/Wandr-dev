@@ -238,6 +238,19 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky mobile CTA */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-background/90 backdrop-blur-md border-t border-border">
+        <Button
+          size="lg"
+          className="w-full gap-2 rounded-full"
+          onClick={handleCurate}
+          data-testid="button-start-planning-mobile"
+        >
+          Start Planning
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }
