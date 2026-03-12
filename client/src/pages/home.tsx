@@ -297,6 +297,9 @@ export default function Home() {
             Bespoke escapes, masterfully planned.
           </p>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
+            <Link href="/brand">
+              <span className="cursor-pointer hover:text-foreground transition-colors">Brand</span>
+            </Link>
             <Link href="/faq">
               <span className="cursor-pointer hover:text-foreground transition-colors">FAQ</span>
             </Link>
