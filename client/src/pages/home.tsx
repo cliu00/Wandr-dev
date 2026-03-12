@@ -95,8 +95,12 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Nav variant="transparent" />
 
+      <main id="main-content">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <section
+        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+        aria-label="Plan your escape"
+      >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -122,11 +126,16 @@ export default function Home() {
           </p>
 
           {/* Trip type selector */}
-          <div className="flex items-center gap-1 mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
+          <div
+            role="group"
+            aria-label="Trip type"
+            className="flex items-center gap-1 mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1"
+          >
             {TRIP_TYPES.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTripType(t.value)}
+                aria-pressed={tripType === t.value}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   tripType === t.value
                     ? "bg-white text-gray-900 shadow-sm"
@@ -134,7 +143,7 @@ export default function Home() {
                 }`}
                 data-testid={`button-trip-type-${t.value}`}
               >
-                {t.icon}
+                <span aria-hidden="true">{t.icon}</span>
                 {t.label}
               </button>
             ))}
@@ -158,6 +167,7 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Where are you dreaming of?"
+                aria-label="Destination"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCurate()}
@@ -265,6 +275,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-border">
