@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { MapPin, Users, User, Heart, Sparkles, Compass, ArrowRight, Star, Share2, Baby } from "lucide-react";
+import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Star, Share2, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { CURATED_ESCAPES } from "@/lib/mock-data";
@@ -59,7 +59,7 @@ export default function Home() {
 
   const TRIP_TYPES: { value: TripType; label: string; icon: React.ReactNode }[] = [
     { value: "solo", label: "Solo", icon: <User className="w-3.5 h-3.5" /> },
-    { value: "duo", label: "Duo", icon: <Heart className="w-3.5 h-3.5" /> },
+    { value: "duo", label: "Duo", icon: <Handshake className="w-3.5 h-3.5" /> },
     { value: "group", label: "Group", icon: <Users className="w-3.5 h-3.5" /> },
     { value: "family", label: "Family", icon: <Baby className="w-3.5 h-3.5" /> },
   ];
