@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Share2, Bookmark, Users, RefreshCw, X, LogIn, UserPlus, Settings } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -17,16 +19,12 @@ export default function ItineraryView() {
   const currentDay = itinerary.days.find((d) => d.dayNumber === activeDay) ?? itinerary.days[0];
 
   function handleSave() {
-    setShowAuthModal(true);
-  }
-
-  function handleAuthAction(action: "login" | "signup") {
-    setShowAuthModal(false);
-    setSaved(true);
-    toast({
-      title: action === "login" ? "Signed in" : "Account created",
-      description: "Your itinerary has been saved.",
-    });
+    if (user) {
+      setSaved(true);
+      toast({ title: "Itinerary saved", description: "Added to your trips." });
+    } else {
+      setShowAuthModal(true);
+    }
   }
 
   function handleShare() {
@@ -325,7 +323,7 @@ export default function ItineraryView() {
             <div className="flex flex-col gap-3">
               <Button
                 className="w-full rounded-full gap-2"
-                onClick={() => handleAuthAction("signup")}
+                onClick={() => { setShowAuthModal(false); navigate("/sign-up"); }}
                 data-testid="button-signup"
               >
                 <UserPlus className="w-4 h-4" />
@@ -334,7 +332,7 @@ export default function ItineraryView() {
               <Button
                 variant="outline"
                 className="w-full rounded-full gap-2"
-                onClick={() => handleAuthAction("login")}
+                onClick={() => { setShowAuthModal(false); navigate("/sign-in"); }}
                 data-testid="button-login"
               >
                 <LogIn className="w-4 h-4" />

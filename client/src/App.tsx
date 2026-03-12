@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { AuthProvider } from "@/lib/auth-context";
 import Home from "@/pages/home";
 import Intake from "@/pages/intake";
 import Generating from "@/pages/generating";
@@ -11,6 +12,8 @@ import ItineraryView from "@/pages/itinerary";
 import SurveyInvite from "@/pages/survey-invite";
 import SurveyJoin from "@/pages/survey-join";
 import SurveyStatus from "@/pages/survey-status";
+import SignIn from "@/pages/sign-in";
+import SignUp from "@/pages/sign-up";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import Contact from "@/pages/contact";
@@ -26,6 +29,8 @@ function Router() {
       <Route path="/survey/invite" component={SurveyInvite} />
       <Route path="/survey/join" component={SurveyJoin} />
       <Route path="/survey/status" component={SurveyStatus} />
+      <Route path="/sign-in" component={SignIn} />
+      <Route path="/sign-up" component={SignUp} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/contact" component={Contact} />
@@ -37,12 +42,14 @@ function Router() {
 function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
