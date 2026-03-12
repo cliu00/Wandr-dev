@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,17 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16">
+      {/* Back button */}
+      <button
+        onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
+        className="absolute top-5 left-5 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        data-testid="button-back"
+        aria-label="Go back"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       <div className="w-full max-w-sm">
         {/* Logo */}
         <Link href="/">
