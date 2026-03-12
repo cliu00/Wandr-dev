@@ -214,6 +214,7 @@ function StepDurationDate({
   const today = new Date();
 
   const options = [
+    { value: 1, label: "1 day", sub: "A focused day out" },
     { value: 2, label: "2 days", sub: "A sharp weekend away" },
     { value: 3, label: "3 days", sub: "The sweet spot" },
     { value: 4, label: "4 days", sub: "Room to breathe" },
@@ -228,7 +229,7 @@ function StepDurationDate({
         We'll pace your itinerary accordingly.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {options.map((opt) => (
           <button
             key={opt.value}
