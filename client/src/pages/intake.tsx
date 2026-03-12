@@ -60,10 +60,11 @@ export default function Intake() {
 
   const totalSteps = STEPS.length;
   const currentStepKey = STEPS[step - 1];
-  const [skipMessage, setSkipMessage] = useState(false);
+  const [skipConfirm, setSkipConfirm] = useState(false);
 
   function goNext() {
     setDirection(1);
+    setSkipConfirm(false);
     setStep((s) => s + 1);
   }
 
@@ -72,20 +73,18 @@ export default function Intake() {
       navigate("/");
       return;
     }
+    setSkipConfirm(false);
     setDirection(-1);
     setStep((s) => s - 1);
   }
 
-  function skip() {
-    setSkipMessage(true);
-    setTimeout(() => {
-      setSkipMessage(false);
-      if (isLastStep) {
-        handleSubmit();
-      } else {
-        goNext();
-      }
-    }, 1400);
+  function actuallySkip() {
+    setSkipConfirm(false);
+    if (isLastStep) {
+      handleSubmit();
+    } else {
+      goNext();
+    }
   }
 
   function handleSubmit() {
@@ -215,20 +214,53 @@ export default function Intake() {
           </Button>
 
           {isSkippable && (
-            <div className="min-h-[1.5rem] flex items-center justify-center">
-              {skipMessage ? (
-                <p className="text-xs text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200 text-center">
-                  Your answers so far will help us tailor your itinerary.
-                </p>
-              ) : (
-                <button
-                  onClick={skip}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
-                  data-testid="button-skip"
-                >
-                  Skip this question
-                </button>
-              )}
+            <div className="min-h-[3rem] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                {skipConfirm ? (
+                  <motion.div
+                    key="confirm"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <p className="text-xs text-muted-foreground">
+                      More detail = a more personalised itinerary.
+                    </p>
+                    <div className="flex items-center gap-4 text-sm">
+                      <button
+                        onClick={() => setSkipConfirm(false)}
+                        className="font-medium text-foreground hover:opacity-70 transition-opacity"
+                        data-testid="button-answer"
+                      >
+                        I'll answer
+                      </button>
+                      <span className="text-border select-none">|</span>
+                      <button
+                        onClick={actuallySkip}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        data-testid="button-skip-confirm"
+                      >
+                        Skip anyway
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="skip"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={() => setSkipConfirm(true)}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                    data-testid="button-skip"
+                  >
+                    Skip this question
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
