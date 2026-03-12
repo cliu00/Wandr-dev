@@ -10,10 +10,15 @@ interface NavProps {
 
 function WandrLogo({ color }: { color: string }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+      <circle cx="5" cy="19" r="2.5" fill={color} />
+      <circle cx="19" cy="5" r="2.5" fill={color} />
       <path
-        d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
-        fill={color}
+        d="M5 16.5C5 11 19 13 19 7.5"
+        stroke={color}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
       />
     </svg>
   );

@@ -140,6 +140,14 @@ export default function Home() {
             ))}
           </div>
 
+          {/* Trip type context */}
+          <p className="text-white/55 text-sm mb-4 tracking-wide min-h-[1.25rem] transition-all duration-300">
+            {tripType === "solo" && "Your solo adventure, thoughtfully curated."}
+            {tripType === "duo" && "Planning for two — every detail, personalised."}
+            {tripType === "group" && "A group escape everyone will love."}
+            {tripType === "family" && "Family-friendly from start to finish."}
+          </p>
+
           {/* Search bar */}
           <div
             className="w-full max-w-xl bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
@@ -149,7 +157,7 @@ export default function Home() {
               <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Where in Canada? (Vancouver, Toronto…)"
+                placeholder="Where are you dreaming of?"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCurate()}
@@ -198,6 +206,30 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="py-16 px-6 border-y border-border">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0 text-center divide-y md:divide-y-0 md:divide-x divide-border">
+            <div className="md:px-14">
+              <div className="font-serif text-4xl font-light text-foreground">4,200+</div>
+              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Escapes planned</div>
+            </div>
+            <div className="md:px-14">
+              <div className="font-serif text-4xl font-light text-foreground">4.9 ★</div>
+              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Average rating</div>
+            </div>
+            <div className="md:px-14">
+              <div className="font-serif text-4xl font-light text-foreground">32</div>
+              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Canadian destinations</div>
+            </div>
+            <div className="md:px-14">
+              <div className="font-serif text-4xl font-light text-foreground">&lt; 60s</div>
+              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">From quiz to itinerary</div>
+            </div>
           </div>
         </div>
       </section>
@@ -262,10 +294,14 @@ export default function Home() {
       <footer className="py-12 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="5" cy="19" r="2.5" fill="hsl(var(--primary))" />
+              <circle cx="19" cy="5" r="2.5" fill="hsl(var(--primary))" />
               <path
-                d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
-                fill="hsl(var(--primary))"
+                d="M5 16.5C5 11 19 13 19 7.5"
+                stroke="hsl(var(--primary))"
+                strokeWidth="1.8"
+                strokeLinecap="round"
               />
             </svg>
             <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
