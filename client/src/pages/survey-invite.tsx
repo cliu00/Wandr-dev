@@ -28,7 +28,7 @@ export default function SurveyInvite() {
     if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({ title: "Link copied", description: "Share it with your crew." });
+      toast({ title: "Link copied", description: "Share it with your companions." });
     } else {
       toast({
         title: "Couldn't copy automatically",
@@ -105,7 +105,7 @@ export default function SurveyInvite() {
             <Users className="w-7 h-7 text-primary" />
           </div>
           <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
-            Invite your crew
+            Invite your companions
           </h1>
           <p className="text-muted-foreground text-sm">
             Planning Vancouver · Apr 18–20

@@ -33,7 +33,7 @@ export default function ItineraryView() {
   async function handleShare() {
     const ok = await copyToClipboard("https://wandr.app/itinerary/share/vancouver-abc123");
     if (ok) {
-      toast({ title: "Link copied", description: "Share this link with your crew." });
+      toast({ title: "Link copied", description: "Share this link with your companions." });
     } else {
       toast({
         title: "Couldn't copy automatically",
@@ -180,7 +180,7 @@ export default function ItineraryView() {
             <Users className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground leading-snug">
-                Your itinerary is ready — now invite your crew.
+                Your itinerary is ready — now invite your companions.
               </p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
                 Share a link so everyone can add their preferences. We'll blend all the input and update this itinerary.
@@ -276,7 +276,7 @@ export default function ItineraryView() {
                 data-testid="button-invite-cta"
               >
                 <Users className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Invite Crew</span>
+                <span className="text-sm font-medium text-foreground">Invite Companions</span>
               </button>
               <button
                 onClick={handleRegenerate}
