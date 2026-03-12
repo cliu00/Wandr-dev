@@ -67,7 +67,11 @@ export default function Intake() {
   }
 
   function skip() {
-    goNext();
+    if (isLastStep) {
+      handleSubmit();
+    } else {
+      goNext();
+    }
   }
 
   function handleSubmit() {
@@ -186,7 +190,7 @@ export default function Intake() {
               : "Continue"}
           </Button>
 
-          {isSkippable && !isLastStep && (
+          {isSkippable && (
             <button
               onClick={skip}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
