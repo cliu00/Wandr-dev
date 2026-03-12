@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Users, Heart, PartyPopper, Utensils, Timer, CalendarDays, ChevronDown, MapPin, Wine, Coffee, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Users, Heart, PartyPopper, Utensils, Timer, CalendarDays, ChevronDown, MapPin, Wine, Coffee, ShoppingBag, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DayPicker } from "react-day-picker";
@@ -146,9 +146,14 @@ export default function Intake() {
               Planning your {prefillDestination} escape
             </span>
           )}
-          <span className="text-sm text-muted-foreground font-medium" data-testid="text-step-counter">
-            {step}/{totalSteps}
-          </span>
+          <div className="text-right" data-testid="text-step-counter">
+            <div className="text-sm text-muted-foreground font-medium">{step}/{totalSteps}</div>
+            {isSkippable && (
+              <div className="text-[10px] text-muted-foreground/40 leading-tight mt-0.5 tracking-wide">
+                Details improve results
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -252,14 +257,18 @@ function StepDurationDate({
 
   return (
     <div>
+      <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-primary/6 border border-primary/12 mb-7">
+        <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-primary/75 leading-snug">
+          The more you share, the more personalised your itinerary will be. Every question after this one is optional.
+        </p>
+      </div>
+
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
         How long is your escape?
       </h2>
-      <p className="text-muted-foreground mb-4 text-sm">
+      <p className="text-muted-foreground mb-8 text-sm">
         We'll pace your itinerary accordingly.
-      </p>
-      <p className="text-xs text-muted-foreground/65 mb-8 leading-relaxed">
-        Answer as many questions as you'd like — the more you share, the more personalised your itinerary will be. Every question after this one is optional.
       </p>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
