@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Bookmark, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Share2, Bookmark, Users, RefreshCw, X, LogIn, UserPlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
@@ -10,14 +10,22 @@ export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [saved, setSaved] = useState(false);
+  const [activeDay, setActiveDay] = useState(1);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const itinerary = MOCK_ITINERARY;
+  const currentDay = itinerary.days.find((d) => d.dayNumber === activeDay) ?? itinerary.days[0];
 
   function handleSave() {
+    setShowAuthModal(true);
+  }
+
+  function handleAuthAction(action: "login" | "signup") {
+    setShowAuthModal(false);
     setSaved(true);
     toast({
-      title: "Itinerary saved",
-      description: "Added to your trips.",
+      title: action === "login" ? "Signed in" : "Account created",
+      description: "Your itinerary has been saved.",
     });
   }
 
@@ -65,7 +73,6 @@ export default function ItineraryView() {
             </div>
           </div>
 
-          {/* Desktop action row */}
           <div className="hidden md:flex items-center gap-1">
             <Button
               variant="ghost"
@@ -109,7 +116,6 @@ export default function ItineraryView() {
             </Button>
           </div>
 
-          {/* Mobile: share icon */}
           <div className="flex md:hidden items-center gap-1">
             <Button
               variant="ghost"
@@ -121,6 +127,31 @@ export default function ItineraryView() {
             </Button>
           </div>
         </div>
+
+        {/* Day tab selector */}
+        {itinerary.days.length > 1 && (
+          <div className="border-t border-border/50 bg-background/95">
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="flex gap-1 py-2 overflow-x-auto scrollbar-hide">
+                {itinerary.days.map((day) => (
+                  <button
+                    key={day.dayNumber}
+                    onClick={() => setActiveDay(day.dayNumber)}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      activeDay === day.dayNumber
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                    data-testid={`button-day-${day.dayNumber}`}
+                  >
+                    Day {day.dayNumber}
+                    <span className="ml-1.5 text-[10px] opacity-70 font-normal">{day.date}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 pb-32 md:pb-8">
@@ -133,27 +164,97 @@ export default function ItineraryView() {
           </p>
         )}
 
-        {itinerary.days.map((day) => (
-          <div key={day.dayNumber} className="mb-10">
-            <div className="flex items-baseline gap-3 mb-5">
-              <h2 className="font-serif text-2xl font-bold text-foreground">
-                Day {day.dayNumber}
-              </h2>
-              <span className="text-muted-foreground text-sm">{day.date}</span>
-            </div>
+        {/* Active day content */}
+        <div className="mb-10">
+          <div className="flex items-baseline gap-3 mb-5">
+            <h2 className="font-serif text-2xl font-bold text-foreground">
+              Day {currentDay.dayNumber}
+            </h2>
+            <span className="text-muted-foreground text-sm">{currentDay.date}</span>
+          </div>
 
-            <div className="flex flex-col gap-4">
-              {day.blocks.map((block, idx) => (
-                <ActivityCard
-                  key={block.id}
-                  block={block}
-                  index={idx}
-                  dayNumber={day.dayNumber}
-                />
-              ))}
+          <div className="flex flex-col gap-4">
+            {currentDay.blocks.map((block, idx) => (
+              <ActivityCard
+                key={block.id}
+                block={block}
+                index={idx}
+                dayNumber={currentDay.dayNumber}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Day navigation footer */}
+        {itinerary.days.length > 1 && (
+          <div className="flex items-center justify-between mb-10">
+            <button
+              onClick={() => setActiveDay((d) => Math.max(1, d - 1))}
+              disabled={activeDay === 1}
+              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              data-testid="button-prev-day"
+            >
+              ← Day {activeDay - 1}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {activeDay} / {itinerary.days.length}
+            </span>
+            <button
+              onClick={() => setActiveDay((d) => Math.min(itinerary.days.length, d + 1))}
+              disabled={activeDay === itinerary.days.length}
+              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              data-testid="button-next-day"
+            >
+              Day {activeDay + 1} →
+            </button>
+          </div>
+        )}
+
+        {/* End of itinerary CTA */}
+        {activeDay === itinerary.days.length && (
+          <div className="border border-border rounded-3xl p-6 md:p-8 text-center">
+            <h3 className="font-serif text-2xl font-light text-foreground mb-1">
+              Your escape is ready.
+            </h3>
+            <p className="text-sm text-muted-foreground mb-8">
+              What would you like to do next?
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button
+                onClick={handleSave}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                data-testid="button-save-cta"
+              >
+                <Bookmark className={`w-5 h-5 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                <span className="text-sm font-medium text-foreground">{saved ? "Saved" : "Save Trip"}</span>
+              </button>
+              <button
+                onClick={handleShare}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                data-testid="button-share-cta"
+              >
+                <Share2 className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Share Trip</span>
+              </button>
+              <button
+                onClick={handleInvite}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                data-testid="button-invite-cta"
+              >
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Invite Crew</span>
+              </button>
+              <button
+                onClick={handleRegenerate}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                data-testid="button-regenerate-cta"
+              >
+                <Settings className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Adjust</span>
+              </button>
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Mobile sticky action bar */}
@@ -195,6 +296,54 @@ export default function ItineraryView() {
           </button>
         </div>
       </div>
+
+      {/* Auth modal */}
+      {showAuthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowAuthModal(false)}
+          data-testid="modal-auth-backdrop"
+        >
+          <div
+            className="w-full max-w-sm bg-background rounded-3xl border border-border p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            data-testid="modal-auth"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-foreground">Save your trip</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">A free account keeps it safe.</p>
+              </div>
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-close-auth"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button
+                className="w-full rounded-full gap-2"
+                onClick={() => handleAuthAction("signup")}
+                data-testid="button-signup"
+              >
+                <UserPlus className="w-4 h-4" />
+                Create a free account
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full rounded-full gap-2"
+                onClick={() => handleAuthAction("login")}
+                data-testid="button-login"
+              >
+                <LogIn className="w-4 h-4" />
+                Log in
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
