@@ -17,6 +17,7 @@ interface IntakeState {
   budget: string[];
   activityTypes: string[];
   food: string[];
+  activityNotes: string;
   dietaryNotes: string;
   anchorActivity: string;
 }
@@ -52,6 +53,7 @@ export default function Intake() {
     budget: [],
     activityTypes: [],
     food: [],
+    activityNotes: "",
     dietaryNotes: "",
     anchorActivity: "",
   });
@@ -575,6 +577,20 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-5">
+        <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
+          Anything else on your must-do list?
+        </label>
+        <textarea
+          placeholder="e.g. Whale watching, a cooking class, somewhere with live jazz…"
+          value={state.activityNotes}
+          onChange={(e) => setState((s: IntakeState) => ({ ...s, activityNotes: e.target.value }))}
+          rows={3}
+          className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
+          data-testid="input-activity-notes"
+        />
       </div>
     </div>
   );
