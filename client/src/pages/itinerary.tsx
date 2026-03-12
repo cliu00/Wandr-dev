@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Map, X, Bed, Bookmark, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Share2, Map, X, Bookmark, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
 import { ItineraryMap } from "@/components/itinerary-map";
@@ -11,7 +11,6 @@ export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [showMobileMap, setShowMobileMap] = useState(false);
-  const [showRestBlocks, setShowRestBlocks] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const itinerary = MOCK_ITINERARY;
@@ -51,12 +50,7 @@ export default function ItineraryView() {
     }
   }
 
-  const filteredDays = itinerary.days.map((day) => ({
-    ...day,
-    blocks: showRestBlocks
-      ? day.blocks
-      : day.blocks.filter((b) => b.timeSlot !== "rest"),
-  }));
+  const filteredDays = itinerary.days;
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,30 +160,6 @@ export default function ItineraryView() {
               <div />
             )}
 
-            {/* Rest blocks toggle */}
-            <button
-              onClick={() => setShowRestBlocks((v) => !v)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-full border text-xs font-medium transition-all ${
-                showRestBlocks
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-card border-border text-muted-foreground hover:border-primary/30"
-              }`}
-              data-testid="button-toggle-rest"
-            >
-              <Bed className="w-3.5 h-3.5" />
-              Rest blocks
-              <span
-                className={`w-7 h-4 rounded-full transition-colors relative flex-shrink-0 ${
-                  showRestBlocks ? "bg-primary" : "bg-muted-foreground/30"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
-                    showRestBlocks ? "translate-x-0.5" : "translate-x-3"
-                  }`}
-                />
-              </span>
-            </button>
           </div>
 
           {filteredDays.map((day) => (
