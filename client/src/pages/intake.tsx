@@ -128,8 +128,7 @@ export default function Intake() {
     else goNext();
   }
   function handleSubmit() {
-    if (groupType === "group") navigate("/survey/invite");
-    else navigate("/generating");
+    navigate("/generating");
   }
 
   function canContinue(): boolean {
