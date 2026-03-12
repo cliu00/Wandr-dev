@@ -53,101 +53,115 @@ export default function ItineraryView() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
+        {/* Main header row */}
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+          {/* Back */}
+          <button
             onClick={() => navigate("/")}
+            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Back to home"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4" />
-          </Button>
+          </button>
 
-          <div className="text-center">
-            <div
-              className="font-serif text-base font-semibold text-foreground"
+          {/* Title block — left-aligned, takes remaining space */}
+          <div className="flex-1 min-w-0">
+            <h1
+              className="font-serif text-lg font-light text-foreground leading-none truncate"
               data-testid="text-itinerary-title"
             >
               {itinerary.destination}
-            </div>
-            <div className="text-xs text-muted-foreground">
+            </h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-none">
               {itinerary.durationDays}-day itinerary
-            </div>
+              {itinerary.groupType !== "solo" && itinerary.participants.length > 0 && (
+                <> · {itinerary.participants.join(" & ")}</>
+              )}
+            </p>
           </div>
 
-          <div className="hidden md:flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
+          {/* Actions */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {/* Save — primary, always visible */}
+            <button
               onClick={handleSave}
-              className={`gap-1.5 text-xs ${saved ? "text-primary" : ""}`}
+              aria-label={saved ? "Saved" : "Save itinerary"}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                saved
+                  ? "border-primary/40 bg-primary/8 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+              }`}
               data-testid="button-save"
             >
-              <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-primary" : ""}`} />
-              {saved ? "Saved" : "Save"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              <Bookmark className={`w-3 h-3 ${saved ? "fill-primary" : ""}`} />
+              <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
+            </button>
+
+            {/* Share */}
+            <button
               onClick={handleShare}
-              className="gap-1.5 text-xs"
+              aria-label="Share itinerary"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-share"
             >
-              <Share2 className="w-3.5 h-3.5" />
-              Share
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              <Share2 className="w-3 h-3" />
+              <span className="hidden md:inline">Share</span>
+            </button>
+
+            {/* Invite — hidden on mobile */}
+            <button
               onClick={handleInvite}
-              className="gap-1.5 text-xs"
+              aria-label="Invite others"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-invite"
             >
-              <Users className="w-3.5 h-3.5" />
-              Invite Others
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              <Users className="w-3 h-3" />
+              <span className="hidden md:inline">Invite</span>
+            </button>
+
+            {/* Divider */}
+            <span className="hidden sm:block w-px h-4 bg-border mx-1" aria-hidden="true" />
+
+            {/* Start over */}
+            <button
               onClick={handleRegenerate}
-              className="gap-1.5 text-xs"
+              aria-label="Start over"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-regenerate"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Start over
-            </Button>
-          </div>
-
-          <div className="flex md:hidden items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              data-testid="button-share-mobile"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+              <RefreshCw className="w-3 h-3" />
+              <span className="hidden md:inline">Start over</span>
+            </button>
           </div>
         </div>
 
         {/* Day tab selector */}
         {itinerary.days.length > 1 && (
-          <div className="border-t border-border/50 bg-background/95">
+          <div className="border-t border-border/40">
             <div className="max-w-4xl mx-auto px-4">
-              <div className="flex gap-1 py-2 overflow-x-auto scrollbar-hide">
+              <div
+                className="flex gap-1 py-2 overflow-x-auto"
+                role="tablist"
+                aria-label="Itinerary days"
+              >
                 {itinerary.days.map((day) => (
                   <button
                     key={day.dayNumber}
+                    role="tab"
+                    aria-selected={activeDay === day.dayNumber}
                     onClick={() => setActiveDay(day.dayNumber)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                       activeDay === day.dayNumber
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                     }`}
                     data-testid={`button-day-${day.dayNumber}`}
                   >
                     Day {day.dayNumber}
-                    <span className="ml-1.5 text-[10px] opacity-70 font-normal">{day.date}</span>
+                    <span className={`text-[10px] font-normal ${activeDay === day.dayNumber ? "opacity-70" : "opacity-50"}`}>
+                      {day.date}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -156,24 +170,9 @@ export default function ItineraryView() {
         )}
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 pb-32 md:pb-8">
-        {itinerary.groupType !== "solo" && (
-          <p className="text-sm text-muted-foreground mb-6">
-            Curated for{" "}
-            <span className="font-medium text-foreground">
-              {itinerary.participants.join(" & ")}
-            </span>
-          </p>
-        )}
-
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 pb-32 md:pb-8">
         {/* Active day content */}
         <div className="mb-10">
-          <div className="flex items-baseline gap-3 mb-5">
-            <h2 className="font-serif text-2xl font-bold text-foreground">
-              Day {currentDay.dayNumber}
-            </h2>
-            <span className="text-muted-foreground text-sm">{currentDay.date}</span>
-          </div>
 
           <div className="flex flex-col gap-4">
             {currentDay.blocks.map((block, idx) => (
