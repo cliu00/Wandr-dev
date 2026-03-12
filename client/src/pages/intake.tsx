@@ -18,6 +18,7 @@ interface IntakeState {
   activityTypes: string[];
   food: string[];
   dietaryNotes: string;
+  anchorActivity: string;
 }
 
 const slideVariants = {
@@ -52,15 +53,14 @@ export default function Intake() {
     activityTypes: [],
     food: [],
     dietaryNotes: "",
+    anchorActivity: "",
   });
 
-  // Duration + Date are now ONE combined step
-  // Solo: durationDate, energy, budget, activities, food = 5 steps
-  // Group: durationDate, groupSize, energy, budget, activities, food = 6 steps
-  const STEPS = ["durationDate", "energy", "budget", "activities", "food"];
+  const STEPS = ["durationDate", "energy", "budget", "activities", "anchor", "food"];
 
   const totalSteps = STEPS.length;
   const currentStepKey = STEPS[step - 1];
+  const [skipMessage, setSkipMessage] = useState(false);
 
   function goNext() {
     setDirection(1);
@@ -77,11 +77,15 @@ export default function Intake() {
   }
 
   function skip() {
-    if (isLastStep) {
-      handleSubmit();
-    } else {
-      goNext();
-    }
+    setSkipMessage(true);
+    setTimeout(() => {
+      setSkipMessage(false);
+      if (isLastStep) {
+        handleSubmit();
+      } else {
+        goNext();
+      }
+    }, 1400);
   }
 
   function handleSubmit() {
@@ -102,6 +106,7 @@ export default function Intake() {
       case "energy":
       case "budget":
       case "activities":
+      case "anchor":
       case "food":
         return true;
       default: return false;
@@ -175,6 +180,9 @@ export default function Intake() {
               {currentStepKey === "activities" && (
                 <StepActivities state={state} setState={setState} />
               )}
+              {currentStepKey === "anchor" && (
+                <StepAnchor state={state} setState={setState} />
+              )}
               {currentStepKey === "food" && (
                 <StepFood state={state} setState={setState} />
               )}
@@ -201,13 +209,21 @@ export default function Intake() {
           </Button>
 
           {isSkippable && (
-            <button
-              onClick={skip}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
-              data-testid="button-skip"
-            >
-              Skip this question
-            </button>
+            <div className="min-h-[1.5rem] flex items-center justify-center">
+              {skipMessage ? (
+                <p className="text-xs text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200 text-center">
+                  Your answers so far will help us tailor your itinerary.
+                </p>
+              ) : (
+                <button
+                  onClick={skip}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                  data-testid="button-skip"
+                >
+                  Skip this question
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -239,8 +255,11 @@ function StepDurationDate({
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
         How long is your escape?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">
+      <p className="text-muted-foreground mb-4 text-sm">
         We'll pace your itinerary accordingly.
+      </p>
+      <p className="text-xs text-muted-foreground/65 mb-8 leading-relaxed">
+        Answer as many questions as you'd like — the more you share, the more personalised your itinerary will be. Every question after this one is optional.
       </p>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
@@ -519,6 +538,30 @@ function StepActivities({ state, setState }: { state: IntakeState; setState: any
   );
 }
 
+function StepAnchor({ state, setState }: { state: IntakeState; setState: any }) {
+  return (
+    <div>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        Anything specific to plan around?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        A reservation, event, or must-do — we'll build your day around it.
+      </p>
+      <textarea
+        placeholder={"e.g. Dinner at Alo on Saturday evening\nCanucks game Friday night\nMorning hike at Grouse Mountain"}
+        value={state.anchorActivity}
+        onChange={(e) => setState((s: IntakeState) => ({ ...s, anchorActivity: e.target.value }))}
+        rows={4}
+        className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
+        data-testid="input-anchor-activity"
+      />
+      <p className="text-xs text-muted-foreground/65 mt-2">
+        Optional — leave blank and we'll plan everything from scratch.
+      </p>
+    </div>
+  );
+}
+
 function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   const options = [
     {
@@ -571,9 +614,9 @@ function StepFood({ state, setState }: { state: IntakeState; setState: any }) {
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        What's your food & drink vibe?
+        What are your dining preferences?
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">Pick everything that appeals — we'll plan around it.</p>
+      <p className="text-muted-foreground mb-8 text-sm">Select all that interest you — we'll build your meals around them.</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
           const active = state.food.includes(opt.value);
