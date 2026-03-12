@@ -1,27 +1,17 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Copy, Mail, Check, Users, ChevronRight, Plus, X } from "lucide-react";
+import { ArrowLeft, Copy, Check, Users, ChevronRight, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { copyToClipboard } from "@/lib/clipboard";
 
 const FAKE_LINK = "https://wandr.app/survey/join/vancouver-x7k9m";
 
-const EMAIL_SCRIPT = `Subject: Help plan our trip!
-
-Hey! I'm planning a trip and using Wandr to build our itinerary. Add your preferences here so we can create a plan everyone loves.
-
-Your personal link: ${FAKE_LINK}
-
-Takes about 2 minutes — just a few quick questions about what you enjoy. See you there!`;
-
 export default function SurveyInvite() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [scriptCopied, setScriptCopied] = useState(false);
-  const [names, setNames] = useState<string[]>(["", ""]);
-  const [nameInput, setNameInput] = useState("");
+  const [names, setNames] = useState<string[]>([""]); // one field by default
 
   async function handleCopyLink() {
     const ok = await copyToClipboard(FAKE_LINK);
@@ -36,46 +26,6 @@ export default function SurveyInvite() {
         variant: "destructive",
       });
     }
-  }
-
-  async function handleCopyScript() {
-    const ok = await copyToClipboard(EMAIL_SCRIPT);
-    if (ok) {
-      setScriptCopied(true);
-      setTimeout(() => setScriptCopied(false), 2500);
-      toast({ title: "Email copied", description: "Paste it into any email client." });
-    } else {
-      toast({
-        title: "Couldn't copy automatically",
-        description: "Select the message text above and copy it manually.",
-        variant: "destructive",
-      });
-    }
-  }
-
-  function handleEmailVia() {
-    const subject = encodeURIComponent("Help plan our trip!");
-    const body = encodeURIComponent(EMAIL_SCRIPT);
-    try {
-      window.open(`mailto:?subject=${subject}&body=${body}`, "_self");
-    } catch {
-      toast({
-        title: "Couldn't open email client",
-        description: "Copy the message above and paste it into your email app.",
-        variant: "destructive",
-      });
-    }
-  }
-
-  function addName() {
-    const trimmed = nameInput.trim();
-    if (!trimmed || names.includes(trimmed)) return;
-    setNames((n) => [...n.filter(Boolean), trimmed]);
-    setNameInput("");
-  }
-
-  function removeName(name: string) {
-    setNames((n) => n.filter((x) => x !== name));
   }
 
   function updateName(index: number, value: string) {
@@ -104,8 +54,9 @@ export default function SurveyInvite() {
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Users className="w-7 h-7 text-primary" />
           </div>
-          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
-            Invite your companions
+          <h1 className="font-serif text-3xl font-light text-foreground mb-2 leading-tight">
+            Invite fellow{" "}
+            <span className="italic">Wandr</span>ers
           </h1>
           <p className="text-muted-foreground text-sm">
             Planning Vancouver · Apr 18–20
@@ -161,8 +112,8 @@ export default function SurveyInvite() {
           </button>
         </div>
 
-        {/* Step 2: Group link */}
-        <div className="mb-6">
+        {/* Group link */}
+        <div className="mb-8">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
             Your group link
           </label>
@@ -181,42 +132,6 @@ export default function SurveyInvite() {
               {copied ? "Copied!" : "Copy"}
             </Button>
           </div>
-        </div>
-
-        {/* Step 3: Email invite */}
-        <div className="mb-8">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            Invite by email
-          </label>
-          <div className="rounded-2xl border border-border bg-card p-4 mb-3">
-            <pre className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">
-              {EMAIL_SCRIPT}
-            </pre>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyScript}
-              className="flex-1 gap-1.5 rounded-full text-xs"
-              data-testid="button-copy-script"
-            >
-              {scriptCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {scriptCopied ? "Copied!" : "Copy message"}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleEmailVia}
-              className="flex-1 gap-1.5 rounded-full text-xs"
-              data-testid="button-open-email"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              Open in email
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            If your email app didn't open, use "Copy message" instead.
-          </p>
         </div>
 
         {/* Info note */}
