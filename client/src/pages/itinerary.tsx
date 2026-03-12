@@ -36,7 +36,7 @@ export default function ItineraryView() {
   }
 
   function handleRegenerate() {
-    navigate("/generating");
+    navigate("/");
   }
 
   return (
@@ -105,7 +105,7 @@ export default function ItineraryView() {
               data-testid="button-regenerate"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Regenerate
+              Start over
             </Button>
           </div>
 
@@ -191,7 +191,7 @@ export default function ItineraryView() {
             data-testid="button-regenerate-mobile"
           >
             <RefreshCw className="w-5 h-5" />
-            Regenerate
+            Start over
           </button>
         </div>
       </div>
