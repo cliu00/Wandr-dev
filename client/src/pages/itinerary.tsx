@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Map, X, Bookmark, Users, RefreshCw } from "lucide-react";
+import { ArrowLeft, Share2, Bookmark, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
-import { ItineraryMap } from "@/components/itinerary-map";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [showMobileMap, setShowMobileMap] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const itinerary = MOCK_ITINERARY;
@@ -41,22 +39,11 @@ export default function ItineraryView() {
     navigate("/generating");
   }
 
-  function handleMarkerClick(dayNumber: number, blockIndex: number) {
-    const el = document.getElementById(`block-d${dayNumber}-${blockIndex}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("ring-2", "ring-primary");
-      setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
-    }
-  }
-
-  const filteredDays = itinerary.days;
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -122,16 +109,8 @@ export default function ItineraryView() {
             </Button>
           </div>
 
-          {/* Mobile: map + share icons */}
+          {/* Mobile: share icon */}
           <div className="flex md:hidden items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowMobileMap(true)}
-              data-testid="button-view-map-mobile"
-            >
-              <Map className="w-4 h-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -144,51 +123,37 @@ export default function ItineraryView() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto flex">
-        {/* Left — Itinerary */}
-        <div className="flex-1 min-w-0 px-4 md:px-8 py-8 md:max-w-[58%]">
-          {/* Controls row */}
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            {itinerary.groupType !== "solo" ? (
-              <p className="text-sm text-muted-foreground">
-                Curated for{" "}
-                <span className="font-medium text-foreground">
-                  {itinerary.participants.join(" & ")}
-                </span>
-              </p>
-            ) : (
-              <div />
-            )}
+      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 pb-32 md:pb-8">
+        {itinerary.groupType !== "solo" && (
+          <p className="text-sm text-muted-foreground mb-6">
+            Curated for{" "}
+            <span className="font-medium text-foreground">
+              {itinerary.participants.join(" & ")}
+            </span>
+          </p>
+        )}
 
-          </div>
-
-          {filteredDays.map((day) => (
-            <div key={day.dayNumber} className="mb-10">
-              <div className="flex items-baseline gap-3 mb-5">
-                <h2 className="font-serif text-2xl font-bold text-foreground">
-                  Day {day.dayNumber}
-                </h2>
-                <span className="text-muted-foreground text-sm">{day.date}</span>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {day.blocks.map((block, idx) => (
-                  <ActivityCard
-                    key={block.id}
-                    block={block}
-                    index={idx}
-                    dayNumber={day.dayNumber}
-                  />
-                ))}
-              </div>
+        {itinerary.days.map((day) => (
+          <div key={day.dayNumber} className="mb-10">
+            <div className="flex items-baseline gap-3 mb-5">
+              <h2 className="font-serif text-2xl font-bold text-foreground">
+                Day {day.dayNumber}
+              </h2>
+              <span className="text-muted-foreground text-sm">{day.date}</span>
             </div>
-          ))}
-        </div>
 
-        {/* Right — Map (desktop only) */}
-        <div className="hidden md:block sticky top-14 h-[calc(100vh-3.5rem)] flex-1 border-l border-border">
-          <ItineraryMap itinerary={itinerary} onMarkerClick={handleMarkerClick} />
-        </div>
+            <div className="flex flex-col gap-4">
+              {day.blocks.map((block, idx) => (
+                <ActivityCard
+                  key={block.id}
+                  block={block}
+                  index={idx}
+                  dayNumber={day.dayNumber}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Mobile sticky action bar */}
@@ -228,41 +193,8 @@ export default function ItineraryView() {
             <RefreshCw className="w-5 h-5" />
             Regenerate
           </button>
-          <button
-            onClick={() => setShowMobileMap(true)}
-            className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
-            data-testid="button-map-mobile"
-          >
-            <Map className="w-5 h-5" />
-            Map
-          </button>
         </div>
       </div>
-
-      {/* Mobile Map Sheet */}
-      {showMobileMap && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-background">
-            <div className="absolute top-4 right-4 z-10">
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={() => setShowMobileMap(false)}
-                data-testid="button-close-map"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <ItineraryMap
-              itinerary={itinerary}
-              onMarkerClick={(day, idx) => {
-                setShowMobileMap(false);
-                setTimeout(() => handleMarkerClick(day, idx), 100);
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
