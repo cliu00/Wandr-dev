@@ -181,7 +181,7 @@ export default function Home() {
               data-testid="button-curate-escape"
             >
               <Sparkles className="w-4 h-4" />
-              Curate
+              Plan My Escape
             </Button>
           </div>
         </div>
