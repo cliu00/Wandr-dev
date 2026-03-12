@@ -210,30 +210,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Signals */}
-      <section className="py-16 px-6 border-y border-border">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0 text-center divide-y md:divide-y-0 md:divide-x divide-border">
-            <div className="md:px-14">
-              <div className="font-serif text-4xl font-light text-foreground">4,200+</div>
-              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Escapes planned</div>
-            </div>
-            <div className="md:px-14">
-              <div className="font-serif text-4xl font-light text-foreground">4.9 ★</div>
-              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Average rating</div>
-            </div>
-            <div className="md:px-14">
-              <div className="font-serif text-4xl font-light text-foreground">32</div>
-              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">Canadian destinations</div>
-            </div>
-            <div className="md:px-14">
-              <div className="font-serif text-4xl font-light text-foreground">&lt; 60s</div>
-              <div className="text-muted-foreground text-sm mt-1.5 tracking-wide">From quiz to itinerary</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Curated Escapes Section */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
