@@ -75,7 +75,7 @@ export default function Home() {
       icon: <Sparkles className="w-6 h-6" />,
       step: "02",
       title: "Your itinerary, instantly",
-      desc: "Wandr builds a day-by-day plan with morning, afternoon, and evening blocks — tailored entirely to you.",
+      desc: "Wandr builds a day-by-day plan tailored to you — then tweak any detail until it's exactly right.",
     },
     {
       icon: <Share2 className="w-6 h-6" />,
