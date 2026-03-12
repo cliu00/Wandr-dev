@@ -129,7 +129,7 @@ export default function Home() {
                 onClick={() => setTripType(t.value)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   tripType === t.value
-                    ? "bg-white text-foreground shadow-sm"
+                    ? "bg-white text-gray-900 shadow-sm"
                     : "text-white/75 hover:text-white"
                 }`}
                 data-testid={`button-trip-type-${t.value}`}
@@ -146,14 +146,14 @@ export default function Home() {
             data-testid="search-bar"
           >
             <div className="flex items-center gap-2 flex-1 px-4">
-              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Where in Canada? (Vancouver, Toronto…)"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCurate()}
-                className="flex-1 text-foreground placeholder:text-muted-foreground text-sm outline-none bg-transparent py-1"
+                className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none bg-transparent py-1"
                 data-testid="input-destination"
               />
             </div>
@@ -237,7 +237,7 @@ export default function Home() {
 
                   {/* Distance badge — replaces price */}
                   <div className="absolute top-3 right-3">
-                    <span className="bg-white/95 backdrop-blur-sm text-foreground text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {distanceLabel(escape.lat, escape.lng)}
                     </span>
