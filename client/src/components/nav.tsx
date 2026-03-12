@@ -1,14 +1,30 @@
 import { Link } from "wouter";
-import { Bookmark } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/lib/theme-provider";
 
 interface NavProps {
   variant?: "transparent" | "solid";
 }
 
+function WandrLogo({ color }: { color: string }) {
+  return (
+    <svg width="22" height="16" viewBox="0 0 22 16" fill="none" className="flex-shrink-0">
+      <path
+        d="M1 15L5.5 2L11 11.5L16.5 2L21 15"
+        stroke={color}
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Nav({ variant = "solid" }: NavProps) {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const isTransparent = variant === "transparent";
 
   function handleLogin() {
@@ -17,6 +33,15 @@ export function Nav({ variant = "solid" }: NavProps) {
       description: "Authentication will be available in the full version.",
     });
   }
+
+  function handleSignup() {
+    toast({
+      title: "Sign up coming soon",
+      description: "Create your account in the full version.",
+    });
+  }
+
+  const iconColor = isTransparent ? "white" : "currentColor";
 
   return (
     <nav
@@ -30,39 +55,56 @@ export function Nav({ variant = "solid" }: NavProps) {
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <Link href="/">
-          <span
-            className={`font-serif text-xl font-bold tracking-widest cursor-pointer ${
-              isTransparent ? "text-white" : "text-foreground"
-            }`}
-            data-testid="logo"
-          >
-            Wandr
-          </span>
+          <div className="flex items-center gap-2 cursor-pointer" data-testid="logo">
+            <WandrLogo color={isTransparent ? "white" : "hsl(var(--primary))"} />
+            <span
+              className={`font-serif text-xl font-bold tracking-widest ${
+                isTransparent ? "text-white" : "text-foreground"
+              }`}
+            >
+              Wandr
+            </span>
+          </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button
             size="icon"
             variant="ghost"
-            onClick={handleLogin}
-            data-testid="button-bookmark"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            data-testid="button-theme-toggle"
             className={isTransparent ? "text-white hover:bg-white/10" : ""}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
-            <Bookmark className="w-4 h-4" />
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
           <Button
-            variant={isTransparent ? "outline" : "default"}
+            variant="ghost"
             size="sm"
             onClick={handleLogin}
             data-testid="button-login"
             className={
               isTransparent
-                ? "text-white border-white/40 bg-white/10 backdrop-blur-sm hover:bg-white/20"
-                : ""
+                ? "text-white/85 hover:text-white hover:bg-white/10 text-sm"
+                : "text-sm"
             }
           >
             Log in
+          </Button>
+
+          <Button
+            variant={isTransparent ? "outline" : "default"}
+            size="sm"
+            onClick={handleSignup}
+            data-testid="button-signup"
+            className={
+              isTransparent
+                ? "text-white border-white/40 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-sm"
+                : "text-sm"
+            }
+          >
+            Sign up
           </Button>
         </div>
       </div>

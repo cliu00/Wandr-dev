@@ -46,6 +46,8 @@ export interface CuratedEscape {
   endDate: string;
   durationDays: number;
   pricePerDay: number;
+  lat: number;
+  lng: number;
   tags: string[];
 }
 
@@ -237,6 +239,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Apr 20",
     durationDays: 3,
     pricePerDay: 130,
+    lat: 49.2827,
+    lng: -123.1207,
     tags: ["Nature", "Culture", "Dining"],
   },
   {
@@ -250,6 +254,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "May 11",
     durationDays: 3,
     pricePerDay: 120,
+    lat: 43.6532,
+    lng: -79.3832,
     tags: ["Culture", "Dining", "History"],
   },
   {
@@ -263,6 +269,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Jun 7",
     durationDays: 2,
     pricePerDay: 100,
+    lat: 45.5017,
+    lng: -73.5673,
     tags: ["Dining", "Culture", "History"],
   },
   {
@@ -276,6 +284,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Mar 29",
     durationDays: 2,
     pricePerDay: 95,
+    lat: 46.8139,
+    lng: -71.2080,
     tags: ["History", "Culture", "Relaxation"],
   },
   {
@@ -289,6 +299,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Jul 14",
     durationDays: 3,
     pricePerDay: 150,
+    lat: 51.1784,
+    lng: -115.5708,
     tags: ["Nature", "Adventure", "Relaxation"],
   },
   {
@@ -302,6 +314,8 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Apr 6",
     durationDays: 2,
     pricePerDay: 110,
+    lat: 48.4284,
+    lng: -123.3656,
     tags: ["Nature", "Relaxation", "Culture"],
   },
 ];

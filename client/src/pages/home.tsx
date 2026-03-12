@@ -1,27 +1,95 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { MapPin, Users, User, Sparkles, Compass, ArrowRight, Clock, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { MapPin, Users, User, Heart, Sparkles, Compass, ArrowRight, Star, Share2, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { CURATED_ESCAPES } from "@/lib/mock-data";
 
+type TripType = "solo" | "duo" | "group" | "family";
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+const VANCOUVER: { lat: number; lng: number } = { lat: 49.2827, lng: -123.1207 };
+
 export default function Home() {
   const [, navigate] = useLocation();
   const [destination, setDestination] = useState("");
-  const [isGroup, setIsGroup] = useState(false);
+  const [tripType, setTripType] = useState<TripType>("solo");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
+  }, []);
+
+  function distanceLabel(escapeLat: number, escapeLng: number): string {
+    const ref = userLocation ?? VANCOUVER;
+    const km = haversineKm(ref.lat, ref.lng, escapeLat, escapeLng);
+    if (km < 20) return "Local";
+    if (km >= 1000) return `${(km / 1000).toFixed(1).replace(/\.0$/, "")}k km away`;
+    return `${km.toLocaleString()} km away`;
+  }
 
   function handleCurate() {
     const params = new URLSearchParams();
     if (destination) params.set("destination", destination);
-    params.set("group", String(isGroup));
+    params.set("tripType", tripType);
     navigate(`/intake?${params.toString()}`);
   }
 
   function handleEscapeClick(escape: typeof CURATED_ESCAPES[0]) {
     navigate(
-      `/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}&group=${isGroup}`
+      `/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}&tripType=${tripType}`
     );
   }
+
+  const TRIP_TYPES: { value: TripType; label: string; icon: React.ReactNode }[] = [
+    { value: "solo", label: "Solo", icon: <User className="w-3.5 h-3.5" /> },
+    { value: "duo", label: "Duo", icon: <Heart className="w-3.5 h-3.5" /> },
+    { value: "group", label: "Group", icon: <Users className="w-3.5 h-3.5" /> },
+    { value: "family", label: "Family", icon: <Baby className="w-3.5 h-3.5" /> },
+  ];
+
+  const HOW_IT_WORKS = [
+    {
+      icon: <Compass className="w-6 h-6" />,
+      step: "01",
+      title: "Tell us your style",
+      desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
+    },
+    {
+      icon: <Sparkles className="w-6 h-6" />,
+      step: "02",
+      title: "AI builds your itinerary",
+      desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
+    },
+    {
+      icon: <Star className="w-6 h-6" />,
+      step: "03",
+      title: "Adjust until perfect",
+      desc: "Swap any activity with one tap. Every recommendation explains exactly why it was chosen for you.",
+    },
+    {
+      icon: <Share2 className="w-6 h-6" />,
+      step: "04",
+      title: "Save or share your trip",
+      desc: "Save your itinerary for later, or share a link with your crew before you go.",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +103,7 @@ export default function Home() {
             backgroundImage: `url(https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=90)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/45 to-black/75" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
 
         <div className="relative z-10 w-full max-w-3xl mx-auto px-6 flex flex-col items-center text-center">
           <h1
@@ -47,41 +115,32 @@ export default function Home() {
             <em className="font-normal">Masterfully Planned.</em>
           </h1>
 
-          <div className="w-24 h-px bg-accent my-6 mx-auto" />
+          <div className="w-24 h-px bg-accent my-7 mx-auto" />
 
-          <p className="text-white/75 text-base md:text-lg mb-8 max-w-md leading-relaxed tracking-wide">
-            Curated 2–4 day Canadian escapes for individuals and groups.
+          <p className="text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed tracking-wide">
+            Personalised Canadian escapes for solo travellers, couples, groups, and families.
           </p>
 
-          {/* Solo / Group mode selector — sits above the search bar */}
+          {/* Trip type selector */}
           <div className="flex items-center gap-1 mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
-            <button
-              onClick={() => setIsGroup(false)}
-              className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                !isGroup
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-white/75 hover:text-white"
-              }`}
-              data-testid="button-solo-toggle"
-            >
-              <User className="w-3.5 h-3.5" />
-              Solo
-            </button>
-            <button
-              onClick={() => setIsGroup(true)}
-              className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                isGroup
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-white/75 hover:text-white"
-              }`}
-              data-testid="button-group-toggle"
-            >
-              <Users className="w-3.5 h-3.5" />
-              Group
-            </button>
+            {TRIP_TYPES.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setTripType(t.value)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  tripType === t.value
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-white/75 hover:text-white"
+                }`}
+                data-testid={`button-trip-type-${t.value}`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          {/* Search bar — Curate is the clear primary CTA */}
+          {/* Search bar */}
           <div
             className="w-full max-w-xl bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
             data-testid="search-bar"
@@ -117,8 +176,8 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-6 bg-muted/50">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="py-24 px-6 bg-muted/50">
+        <div className="max-w-6xl mx-auto text-center">
           <h2 className="font-serif text-5xl font-light text-foreground mb-3 tracking-wide">
             How it works
           </h2>
@@ -126,97 +185,72 @@ export default function Home() {
             From blank canvas to bespoke itinerary in under a minute.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              {
-                icon: <Compass className="w-6 h-6" />,
-                step: "01",
-                title: "Tell us your style",
-                desc: "Answer a few quick questions about your energy, budget, food preferences, and who's coming.",
-              },
-              {
-                icon: <Sparkles className="w-6 h-6" />,
-                step: "02",
-                title: "We curate your escape",
-                desc: "Our AI crafts a day-by-day itinerary with morning, afternoon, and evening blocks — all personalised.",
-              },
-              {
-                icon: <Star className="w-6 h-6" />,
-                step: "03",
-                title: "Adjust until perfect",
-                desc: "Swap any activity with one tap. Every recommendation explains exactly why it was chosen for you.",
-              },
-            ].map((item) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+            {HOW_IT_WORKS.map((item) => (
               <div key={item.step} className="flex flex-col items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   {item.icon}
                 </div>
                 <div>
                   <div className="text-xs text-accent font-semibold tracking-widest mb-1">{item.step}</div>
-                  <h3 className="font-serif text-2xl font-light mb-2 tracking-wide">{item.title}</h3>
+                  <h3 className="font-serif text-xl font-light mb-2 tracking-wide leading-snug">{item.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
       {/* Curated Escapes Section */}
-      <section className="py-20 px-6">
+      <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-10">
+          <div className="mb-12">
             <h2 className="font-serif text-5xl font-light text-foreground mb-2 tracking-wide">
               Curated escapes
             </h2>
             <p className="text-muted-foreground text-base">
-              Hand-picked Canadian itineraries. Just tap to start planning.
+              Hand-picked Canadian itineraries.{" "}
+              {userLocation ? "Sorted by distance from you." : "Just tap to start planning."}
             </p>
           </div>
 
           <div
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
+            className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: "none" }}
           >
             {CURATED_ESCAPES.map((escape) => (
               <div
                 key={escape.id}
                 onClick={() => handleEscapeClick(escape)}
-                className="flex-shrink-0 w-64 cursor-pointer group snap-start"
+                className="flex-shrink-0 w-68 cursor-pointer group snap-start"
+                style={{ width: "272px" }}
                 data-testid={`card-escape-${escape.id}`}
               >
-                <div className="relative rounded-2xl overflow-hidden h-80">
+                <div className="relative rounded-2xl overflow-hidden h-84" style={{ height: "336px" }}>
                   <img
                     src={escape.imageUrl}
                     alt={escape.destination}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
+                  {/* Distance badge — replaces price */}
                   <div className="absolute top-3 right-3">
-                    <span className="bg-white/95 backdrop-blur-sm text-foreground text-xs font-semibold px-3 py-1.5 rounded-full">
-                      from ${escape.pricePerDay}/day
+                    <span className="bg-white/95 backdrop-blur-sm text-foreground text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {distanceLabel(escape.lat, escape.lng)}
                     </span>
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-serif text-white text-2xl font-normal leading-tight">
                       {escape.destination}
                     </h3>
-                    <p className="text-white/70 text-sm mt-0.5 leading-snug">
+                    <p className="text-white/70 text-sm mt-1 leading-snug">
                       {escape.tagline}
                     </p>
                   </div>
-                </div>
-
-                <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    {escape.startDate} – {escape.endDate}
-                  </span>
-                  <span>·</span>
-                  <span>{escape.durationDays} days</span>
                 </div>
               </div>
             ))}
@@ -225,16 +259,33 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 px-6 border-t border-border">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
+      <footer className="py-12 px-6 border-t border-border">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <svg width="18" height="13" viewBox="0 0 22 16" fill="none">
+              <path
+                d="M1 15L5.5 2L11 11.5L16.5 2L21 15"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
+          </div>
           <p className="text-muted-foreground text-sm text-center">
             Bespoke escapes, masterfully planned.
           </p>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <span className="cursor-pointer hover:text-foreground transition-colors">Privacy</span>
-            <span className="cursor-pointer hover:text-foreground transition-colors">Terms</span>
-            <span className="cursor-pointer hover:text-foreground transition-colors">Contact</span>
+            <Link href="/privacy">
+              <span className="cursor-pointer hover:text-foreground transition-colors">Privacy</span>
+            </Link>
+            <Link href="/terms">
+              <span className="cursor-pointer hover:text-foreground transition-colors">Terms</span>
+            </Link>
+            <Link href="/contact">
+              <span className="cursor-pointer hover:text-foreground transition-colors">Contact</span>
+            </Link>
           </div>
         </div>
       </footer>

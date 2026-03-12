@@ -29,7 +29,15 @@ export default function Intake() {
   const [, navigate] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const prefillDestination = searchParams.get("destination") || "";
-  const isGroupFromHome = searchParams.get("group") === "true";
+  const tripTypeParam = searchParams.get("tripType") || "solo";
+
+  const tripTypeMap: Record<string, IntakeState["groupType"]> = {
+    solo: "solo",
+    duo: "partner",
+    group: "small",
+    family: "big",
+  };
+  const initialGroupType = tripTypeMap[tripTypeParam] ?? "solo";
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -37,7 +45,7 @@ export default function Intake() {
     destination: prefillDestination,
     duration: null,
     startDate: undefined,
-    groupType: isGroupFromHome ? null : "solo",
+    groupType: initialGroupType,
     energy: 50,
     budget: [],
     activityTypes: [],
