@@ -207,8 +207,8 @@ export default function ItineraryView() {
               >
                 <Users className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Invite companions to co-plan</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Companions answer their own preferences. Wandr blends everyone's input and updates this itinerary.</p>
+                  <p className="text-sm font-semibold text-foreground leading-snug">Invite another wandrer</p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Send a personal link — they answer 5 quick questions. Wandr blends everyone's input and refines this itinerary.</p>
                 </div>
               </button>
 

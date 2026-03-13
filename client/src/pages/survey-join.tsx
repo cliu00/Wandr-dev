@@ -58,7 +58,7 @@ export default function SurveyJoin() {
 
   function goNext() {
     if (isLastStep) {
-      navigate("/generating");
+      navigate("/survey/status");
       return;
     }
     const idx = STEPS.indexOf(step);
@@ -67,7 +67,7 @@ export default function SurveyJoin() {
 
   function skipStep() {
     if (isLastStep) {
-      navigate("/generating");
+      navigate("/survey/status");
       return;
     }
     const idx = STEPS.indexOf(step);

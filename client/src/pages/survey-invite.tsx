@@ -126,7 +126,7 @@ export default function SurveyInvite() {
           {[
             { n: "1", text: "Enter each wandrer's name below — a personal link is generated instantly." },
             { n: "2", text: "Copy and send each person their unique link directly (text, email, DM)." },
-            { n: "3", text: "They answer 4 quick questions. Once everyone responds, you generate the group itinerary." },
+            { n: "3", text: "They answer 5 quick questions. Once everyone responds, you generate the group itinerary." },
           ].map(({ n, text }) => (
             <div key={n} className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -235,7 +235,7 @@ export default function SurveyInvite() {
         {hasAnyFilled && (
           <div className="bg-muted/50 rounded-2xl p-4 text-sm text-muted-foreground leading-relaxed">
             <span className="font-medium text-foreground">What happens next:</span> each person opens
-            their personal link and answers 4 questions about their travel style. You'll see their
+            their personal link and answers 5 questions about their travel style. You'll see their
             responses appear on the status page in real time.
           </div>
         )}
