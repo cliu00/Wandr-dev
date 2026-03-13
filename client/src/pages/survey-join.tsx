@@ -3,13 +3,13 @@ import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { FlowHeader } from "@/components/flow-header";
 import {
-  ArrowLeft, Check, MapPin, ChevronRight, UserCheck,
+  ArrowLeft, MapPin, ChevronRight, UserCheck,
   Calendar, Users, Sparkles, Zap, DollarSign, Compass, UtensilsCrossed
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Star, Utensils, Timer } from "lucide-react";
+import { Star, Utensils } from "lucide-react";
 
 type JoinStep = "welcome" | "identity" | "energy" | "budget" | "activities" | "food";
 
@@ -42,7 +42,9 @@ export default function SurveyJoin() {
   const [energy, setEnergy] = useState(50);
   const [budget, setBudget] = useState<string | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
-  const [food, setFood] = useState<string | null>(null);
+  const [activityNotes, setActivityNotes] = useState("");
+  const [food, setFood] = useState<string[]>([]);
+  const [dietaryNotes, setDietaryNotes] = useState("");
   const [heroLoaded, setHeroLoaded] = useState(false);
 
   const name = hasPersonalLink ? prefilledName : selfName;
@@ -84,7 +86,7 @@ export default function SurveyJoin() {
     if (step === "identity") return selfName.trim().length > 0;
     if (step === "budget") return budget !== null;
     if (step === "activities") return activities.length > 0;
-    if (step === "food") return food !== null;
+    if (step === "food") return food.length > 0;
     return true;
   }
 
@@ -291,10 +293,10 @@ export default function SurveyJoin() {
               {/* ── Energy ── */}
               {step === "energy" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
                     {name ? `What's your energy for this trip, ${name}?` : "What's your energy for this trip?"}
                   </h2>
-                  <p className="text-muted-foreground mb-12">From full chill to full throttle.</p>
+                  <p className="text-muted-foreground mb-12 text-sm">Share yours first — Wandr blends in everyone's input.</p>
                   <div className="px-2">
                     <Slider
                       value={[energy]}
@@ -303,11 +305,12 @@ export default function SurveyJoin() {
                       max={100}
                       step={1}
                       className="mb-6"
+                      data-testid="slider-energy"
                     />
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>I need to decompress</span>
-                      <span>Balanced</span>
-                      <span>Pack it all in</span>
+                      <span>Relaxed pace</span>
+                      <span>Some of both</span>
+                      <span>Action-packed</span>
                     </div>
                   </div>
                 </div>
@@ -316,68 +319,29 @@ export default function SurveyJoin() {
               {/* ── Budget ── */}
               {step === "budget" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">What's your daily budget?</h2>
-                  <p className="text-muted-foreground mb-8">
-                    Share yours — Wandr will find the right balance once everyone weighs in.
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">What's your spend style?</h2>
+                  <p className="text-muted-foreground mb-8 text-sm">
+                    Wandr will find the sweet spot once everyone weighs in.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { value: "under-100", label: "Under $100", sub: "Budget-friendly" },
-                      { value: "100-200", label: "$100–200", sub: "Comfortable" },
-                      { value: "200-350", label: "$200–350", sub: "Treat yourself" },
-                      { value: "350-plus", label: "$350+", sub: "Luxury" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setBudget(opt.value)}
-                        className={`p-5 rounded-2xl border-2 text-left transition-all ${
-                          budget === opt.value
-                            ? "border-primary bg-primary/8"
-                            : "border-border bg-card hover:border-primary/40"
-                        }`}
-                        data-testid={`button-budget-${opt.value}`}
-                      >
-                        <div className="font-semibold text-lg">{opt.label}</div>
-                        <div className="text-sm text-muted-foreground">{opt.sub}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Activities ── */}
-              {step === "activities" && (
-                <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">What excites you most?</h2>
-                  <p className="text-muted-foreground mb-8">Pick all that apply.</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      "Hidden gems",
-                      "Iconic landmarks",
-                      "Street art & murals",
-                      "Markets & shopping",
-                      "Nature & parks",
-                      "Nightlife",
-                      "Wellness & spas",
-                      "Architecture",
+                      { value: "under-100", label: "Budget-friendly", range: "~$50–100/day" },
+                      { value: "100-200",   label: "Comfortable",     range: "~$100–200/day" },
+                      { value: "200-350",   label: "Treat yourself",  range: "~$200–350/day" },
+                      { value: "350-plus",  label: "Luxury",           range: "$350+/day" },
                     ].map((opt) => {
-                      const active = activities.includes(opt);
+                      const active = budget === opt.value;
                       return (
                         <button
-                          key={opt}
-                          onClick={() =>
-                            setActivities((a) =>
-                              active ? a.filter((x) => x !== opt) : [...a, opt]
-                            )
-                          }
-                          className={`p-4 rounded-2xl border-2 text-sm font-medium text-center transition-all ${
-                            active
-                              ? "border-primary bg-primary/8 text-primary"
-                              : "border-border bg-card hover:border-primary/40"
+                          key={opt.value}
+                          onClick={() => setBudget(opt.value)}
+                          className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
                           }`}
-                          data-testid={`button-activity-${opt.toLowerCase().replace(/\s+/g, "-")}`}
+                          data-testid={`button-budget-${opt.value}`}
                         >
-                          {opt}
+                          <div className={`font-semibold text-lg leading-tight ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
+                          <div className={`text-xs mt-1 ${active ? "text-primary/60" : "text-muted-foreground"}`}>{opt.range}</div>
                         </button>
                       );
                     })}
@@ -385,59 +349,127 @@ export default function SurveyJoin() {
                 </div>
               )}
 
+              {/* ── Activities ── */}
+              {step === "activities" && (
+                <div>
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">What do you enjoy most?</h2>
+                  <p className="text-muted-foreground mb-8 text-sm">Pick what excites you — Wandr blends everyone's picks.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "Hidden Gems",       sub: "Off-the-beaten-path spots locals love" },
+                      { label: "Iconic Landmarks",  sub: "The must-sees, done right" },
+                      { label: "Food & Drink",      sub: "Food tours • markets • local specialties" },
+                      { label: "History & Museums", sub: "Museums • historic sites • architecture" },
+                      { label: "Nature & Parks",    sub: "Parks • viewpoints • scenic walks" },
+                      { label: "Markets & Shopping",sub: "Local markets • boutiques • vintage finds" },
+                      { label: "Nightlife",         sub: "Bars • live music • late-night spots" },
+                      { label: "Art & Culture",     sub: "Galleries • street art • performances" },
+                    ].map((opt) => {
+                      const active = activities.includes(opt.label);
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() =>
+                            setActivities((a) =>
+                              active ? a.filter((x) => x !== opt.label) : [...a, opt.label]
+                            )
+                          }
+                          className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                            active
+                              ? "border-primary bg-primary/8"
+                              : "border-border bg-card hover:border-primary/40"
+                          }`}
+                          data-testid={`button-activity-${opt.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                        >
+                          <div className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{opt.sub}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-5">
+                    <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
+                      Anything specific you'd like to plan around?
+                    </label>
+                    <textarea
+                      placeholder="e.g. A group boat tour, escape room, something active together, concert on Saturday…"
+                      value={activityNotes}
+                      onChange={(e) => setActivityNotes(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
+                      data-testid="input-activity-notes"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* ── Food ── */}
               {step === "food" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">What's your dining style?</h2>
-                  <p className="text-muted-foreground mb-8">
-                    Helps us calibrate the group's restaurant picks.
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">How do you like to eat?</h2>
+                  <p className="text-muted-foreground mb-8 text-sm">
+                    Share yours — Wandr blends it with your wandrers' picks.
                   </p>
                   <div className="flex flex-col gap-3">
                     {[
                       {
-                        value: "fine-dining",
-                        icon: <Utensils className="w-5 h-5" />,
-                        label: "Fine dining & reservations",
-                        sub: "The best tables in the city — booked in advance",
-                      },
-                      {
-                        value: "great-meals",
-                        icon: <Star className="w-5 h-5" />,
-                        label: "Great restaurants, no fuss",
-                        sub: "Quality food without the tasting-menu commitment",
-                      },
-                      {
-                        value: "local-casual",
+                        value: "street-food",
                         icon: <MapPin className="w-5 h-5" />,
-                        label: "Local gems & casual spots",
-                        sub: "Neighbourhood favourites, cafés, and hidden finds",
+                        label: "Street food & markets",
+                        sub: "Stalls, vendors, food halls — the hunt is half the fun.",
                       },
                       {
-                        value: "just-fed",
-                        icon: <Timer className="w-5 h-5" />,
-                        label: "Quick bites, keep moving",
-                        sub: "Fuel up fast — dining isn't the focus",
+                        value: "neighbourhood",
+                        icon: <Utensils className="w-5 h-5" />,
+                        label: "Neighbourhood gems",
+                        sub: "Mom-and-pop spots, family-run kitchens — beloved by locals.",
                       },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setFood(opt.value)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
-                          food === opt.value
-                            ? "border-primary bg-primary/8"
-                            : "border-border bg-card hover:border-primary/40"
-                        }`}
-                        data-testid={`button-food-${opt.value}`}
-                      >
-                        <span className={food === opt.value ? "text-primary" : "text-muted-foreground"}>
-                          {opt.icon}
-                        </span>
-                        <div>
-                          <div className="font-semibold">{opt.label}</div>
-                          <div className="text-sm text-muted-foreground">{opt.sub}</div>
-                        </div>
-                      </button>
-                    ))}
+                      {
+                        value: "sit-down",
+                        icon: <Star className="w-5 h-5" />,
+                        label: "Proper sit-downs",
+                        sub: "Full menus, good wine, no rush — conversation over courses.",
+                      },
+                      {
+                        value: "special-evening",
+                        icon: <Sparkles className="w-5 h-5" />,
+                        label: "One standout meal",
+                        sub: "A memorable table as a trip highlight — not every meal needs to be an event.",
+                      },
+                    ].map((opt) => {
+                      const active = food.includes(opt.value);
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setFood((f) => active ? f.filter((x) => x !== opt.value) : [...f, opt.value])}
+                          className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+                          }`}
+                          data-testid={`button-food-${opt.value}`}
+                        >
+                          <span className={`flex-shrink-0 mt-0.5 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                            {opt.icon}
+                          </span>
+                          <div>
+                            <div className={`font-semibold text-sm mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
+                            <div className="text-xs text-muted-foreground leading-snug">{opt.sub}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-5">
+                    <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
+                      Any dietary needs or restrictions?
+                    </label>
+                    <textarea
+                      placeholder="e.g. Vegetarian, nut allergy, gluten-free, halal…"
+                      value={dietaryNotes}
+                      onChange={(e) => setDietaryNotes(e.target.value)}
+                      rows={2}
+                      className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
+                      data-testid="input-dietary-notes"
+                    />
                   </div>
                 </div>
               )}
