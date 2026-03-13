@@ -27,12 +27,21 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
   const timeConfig = TIME_CONFIG[block.timeSlot];
 
   const activity = swapped
-    ? { ...block.primary, name: block.backup.name, costRange: block.backup.costRange, description: "An alternative option your AI matched to your preferences.", whyForYou: "Swapped in based on your style." }
+    ? {
+        ...block.primary,
+        name: block.backup.name,
+        costRange: block.backup.costRange,
+        imageUrl: block.backup.imageUrl ?? block.primary.imageUrl,
+        type: block.backup.type ?? block.primary.type,
+        description: block.backup.description ?? "An alternative option your AI matched to your preferences.",
+        whyForYou: block.backup.whyForYou ?? "Swapped in based on your style.",
+      }
     : block.primary;
 
   function handleSwap() {
     if (isBaseRest || !block.backup.name) return;
     setSwapping(true);
+    setImgError(false);
     setTimeout(() => {
       setSwapped((s) => !s);
       setSwapping(false);
@@ -160,20 +169,28 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
           <div className="pt-3 border-t border-border/60">
             {block.backup.name && (
               <div className="flex items-center justify-between gap-2 mb-2.5">
-                <span className="text-xs text-muted-foreground truncate">
-                  Backup: <span className="font-medium text-foreground/70">{block.backup.name}</span>
-                  <span className="ml-1.5 text-muted-foreground">· {block.backup.costRange}</span>
-                </span>
+                {swapped ? (
+                  <span className="text-xs text-muted-foreground truncate">
+                    <span className="inline-flex items-center gap-1 text-primary font-medium mr-1.5">Swapped</span>
+                    · Original: <span className="font-medium text-foreground/70">{block.primary.name}</span>
+                    <span className="ml-1.5 text-muted-foreground">· {block.primary.costRange}</span>
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground truncate">
+                    Backup: <span className="font-medium text-foreground/70">{block.backup.name}</span>
+                    <span className="ml-1.5 text-muted-foreground">· {block.backup.costRange}</span>
+                  </span>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleSwap}
                   disabled={swapping}
-                  className="flex-shrink-0 gap-1.5 text-xs rounded-full"
+                  className={`flex-shrink-0 gap-1.5 text-xs rounded-full ${swapped ? "border-primary/40 text-primary" : ""}`}
                   data-testid={`button-swap-d${dayNumber}-${index}`}
                 >
                   <RefreshCw className={`w-3 h-3 ${swapping ? "animate-spin" : ""}`} />
-                  Swap
+                  {swapped ? "Swap back" : "Swap"}
                 </Button>
               </div>
             )}

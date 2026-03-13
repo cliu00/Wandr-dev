@@ -14,6 +14,10 @@ export interface ActivityBlock {
   backup: {
     name: string;
     costRange: string;
+    imageUrl?: string;
+    description?: string;
+    whyForYou?: string;
+    type?: string;
   };
   groupAttribution: string[];
   curatorName?: string;
@@ -119,7 +123,7 @@ export const MOCK_ITINERARY: Itinerary = {
             lat: 49.2827,
             lng: -123.1085,
           },
-          backup: { name: "Granville Island Public Market", costRange: "$8–20" },
+          backup: { name: "Granville Island Public Market", costRange: "$8–20", imageUrl: STOCK_IMAGES["market"], type: "Indoor market · False Creek", description: "Vancouver's most beloved indoor market — local cheeses, fresh oysters, and artisan everything. Arrive hungry and take your time.", whyForYou: "A slower-paced morning that leans into your love of markets and local finds." },
           groupAttribution: ["Alice", "Bob"],
         },
         {
@@ -138,7 +142,7 @@ export const MOCK_ITINERARY: Itinerary = {
             lat: 49.2826,
             lng: -123.1207,
           },
-          backup: { name: "Museum of Anthropology (UBC)", costRange: "$18" },
+          backup: { name: "Museum of Anthropology (UBC)", costRange: "$18", imageUrl: STOCK_IMAGES["architecture"], type: "World-class museum · UBC Campus", description: "Arthur Erickson's stunning concrete and glass building houses one of the world's finest collections of Northwest Coast Indigenous art. The Great Hall alone is worth the trip.", whyForYou: "Combines your love of architecture and culture — and it's far less crowded than downtown." },
           groupAttribution: ["Alice"],
         },
         {
@@ -157,7 +161,7 @@ export const MOCK_ITINERARY: Itinerary = {
             lat: 49.2628,
             lng: -123.1011,
           },
-          backup: { name: "Ask for Luigi (pasta)", costRange: "$40–60" },
+          backup: { name: "Ask for Luigi", costRange: "$40–60", imageUrl: STOCK_IMAGES["cafe"], type: "Italian pasta bar · Gastown", description: "A tiny, warm pasta bar that's earned a near-mythic reputation in Vancouver. The handmade pastas change weekly, the room is always buzzing, and the waiting list is worth it.", whyForYou: "A slightly more relaxed take on a special dinner — same exceptional quality, more convivial energy." },
           groupAttribution: ["Alice", "Bob"],
         },
       ],
@@ -182,7 +186,7 @@ export const MOCK_ITINERARY: Itinerary = {
             lat: 49.2711,
             lng: -123.1344,
           },
-          backup: { name: "Trout Lake Farmers Market", costRange: "Free" },
+          backup: { name: "Trout Lake Farmers Market", costRange: "Free", imageUrl: STOCK_IMAGES["park"], type: "Outdoor farmers market · East Vancouver", description: "A neighbourhood Saturday ritual on the edge of a peaceful urban park. Less tourist-facing than Granville Island — this is where East Van locals actually shop.", whyForYou: "Quieter, greener, and genuinely local. Perfect if you want the market feel without the crowds." },
           groupAttribution: ["Bob"],
         },
         {
@@ -219,7 +223,7 @@ export const MOCK_ITINERARY: Itinerary = {
             lat: 49.2837,
             lng: -123.1063,
           },
-          backup: { name: "Juniper Kitchen & Bar", costRange: "$15–22" },
+          backup: { name: "Juniper Kitchen & Bar", costRange: "$15–22", imageUrl: STOCK_IMAGES["restaurant"], type: "Pacific Northwest bar & kitchen · Downtown", description: "A warmly lit room in the heart of downtown with an outstanding natural wine list and small plates built around BC ingredients. Quieter than Gastown and just as good.", whyForYou: "Same elevated atmosphere, different vibe — this one feels more like a locals-in-the-know dinner." },
           groupAttribution: ["Alice", "Bob"],
         },
       ],
