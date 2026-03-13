@@ -354,12 +354,7 @@ function StepDurationDate({
     family: "How many days are you planning for?",
   };
 
-  const options = [
-    { value: 1, label: "1 day",    sub: "A focused day out" },
-    { value: 2, label: "2 days",   sub: "A sharp weekend away" },
-    { value: 3, label: "3 days",   sub: "The sweet spot" },
-    { value: 4, label: "4 days",   sub: "Room to breathe" },
-  ];
+  const options = [1, 2, 3, 4];
 
   return (
     <div>
@@ -370,29 +365,33 @@ function StepDurationDate({
         </p>
       </div>
 
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+      <h2 className="font-serif text-4xl font-light text-foreground mb-8 leading-tight">
         {headings[groupType]}
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">We'll pace your itinerary accordingly.</p>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setState((s: IntakeState) => ({ ...s, duration: opt.value }))}
-            className={`p-5 rounded-2xl border-2 text-left transition-all ${
-              state.duration === opt.value
-                ? "border-primary bg-primary/8"
-                : "border-border bg-card hover:border-primary/40"
-            }`}
-            data-testid={`button-duration-${opt.value}`}
-          >
-            <div className={`font-semibold text-lg ${state.duration === opt.value ? "text-primary" : "text-foreground"}`}>
-              {opt.label}
-            </div>
-            <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
-          </button>
-        ))}
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {options.map((n) => {
+          const selected = state.duration === n;
+          return (
+            <button
+              key={n}
+              onClick={() => setState((s: IntakeState) => ({ ...s, duration: n }))}
+              className={`aspect-square flex flex-col items-center justify-center rounded-2xl border-2 transition-all ${
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card hover:border-primary/50 text-foreground"
+              }`}
+              data-testid={`button-duration-${n}`}
+            >
+              <span className={`font-serif text-5xl font-light leading-none ${selected ? "text-primary-foreground" : "text-foreground"}`}>
+                {n}
+              </span>
+              <span className={`text-[11px] uppercase tracking-widest mt-2 font-medium ${selected ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                {n === 1 ? "day" : "days"}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <button
