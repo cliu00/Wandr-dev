@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FlowHeader } from "@/components/flow-header";
 import {
   ArrowLeft, X, Heart, Users, Compass, Utensils, Timer,
-  CalendarDays, ChevronDown, MapPin, Sparkles, Baby, Zap,
+  CalendarDays, MapPin, Sparkles, Baby, Zap,
   Coffee, UtensilsCrossed, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -336,7 +336,6 @@ function StepDurationDate({
   endDate: Date | null;
   groupType: GroupType;
 }) {
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const today = new Date();
 
   const headings: Record<GroupType, string> = {
@@ -386,64 +385,63 @@ function StepDurationDate({
         })}
       </div>
 
-      <button
-        onClick={() => setShowDatePicker((v) => !v)}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-sm transition-all ${
-          showDatePicker || state.startDate
-            ? "border-primary/40 bg-primary/5 text-primary"
-            : "border-border bg-card text-muted-foreground hover:border-primary/30"
-        }`}
-        aria-expanded={showDatePicker}
-        data-testid="button-toggle-dates"
-      >
-        <span className="flex items-center gap-2">
-          <CalendarDays className="w-4 h-4" aria-hidden="true" />
-          {state.startDate
-            ? endDate
+      <div className="flex items-center gap-2 mb-3">
+        <CalendarDays className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+        <span className="text-sm font-medium text-foreground">When are you going?</span>
+        {state.startDate && (
+          <span className="text-sm text-primary font-medium ml-auto">
+            {endDate
               ? `${format(state.startDate, "MMM d")} – ${format(endDate, "MMM d, yyyy")}`
-              : format(state.startDate, "MMMM d, yyyy")
-            : "Add travel dates (optional)"}
-        </span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${showDatePicker ? "rotate-180" : ""}`} aria-hidden="true" />
-      </button>
+              : format(state.startDate, "MMMM d, yyyy")}
+          </span>
+        )}
+      </div>
 
-      {showDatePicker && (
-        <div className="mt-1 border border-border rounded-2xl overflow-hidden bg-card">
-          <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <p className="text-xs text-muted-foreground">
-              Dates help us suggest seasonal events, weather-appropriate activities, and local happenings.
+      <div className="border border-border rounded-2xl overflow-hidden bg-card">
+        <div className="flex justify-center p-2">
+          <style>{`
+            .rdp-day_selected { background-color: hsl(155 35% 22%) !important; color: white !important; }
+            .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: hsl(155 35% 22% / 0.08) !important; }
+            .rdp { --rdp-accent-color: hsl(155 35% 22%); }
+            .rdp-caption_label { font-family: var(--font-serif); font-weight: 400; font-size: 1rem; letter-spacing: 0.04em; }
+          `}</style>
+          <DayPicker
+            mode="single"
+            selected={state.startDate}
+            onSelect={(date) => setState((s: IntakeState) => ({ ...s, startDate: date || undefined }))}
+            fromDate={today}
+            numberOfMonths={1}
+          />
+        </div>
+        {state.startDate && (
+          <div className="px-4 pb-3 flex items-center justify-between border-t border-border">
+            <p className="text-sm text-primary font-medium pt-3">
+              {endDate
+                ? `${format(state.startDate, "MMM d")} – ${format(endDate, "MMM d, yyyy")}`
+                : `Departing ${format(state.startDate, "MMMM d, yyyy")}`}
             </p>
+            <button
+              onClick={() => setState((s: IntakeState) => ({ ...s, startDate: undefined }))}
+              className="text-xs text-muted-foreground hover:text-foreground underline pt-3"
+            >
+              Clear
+            </button>
           </div>
-          <div className="flex justify-center p-2">
-            <style>{`
-              .rdp-day_selected { background-color: hsl(155 35% 22%) !important; color: white !important; }
-              .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: hsl(155 35% 22% / 0.08) !important; }
-              .rdp { --rdp-accent-color: hsl(155 35% 22%); }
-              .rdp-caption_label { font-family: var(--font-serif); font-weight: 400; font-size: 1rem; letter-spacing: 0.04em; }
-            `}</style>
-            <DayPicker
-              mode="single"
-              selected={state.startDate}
-              onSelect={(date) => setState((s: IntakeState) => ({ ...s, startDate: date || undefined }))}
-              fromDate={today}
-              numberOfMonths={1}
-            />
-          </div>
-          {state.startDate && (
-            <div className="px-4 pb-3 flex items-center justify-between">
-              <p className="text-sm text-primary font-medium">
-                {endDate
-                  ? `${format(state.startDate, "MMM d")} – ${format(endDate, "MMM d, yyyy")}`
-                  : `Departing ${format(state.startDate, "MMMM d, yyyy")}`}
-              </p>
-              <button
-                onClick={() => setState((s: IntakeState) => ({ ...s, startDate: undefined }))}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
-              >
-                Clear
-              </button>
-            </div>
-          )}
+        )}
+      </div>
+
+      {!state.startDate && (
+        <div className="mt-2 text-center">
+          <p className="text-xs text-muted-foreground">
+            Dates help us suggest seasonal events and local happenings.{" "}
+            <button
+              onClick={() => {}}
+              className="text-muted-foreground/60 hover:text-muted-foreground underline underline-offset-2 transition-colors"
+              data-testid="button-toggle-dates"
+            >
+              Skip for now
+            </button>
+          </p>
         </div>
       )}
     </div>
@@ -743,10 +741,10 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
   };
 
   const options = [
-    { value: "under-100", label: "Budget-friendly" },
-    { value: "100-200",   label: "Comfortable"     },
-    { value: "200-350",   label: "Treat yourself"  },
-    { value: "350-plus",  label: "Luxury"           },
+    { value: "under-100", label: "Budget-friendly", range: "~$50–100/day"  },
+    { value: "100-200",   label: "Comfortable",     range: "~$100–200/day" },
+    { value: "200-350",   label: "Treat yourself",  range: "~$200–350/day" },
+    { value: "350-plus",  label: "Luxury",           range: "$350+/day"    },
   ];
 
   return (
@@ -767,8 +765,11 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
               }`}
               data-testid={`button-budget-${opt.value}`}
             >
-              <div className={`font-semibold text-lg ${active ? "text-primary" : "text-foreground"}`}>
+              <div className={`font-semibold text-lg leading-tight ${active ? "text-primary" : "text-foreground"}`}>
                 {opt.label}
+              </div>
+              <div className={`text-xs mt-1 ${active ? "text-primary/60" : "text-muted-foreground"}`}>
+                {opt.range}
               </div>
             </button>
           );
