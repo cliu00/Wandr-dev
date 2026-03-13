@@ -159,45 +159,66 @@ export default function ItineraryView() {
 
         {/* End of itinerary CTA */}
         {activeDay === itinerary.days.length && (
-          <div className="border border-border rounded-3xl p-6 md:p-8 text-center">
+          <div className="border border-border rounded-3xl p-6 md:p-8">
             <h3 className="font-serif text-2xl font-light text-foreground mb-1">
               Your adventure is ready.
             </h3>
-            <p className="text-sm text-muted-foreground mb-8">
+            <p className="text-sm text-muted-foreground mb-6">
               What would you like to do next?
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex flex-col gap-3">
+              {/* 1 — Save (most common: keep a copy) */}
               <button
                 onClick={handleSave}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                className={`flex items-center gap-4 p-4 rounded-2xl border text-left transition-colors ${
+                  saved ? "border-primary/40 bg-primary/5" : "border-border bg-card hover:border-primary/40"
+                }`}
                 data-testid="button-save-cta"
               >
-                <Bookmark className={`w-5 h-5 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                <span className="text-sm font-medium text-foreground">{saved ? "Saved" : "Save Trip"}</span>
+                <Bookmark className={`w-5 h-5 flex-shrink-0 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{saved ? "Saved to your trips" : "Save this itinerary"}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Keep it in your account so you can come back any time.</p>
+                </div>
               </button>
+
+              {/* 2 — Share (send a read-only link) */}
               <button
                 onClick={handleShare}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
                 data-testid="button-share-cta"
               >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Share Trip</span>
+                <Share2 className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Share a link</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Copy a read-only link — send it to anyone to view the itinerary.</p>
+                </div>
               </button>
+
+              {/* 3 — Invite (collaborative: companions add their prefs) */}
               <button
                 onClick={handleInvite}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
                 data-testid="button-invite-cta"
               >
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Invite Companions</span>
+                <Users className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Invite companions to co-plan</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Companions answer their own preferences. Wandr blends everyone's input and updates this itinerary.</p>
+                </div>
               </button>
+
+              {/* 4 — Start over (least common) */}
               <button
                 onClick={handleRegenerate}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 transition-colors"
+                className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
                 data-testid="button-regenerate-cta"
               >
-                <Settings className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Start Over</span>
+                <Settings className="w-5 h-5 flex-shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Start over</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Go back to the beginning and plan a different trip.</p>
+                </div>
               </button>
             </div>
           </div>
