@@ -219,11 +219,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <h2 className="font-serif text-5xl font-light text-foreground mb-2 tracking-wide">
-              Curated escapes
+              Popular destinations
             </h2>
             <p className="text-muted-foreground text-base">
-              Hand-picked Canadian itineraries.{" "}
-              {userLocation ? "Sorted by distance from you." : "Just tap to start planning."}
+              Inspiration to get you started.{" "}
+              {userLocation ? "Sorted by distance from you." : "Tap any destination to plan your trip."}
             </p>
           </div>
 
