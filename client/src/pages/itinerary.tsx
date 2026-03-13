@@ -49,7 +49,10 @@ export default function ItineraryView() {
   }
 
   function handleRegenerate() {
-    navigate("/");
+    const params = new URLSearchParams();
+    params.set("destination", itinerary.destination);
+    params.set("tripType", urlGroupType);
+    navigate(`/intake?${params.toString()}`);
   }
 
   return (
