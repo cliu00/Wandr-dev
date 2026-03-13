@@ -228,15 +228,28 @@ export default function Intake() {
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 px-4 pt-4 pb-5">
         <div className="max-w-2xl mx-auto flex flex-col items-center gap-2">
-          <Button
-            size="lg"
-            className="w-full rounded-full text-base font-medium"
-            disabled={!canContinue()}
-            onClick={isLastStep ? handleSubmit : goNext}
-            data-testid="button-continue"
-          >
-            {isLastStep ? FINAL_CTA[groupType] : "Continue"}
-          </Button>
+          <div className="w-full flex gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={goBack}
+              className="rounded-full px-5 gap-1.5 flex-shrink-0"
+              data-testid="button-back-footer"
+              aria-label={step === 1 ? "Back to home" : "Previous question"}
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              Back
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 rounded-full text-base font-medium"
+              disabled={!canContinue()}
+              onClick={isLastStep ? handleSubmit : goNext}
+              data-testid="button-continue"
+            >
+              {isLastStep ? FINAL_CTA[groupType] : "Continue"}
+            </Button>
+          </div>
 
           {isSkippable && (
             <div className="min-h-[3rem] flex items-center justify-center">
