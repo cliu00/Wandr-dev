@@ -5,7 +5,7 @@ import { FlowHeader } from "@/components/flow-header";
 import {
   ArrowLeft, X, Heart, Users, Compass, Utensils, Timer,
   CalendarDays, MapPin, Sparkles, Baby, Zap,
-  Coffee, UtensilsCrossed, Star,
+  Coffee, UtensilsCrossed, Star, User, Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -56,7 +56,7 @@ const STEP_SEQUENCES: Record<GroupType, string[]> = {
 };
 
 // Steps where "Skip" is not available
-const REQUIRED_STEPS = new Set(["durationDate", "kidsAges"]);
+const REQUIRED_STEPS = new Set(["partyType", "durationDate", "kidsAges"]);
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
@@ -84,17 +84,21 @@ export default function Intake() {
   const searchParams   = new URLSearchParams(window.location.search);
   const prefillDest    = searchParams.get("destination") || "";
   const tripTypeParam  = (searchParams.get("tripType") || "solo") as GroupType;
+  const hasNoType      = searchParams.get("noType") === "true";
   const validTypes: GroupType[] = ["solo", "duo", "group", "family"];
-  const groupType = validTypes.includes(tripTypeParam) ? tripTypeParam : "solo";
+  const initialGroupType = validTypes.includes(tripTypeParam) ? tripTypeParam : "solo";
 
-  const [step,       setStep]       = useState(1);
-  const [direction,  setDirection]  = useState(1);
-  const [skipConfirm, setSkipConfirm] = useState(false);
+  const [step,              setStep]              = useState(1);
+  const [direction,         setDirection]         = useState(1);
+  const [skipConfirm,       setSkipConfirm]       = useState(false);
+  const [groupType,         setGroupType]         = useState<GroupType>(initialGroupType);
+  const [partyTypeSelected, setPartyTypeSelected] = useState(!hasNoType);
+
   const [state, setState] = useState<IntakeState>({
     destination:   prefillDest,
     duration:      null,
     startDate:     undefined,
-    groupType,
+    groupType:     initialGroupType,
     energy:        50,
     budget:        "",
     activityTypes: [],
@@ -109,7 +113,9 @@ export default function Intake() {
     familyNeeds:   [],
   });
 
-  const STEPS    = STEP_SEQUENCES[groupType];
+  const STEPS      = hasNoType
+    ? ["partyType", ...STEP_SEQUENCES[groupType]]
+    : STEP_SEQUENCES[groupType];
   const totalSteps     = STEPS.length;
   const currentStepKey = STEPS[step - 1];
   const isLastStep     = step === totalSteps;
@@ -138,6 +144,7 @@ export default function Intake() {
 
   function canContinue(): boolean {
     switch (currentStepKey) {
+      case "partyType":     return partyTypeSelected;
       case "durationDate":  return state.duration !== null;
       case "soloVibe":      return state.soloVibe !== null;
       case "duoStyle":      return state.duoStyle !== null;
@@ -201,6 +208,7 @@ export default function Intake() {
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
+              {currentStepKey === "partyType"     && <StepPartyType    groupType={groupType} onSelect={(t) => { setGroupType(t); setPartyTypeSelected(true); }} />}
               {currentStepKey === "durationDate"  && <StepDurationDate state={state} setState={setState} endDate={endDate} groupType={groupType} />}
               {currentStepKey === "soloVibe"      && <StepSoloVibe     state={state} setState={setState} />}
               {currentStepKey === "duoStyle"      && <StepDuoStyle     state={state} setState={setState} />}
@@ -324,6 +332,73 @@ function SelectCard({
     >
       {children}
     </button>
+  );
+}
+
+// ── Party type selector (shown when arriving from Popular Destinations) ─────────
+function StepPartyType({
+  groupType,
+  onSelect,
+}: {
+  groupType: GroupType;
+  onSelect: (type: GroupType) => void;
+}) {
+  const options: { value: GroupType; icon: React.ReactNode; label: string; sub: string }[] = [
+    {
+      value: "solo",
+      icon: <User className="w-5 h-5" aria-hidden="true" />,
+      label: "Solo",
+      sub: "Built around your pace, no compromises.",
+    },
+    {
+      value: "duo",
+      icon: <Handshake className="w-5 h-5" aria-hidden="true" />,
+      label: "Duo",
+      sub: "Balanced for two people who want different things.",
+    },
+    {
+      value: "group",
+      icon: <Users className="w-5 h-5" aria-hidden="true" />,
+      label: "Group",
+      sub: "One plan everyone actually agrees on.",
+    },
+    {
+      value: "family",
+      icon: <Baby className="w-5 h-5" aria-hidden="true" />,
+      label: "Family",
+      sub: "Activities for everyone — including the adults.",
+    },
+  ];
+
+  return (
+    <div>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        Who's joining you?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        Your travel party shapes everything — the pace, the picks, and the plan.
+      </p>
+      <div className="flex flex-col gap-3">
+        {options.map((opt) => (
+          <SelectCard
+            key={opt.value}
+            active={groupType === opt.value}
+            onClick={() => onSelect(opt.value)}
+            testId={`button-party-type-${opt.value}`}
+          >
+            <span className={`flex-shrink-0 mt-0.5 ${groupType === opt.value ? "text-primary" : "text-muted-foreground"}`}>
+              {opt.icon}
+            </span>
+            <div>
+              <div className={`font-semibold text-base mb-0.5 ${groupType === opt.value ? "text-primary" : "text-foreground"}`}>
+                {opt.label}
+              </div>
+              <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+            </div>
+          </SelectCard>
+        ))}
+      </div>
+    </div>
   );
 }
 

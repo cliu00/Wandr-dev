@@ -53,7 +53,7 @@ export default function Home() {
 
   function handleEscapeClick(escape: typeof CURATED_ESCAPES[0]) {
     navigate(
-      `/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}&tripType=${tripType}`
+      `/intake?destination=${encodeURIComponent(escape.destination)}&escape=${escape.id}&noType=true`
     );
   }
 
