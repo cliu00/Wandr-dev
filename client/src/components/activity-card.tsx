@@ -135,7 +135,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
         )}
 
         <p className="text-sm text-muted-foreground mb-3">
-          {activity.type}
+          {activity.type?.includes("·") ? activity.type.split("·").pop()?.trim() : activity.type}
         </p>
 
         {swapping ? (
@@ -168,17 +168,12 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
         {!isBaseRest && (
           <div className="pt-3 border-t border-border/60">
             {block.backup.name && (
-              <div className="flex items-center justify-between gap-2 mb-2.5">
-                {swapped ? (
+              <div className={`flex items-center gap-2 mb-2.5 ${swapped ? "justify-between" : "justify-end"}`}>
+                {swapped && (
                   <span className="text-xs text-muted-foreground truncate">
                     <span className="inline-flex items-center gap-1 text-primary font-medium mr-1.5">Swapped</span>
                     · Original: <span className="font-medium text-foreground/70">{block.primary.name}</span>
                     <span className="ml-1.5 text-muted-foreground">· {block.primary.costRange}</span>
-                  </span>
-                ) : (
-                  <span className="text-xs text-muted-foreground truncate">
-                    Backup: <span className="font-medium text-foreground/70">{block.backup.name}</span>
-                    <span className="ml-1.5 text-muted-foreground">· {block.backup.costRange}</span>
                   </span>
                 )}
                 <Button
