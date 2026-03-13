@@ -92,7 +92,7 @@ export default function Home() {
       <main id="main-content">
       {/* Hero Section */}
       <section
-        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+        className="relative min-h-screen flex flex-col overflow-hidden"
         aria-label="Plan your adventure"
       >
         <div
@@ -103,9 +103,12 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
 
-        <div className="relative z-10 w-full max-w-3xl mx-auto px-6 flex flex-col items-center text-center">
+        {/* Three-zone layout: headline top · tabs middle · search bottom */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-between text-center px-6 pt-24 pb-20 md:pt-32 md:pb-28">
+
+          {/* ① Headline — owns the top */}
           <h1
-            className="font-serif text-7xl md:text-9xl font-light text-white leading-[1.0] mb-2 tracking-wide"
+            className="font-serif text-7xl md:text-9xl font-light text-white leading-[1.0] tracking-wide"
             data-testid="text-hero-headline"
           >
             Quick Getaways,
@@ -113,65 +116,68 @@ export default function Home() {
             Masterfully Planned.
           </h1>
 
-          {/* Trip type selector */}
-          <div
-            role="group"
-            aria-label="Trip type"
-            className="flex items-center gap-1 mb-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1"
-          >
-            {TRIP_TYPES.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setTripType(t.value)}
-                aria-pressed={tripType === t.value}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  tripType === t.value
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-white/75 hover:text-white"
-                }`}
-                data-testid={`button-trip-type-${t.value}`}
-              >
-                <span aria-hidden="true">{t.icon}</span>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Trip type context */}
-          <p className="text-white/55 text-sm mb-4 tracking-wide min-h-[1.25rem] transition-all duration-300">
-            {tripType === "solo" && "Built around your pace, no compromises."}
-            {tripType === "duo" && "Balanced for two people who want different things."}
-            {tripType === "group" && "One plan everyone actually agrees on."}
-            {tripType === "family" && "Activities for everyone — including the adults."}
-          </p>
-
-          {/* Search bar */}
-          <div
-            className="w-full max-w-xl bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
-            data-testid="search-bar"
-          >
-            <div className="flex items-center gap-2 flex-1 px-4">
-              <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="Where are you dreaming of?"
-                aria-label="Destination"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCurate()}
-                className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none bg-transparent py-1"
-                data-testid="input-destination"
-              />
-            </div>
-            <Button
-              onClick={handleCurate}
-              className="rounded-full px-6 gap-2 flex-shrink-0"
-              data-testid="button-curate-escape"
+          {/* ② Trip type selector + byline — floats in the middle */}
+          <div className="flex flex-col items-center gap-3">
+            <div
+              role="group"
+              aria-label="Trip type"
+              className="flex items-center gap-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1"
             >
-              <Sparkles className="w-4 h-4" />
-              Plan My Adventure
-            </Button>
+              {TRIP_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTripType(t.value)}
+                  aria-pressed={tripType === t.value}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    tripType === t.value
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-white/75 hover:text-white"
+                  }`}
+                  data-testid={`button-trip-type-${t.value}`}
+                >
+                  <span aria-hidden="true">{t.icon}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-white/55 text-sm tracking-wide min-h-[1.25rem] transition-all duration-300">
+              {tripType === "solo" && "Built around your pace, no compromises."}
+              {tripType === "duo" && "Balanced for two people who want different things."}
+              {tripType === "group" && "One plan everyone actually agrees on."}
+              {tripType === "family" && "Activities for everyone — including the adults."}
+            </p>
           </div>
+
+          {/* ③ Search bar — anchors the bottom */}
+          <div className="w-full max-w-xl flex flex-col items-center gap-3">
+            <div
+              className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
+              data-testid="search-bar"
+            >
+              <div className="flex items-center gap-2 flex-1 px-4">
+                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Where are you dreaming of?"
+                  aria-label="Destination"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCurate()}
+                  className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none bg-transparent py-1"
+                  data-testid="input-destination"
+                />
+              </div>
+              <Button
+                onClick={handleCurate}
+                className="rounded-full px-6 gap-2 flex-shrink-0"
+                data-testid="button-curate-escape"
+              >
+                <Sparkles className="w-4 h-4" />
+                Plan My Adventure
+              </Button>
+            </div>
+          </div>
+
         </div>
       </section>
 
