@@ -27,6 +27,7 @@ interface IntakeState {
   food:          string[];
   anchorActivity: string;
   activityNotes: string;
+  dietaryNotes:  string;
   // Solo-specific
   soloVibe:      string | null;
   // Duo-specific
@@ -44,12 +45,14 @@ interface IntakeState {
 //   2. Persona identity  (solo vibe / duo style / group dynamic / kids ages)
 //   3. Energy            (universal, persona-adapted copy)
 //   4. Budget            (universal, persona-adapted copy)
-//   5. Persona closer    (solo → activities | duo → food | group → activities | family → familyNeeds)
+//   5. Activities        (universal, persona-adapted copy)
+//   6. Food & dining     (universal, persona-adapted copy)
+//   7. Family needs      (family only)
 const STEP_SEQUENCES: Record<GroupType, string[]> = {
-  solo:   ["durationDate", "soloVibe",     "energy", "budget", "activities"],
-  duo:    ["durationDate", "duoStyle",     "energy", "budget", "food"],
-  group:  ["durationDate", "groupDynamic", "energy", "budget", "activities"],
-  family: ["durationDate", "kidsAges",     "energy", "budget", "familyNeeds"],
+  solo:   ["durationDate", "soloVibe",     "energy", "budget", "activities", "food"],
+  duo:    ["durationDate", "duoStyle",     "energy", "budget", "activities", "food"],
+  group:  ["durationDate", "groupDynamic", "energy", "budget", "activities", "food"],
+  family: ["durationDate", "kidsAges",     "energy", "budget", "activities", "food", "familyNeeds"],
 };
 
 // Steps where "Skip" is not available
@@ -98,6 +101,7 @@ export default function Intake() {
     food:          [],
     anchorActivity: "",
     activityNotes: "",
+    dietaryNotes:  "",
     soloVibe:      null,
     duoStyle:      null,
     groupDynamic:  null,
@@ -894,8 +898,14 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
   const headings: Record<GroupType, string> = {
     solo:   "How do you like to eat and drink?",
     duo:    "What's your dining style as a pair?",
-    group:  "How do you like to eat and drink?",
-    family: "How do you like to eat and drink?",
+    group:  "How do you like to eat?",
+    family: "How does your family like to eat?",
+  };
+  const subtexts: Record<GroupType, string> = {
+    solo:   "We'll match every recommendation to how you actually eat.",
+    duo:    "Select all that feel right — even one of you is enough.",
+    group:  "Share yours — Wandr blends it with your wandrers' picks.",
+    family: "Select all that work. We'll keep it practical.",
   };
 
   const options = [
@@ -939,7 +949,7 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
         {headings[groupType]}
       </h2>
-      <p className="text-muted-foreground mb-8 text-sm">Select all that feel right.</p>
+      <p className="text-muted-foreground mb-8 text-sm">{subtexts[groupType]}</p>
       <div className="flex flex-col gap-3">
         {options.map((opt) => {
           const active = state.food.includes(opt.value);
@@ -970,8 +980,8 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
         </label>
         <textarea
           placeholder="e.g. Vegetarian, nut allergy, gluten-free, halal…"
-          value={state.activityNotes}
-          onChange={(e) => setState((s: IntakeState) => ({ ...s, activityNotes: e.target.value }))}
+          value={state.dietaryNotes}
+          onChange={(e) => setState((s: IntakeState) => ({ ...s, dietaryNotes: e.target.value }))}
           rows={2}
           className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
           data-testid="input-dietary-notes"
