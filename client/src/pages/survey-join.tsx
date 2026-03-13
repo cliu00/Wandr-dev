@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useMemo } from "react";
+import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Check, MapPin, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, MapPin, ChevronRight, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -17,17 +17,32 @@ const slideVariants = {
 
 export default function SurveyJoin() {
   const [, navigate] = useLocation();
-  const [step, setStep] = useState<JoinStep>("identity");
-  const [name, setName] = useState("");
+  const search = useSearch();
+
+  // Read name + token from personal link URL params
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  const prefilledName = params.get("name") || "";
+  const hasPersonalLink = prefilledName.length > 0;
+
+  // If opened via personal link, skip straight to "energy"
+  const STEPS: JoinStep[] = hasPersonalLink
+    ? ["energy", "budget", "activities", "food", "done"]
+    : ["identity", "energy", "budget", "activities", "food", "done"];
+
+  const [step, setStep] = useState<JoinStep>(STEPS[0]);
+  const [selfName, setSelfName] = useState("");
   const [email, setEmail] = useState("");
   const [energy, setEnergy] = useState(50);
   const [budget, setBudget] = useState<string | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
   const [food, setFood] = useState<string | null>(null);
 
-  const STEPS: JoinStep[] = ["identity", "energy", "budget", "activities", "food", "done"];
+  // The name we'll use throughout — prefer the personal link name
+  const name = hasPersonalLink ? prefilledName : selfName;
+
   const currentIndex = STEPS.indexOf(step);
-  const progress = (currentIndex / (STEPS.length - 1)) * 100;
+  const totalSteps = STEPS.length - 1; // exclude "done"
+  const progress = (currentIndex / totalSteps) * 100;
 
   function goNext() {
     const idx = STEPS.indexOf(step);
@@ -44,18 +59,17 @@ export default function SurveyJoin() {
   }
 
   function canContinue() {
-    if (step === "identity") return name.trim().length > 0;
+    if (step === "identity") return selfName.trim().length > 0;
     if (step === "budget") return budget !== null;
     if (step === "activities") return activities.length > 0;
     if (step === "food") return food !== null;
     return true;
   }
 
+  // ── Done screen ────────────────────────────────────────────────────────
   if (step === "done") {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center relative px-6"
-      >
+      <div className="min-h-screen flex flex-col items-center justify-center relative px-6">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -81,11 +95,11 @@ export default function SurveyJoin() {
               <span>Vancouver · Apr 18–20</span>
             </div>
             <p className="text-white text-sm">
-              The organiser will generate the final itinerary once everyone responds. We'll notify you when it's ready.
+              The organiser will generate the final itinerary once everyone responds. We'll
+              notify you when it's ready.
             </p>
           </div>
 
-          {/* Two clear next actions — not a dead end */}
           <div className="flex flex-col gap-3">
             <Button
               className="rounded-full gap-2 bg-white text-foreground hover:bg-white/90"
@@ -110,9 +124,10 @@ export default function SurveyJoin() {
     );
   }
 
+  // ── Main survey ────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Progress */}
+      {/* Progress bar + header */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="h-1 bg-muted">
           <div
@@ -136,7 +151,17 @@ export default function SurveyJoin() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col pt-20 pb-28">
+      {/* Personal link identity banner — shown at the top when name came from URL */}
+      {hasPersonalLink && (
+        <div className="fixed top-[57px] left-0 right-0 z-40 bg-primary/8 border-b border-primary/20 px-5 py-2.5 flex items-center gap-2">
+          <UserCheck className="w-4 h-4 text-primary flex-shrink-0" />
+          <span className="text-sm text-primary font-medium">
+            Responding as <span className="font-semibold">{prefilledName}</span>
+          </span>
+        </div>
+      )}
+
+      <div className={`flex-1 flex flex-col pb-28 ${hasPersonalLink ? "pt-[104px]" : "pt-20"}`}>
         <div className="flex-1 max-w-2xl w-full mx-auto px-6 py-8">
           <AnimatePresence mode="wait">
             <motion.div
@@ -147,6 +172,7 @@ export default function SurveyJoin() {
               exit="exit"
               transition={{ duration: 0.3 }}
             >
+              {/* ── Identity step (only shown when no personal link) ── */}
               {step === "identity" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">You've been invited!</h2>
@@ -159,8 +185,8 @@ export default function SurveyJoin() {
                         Your name <span className="text-destructive">*</span>
                       </label>
                       <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={selfName}
+                        onChange={(e) => setSelfName(e.target.value)}
                         placeholder="e.g. Sarah"
                         className="rounded-xl h-12"
                         data-testid="input-name"
@@ -184,10 +210,11 @@ export default function SurveyJoin() {
                 </div>
               )}
 
+              {/* ── Energy ── */}
               {step === "energy" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">
-                    What's your energy for this trip, {name}?
+                    {name ? `What's your energy for this trip, ${name}?` : "What's your energy for this trip?"}
                   </h2>
                   <p className="text-muted-foreground mb-12">From full chill to full throttle.</p>
                   <div className="px-2">
@@ -208,6 +235,7 @@ export default function SurveyJoin() {
                 </div>
               )}
 
+              {/* ── Budget ── */}
               {step === "budget" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">Your daily budget per person?</h2>
@@ -239,6 +267,7 @@ export default function SurveyJoin() {
                 </div>
               )}
 
+              {/* ── Activities ── */}
               {step === "activities" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">What excites you most?</h2>
@@ -268,6 +297,7 @@ export default function SurveyJoin() {
                               ? "border-primary bg-primary/8 text-primary"
                               : "border-border bg-card hover:border-primary/40"
                           }`}
+                          data-testid={`button-activity-${opt.toLowerCase().replace(/\s+/g, "-")}`}
                         >
                           {opt}
                         </button>
@@ -277,6 +307,7 @@ export default function SurveyJoin() {
                 </div>
               )}
 
+              {/* ── Food ── */}
               {step === "food" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">What's your dining style?</h2>
@@ -318,6 +349,7 @@ export default function SurveyJoin() {
                             ? "border-primary bg-primary/8"
                             : "border-border bg-card hover:border-primary/40"
                         }`}
+                        data-testid={`button-food-${opt.value}`}
                       >
                         <span className={food === opt.value ? "text-primary" : "text-muted-foreground"}>
                           {opt.icon}
