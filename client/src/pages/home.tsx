@@ -149,13 +149,13 @@ export default function Home() {
           </div>
 
           {/* ③ Search bar — anchors the bottom */}
-          <div className="w-full max-w-xl flex flex-col items-center gap-3">
+          <div className="w-full max-w-2xl flex flex-col items-center">
             <div
-              className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-1.5 gap-2"
+              className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-2 gap-2"
               data-testid="search-bar"
             >
-              <div className="flex items-center gap-2 flex-1 px-4">
-                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <div className="flex items-center gap-3 flex-1 px-5">
+                <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Where are you dreaming of?"
@@ -163,13 +163,14 @@ export default function Home() {
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCurate()}
-                  className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none bg-transparent py-1"
+                  className="flex-1 text-gray-900 placeholder:text-gray-400 text-base outline-none bg-transparent py-2"
                   data-testid="input-destination"
                 />
               </div>
               <Button
                 onClick={handleCurate}
-                className="rounded-full px-6 gap-2 flex-shrink-0"
+                size="lg"
+                className="rounded-full px-8 gap-2 flex-shrink-0 text-base"
                 data-testid="button-curate-escape"
               >
                 <Sparkles className="w-4 h-4" />
