@@ -337,11 +337,21 @@ export default function SurveyJoin() {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 p-4">
-        <div className="max-w-2xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 px-4 pt-4 pb-5">
+        <div className="max-w-2xl mx-auto flex gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={goBack}
+            className="rounded-full px-5 gap-1.5 flex-shrink-0"
+            data-testid="button-back-footer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
           <Button
             size="lg"
-            className="w-full rounded-full"
+            className="flex-1 rounded-full"
             disabled={!canContinue()}
             onClick={goNext}
             data-testid="button-continue"
