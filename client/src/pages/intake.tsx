@@ -976,6 +976,9 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
           className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
           data-testid="input-dietary-notes"
         />
+        <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
+          We'll make every effort to suggest places that support mainstream needs — gluten-free, vegetarian, vegan, keto, and more. For complex restrictions or severe allergies, we recommend calling venues ahead of your visit. We can't guarantee a perfect match for every requirement.
+        </p>
       </div>
     </div>
   );
