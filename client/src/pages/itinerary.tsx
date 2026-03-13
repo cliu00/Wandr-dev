@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, Settings } from "lucide-react";
+import { ArrowLeft, Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
@@ -52,11 +52,9 @@ export default function ItineraryView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Sticky nav header — compact, just back + day tabs */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        {/* Main header row */}
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          {/* Back */}
           <button
             onClick={() => navigate("/")}
             className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -65,20 +63,9 @@ export default function ItineraryView() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-
-          {/* Title block — left-aligned, takes remaining space */}
-          <div className="flex-1 min-w-0">
-            <h1
-              className="font-serif text-lg font-light text-foreground leading-none truncate"
-              data-testid="text-itinerary-title"
-            >
-              {itinerary.destination}
-            </h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-none">
-              {itinerary.durationDays}-day itinerary
-            </p>
-          </div>
-
+          <span className="text-xs text-muted-foreground tracking-wide">
+            Wandr · {itinerary.destination}
+          </span>
         </div>
 
         {/* Day tab selector */}
@@ -115,7 +102,32 @@ export default function ItineraryView() {
         )}
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 pb-32 md:pb-8">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-8">
+
+        {/* Page title hero */}
+        <div className="mb-8 pb-6 border-b border-border">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+            Your Wandr Itinerary
+          </p>
+          <h1
+            className="font-serif text-5xl md:text-6xl font-light text-foreground leading-none mb-4"
+            data-testid="text-itinerary-title"
+          >
+            {itinerary.destination}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+              {itinerary.durationDays} {itinerary.durationDays === 1 ? "day" : "days"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+              {itinerary.days[0]?.date}
+              {itinerary.days.length > 1 && ` – ${itinerary.days[itinerary.days.length - 1]?.date}`}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border capitalize">
+              {itinerary.groupType === "group" ? "Group trip" : itinerary.groupType === "solo" ? "Solo" : itinerary.groupType === "couple" ? "Duo" : "Family"}
+            </span>
+          </div>
+        </div>
 
         {/* Active day content */}
         <div className="mb-10">
@@ -214,7 +226,7 @@ export default function ItineraryView() {
                 className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
                 data-testid="button-regenerate-cta"
               >
-                <Settings className="w-5 h-5 text-muted-foreground" />
+                <RotateCcw className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-semibold text-foreground leading-snug">Start over</p>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Go back to the beginning and plan a different trip.</p>

@@ -61,10 +61,10 @@ const slideVariants = {
 };
 
 const PERSONA_CONTEXT: Record<GroupType, string> = {
-  solo:   "Solo escape",
-  duo:    "Escape for two",
-  group:  "Group escape",
-  family: "Family escape",
+  solo:   "Solo adventure",
+  duo:    "Adventure for two",
+  group:  "Group adventure",
+  family: "Family adventure",
 };
 
 const FINAL_CTA: Record<GroupType, string> = {
@@ -348,7 +348,7 @@ function StepDurationDate({
   const today = new Date();
 
   const headings: Record<GroupType, string> = {
-    solo:   "How long is your escape?",
+    solo:   "How long is your adventure?",
     duo:    "How long are you two getting away?",
     group:  "How long is the group trip?",
     family: "How many days are you planning for?",
@@ -519,7 +519,7 @@ function StepDuoStyle({ state, setState }: { state: IntakeState; setState: any }
     {
       value:   "romantic",
       icon:    <Heart className="w-5 h-5" aria-hidden="true" />,
-      label:   "Romantic escape",
+      label:   "Romantic getaway",
       sub:     "Candlelit dinners, scenic moments, a little luxury. This trip is about us.",
     },
     {

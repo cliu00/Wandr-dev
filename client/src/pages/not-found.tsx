@@ -9,7 +9,7 @@ export default function NotFound() {
       <Nav variant="solid" />
       <div className="pt-20 px-6">
         <EmptyState
-          headline="This escape couldn't be found."
+          headline="This adventure couldn't be found."
           subheading="The itinerary you're looking for may have been moved or doesn't exist."
           ctaLabel="Back to home"
           onCta={() => navigate("/")}

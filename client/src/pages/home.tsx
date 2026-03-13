@@ -81,7 +81,7 @@ export default function Home() {
       icon: <Share2 className="w-6 h-6" />,
       step: "03",
       title: "Save or share",
-      desc: "Keep it for yourself or share it with your companions — your escape, ready to go.",
+      desc: "Keep it for yourself or share it with your companions — your Wandr itinerary, ready to go.",
     },
   ];
 
@@ -93,7 +93,7 @@ export default function Home() {
       {/* Hero Section */}
       <section
         className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
-        aria-label="Plan your escape"
+        aria-label="Plan your adventure"
       >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -116,7 +116,7 @@ export default function Home() {
           <div className="w-24 h-px bg-accent my-7 mx-auto" />
 
           <p className="text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed tracking-wide">
-            Personalised Canadian escapes for solo travellers, couples, groups, and families.
+            Wandr plans personalised Canadian adventures for solo travellers, couples, groups, and families.
           </p>
 
           {/* Trip type selector */}
@@ -147,7 +147,7 @@ export default function Home() {
           <p className="text-white/55 text-sm mb-4 tracking-wide min-h-[1.25rem] transition-all duration-300">
             {tripType === "solo" && "Your solo adventure, thoughtfully curated."}
             {tripType === "duo" && "Planning for two — every detail, personalised."}
-            {tripType === "group" && "A group escape everyone will love."}
+            {tripType === "group" && "A group adventure everyone will love."}
             {tripType === "family" && "Family-friendly from start to finish."}
           </p>
 
@@ -288,7 +288,7 @@ export default function Home() {
             <span className="font-serif text-lg font-light tracking-widest text-foreground">Wandr</span>
           </div>
           <p className="text-muted-foreground text-sm text-center">
-            Bespoke escapes, masterfully planned.
+            Bespoke adventures, planned by Wandr.
           </p>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <Link href="/brand">

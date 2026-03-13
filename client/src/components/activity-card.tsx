@@ -157,9 +157,9 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
         )}
 
         {!isBaseRest && (
-          <div className="pt-3 border-t border-border/60 space-y-2.5">
+          <div className="pt-3 border-t border-border/60">
             {block.backup.name && (
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
                 <span className="text-xs text-muted-foreground truncate">
                   Backup: <span className="font-medium text-foreground/70">{block.backup.name}</span>
                   <span className="ml-1.5 text-muted-foreground">· {block.backup.costRange}</span>
@@ -177,14 +177,16 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
                 </Button>
               </div>
             )}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setIsRested(true)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full gap-1.5 text-xs rounded-full text-muted-foreground"
               data-testid={`button-rest-d${dayNumber}-${index}`}
             >
               <Coffee className="w-3 h-3" />
-              Swap for free time
-            </button>
+              Take a rest instead
+            </Button>
           </div>
         )}
       </div>

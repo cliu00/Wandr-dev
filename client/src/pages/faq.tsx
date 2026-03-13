@@ -114,7 +114,7 @@ export default function Faq() {
           Questions Worth Asking
         </h1>
         <p className="text-muted-foreground text-sm mb-14 max-w-xl leading-relaxed">
-          Everything you'd want to know before planning your first escape with Wandr.
+          Everything you'd want to know before planning your first adventure with Wandr.
         </p>
 
         <div role="list" aria-label="Frequently asked questions">
