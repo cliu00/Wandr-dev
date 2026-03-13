@@ -103,12 +103,11 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
 
-        {/* Three-zone layout: headline top · tabs middle · search bottom */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-between text-center px-6 pt-24 pb-20 md:pt-32 md:pb-28">
+        {/* Single centered cluster — headline · tabs · byline · search */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 gap-6">
 
-          {/* ① Headline — owns the top */}
           <h1
-            className="font-serif text-7xl md:text-9xl font-light text-white leading-[1.0] tracking-wide"
+            className="font-serif text-5xl md:text-7xl font-light text-white leading-[1.05] tracking-wide"
             data-testid="text-hero-headline"
           >
             Quick Getaways,
@@ -116,8 +115,8 @@ export default function Home() {
             Masterfully Planned.
           </h1>
 
-          {/* ② Trip type selector + byline — floats in the middle */}
-          <div className="flex flex-col items-center gap-3">
+          {/* Tab selector + byline */}
+          <div className="flex flex-col items-center gap-2">
             <div
               role="group"
               aria-label="Trip type"
@@ -148,8 +147,8 @@ export default function Home() {
             </p>
           </div>
 
-          {/* ③ Search bar — anchors the bottom */}
-          <div className="w-full max-w-2xl flex flex-col items-center">
+          {/* Search bar — primary CTA */}
+          <div className="w-full max-w-2xl">
             <div
               className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-2 gap-2"
               data-testid="search-bar"
