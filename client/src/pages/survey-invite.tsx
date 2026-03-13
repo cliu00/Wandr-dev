@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
+import { FlowHeader } from "@/components/flow-header";
 import {
-  ArrowLeft, Copy, Check, Users, ChevronRight,
+  Copy, Check, Users, ChevronRight,
   Plus, X, Link2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,18 +106,7 @@ export default function SurveyInvite() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 py-4 border-b border-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/itinerary/vancouver-2day")}
-          aria-label="Back to itinerary"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <span className="text-sm text-muted-foreground">Vancouver · Apr 18–19</span>
-      </header>
+      <FlowHeader onBack={() => navigate("/itinerary/vancouver-2day")} />
 
       <div className="flex-1 max-w-xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
 

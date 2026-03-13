@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Check, Clock, Users, ChevronRight, Sparkles, Heart, Wrench, Sun, Sunset, Moon } from "lucide-react";
+import { Check, Clock, Users, ChevronRight, Sparkles, Heart, Wrench, Sun, Sunset, Moon } from "lucide-react";
+import { FlowHeader } from "@/components/flow-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_PARTICIPANTS, MOCK_ITINERARY } from "@/lib/mock-data";
@@ -67,19 +68,7 @@ export default function SurveyStatus() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/survey/invite")}
-          aria-label="Back to invite"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-        </Button>
-        <span className="text-sm font-medium text-muted-foreground">Vancouver Group Trip</span>
-        <div className="w-9" aria-hidden="true" />
-      </header>
+      <FlowHeader onBack={() => navigate("/survey/invite")} />
 
       <main className="flex-1 max-w-xl mx-auto w-full px-6 py-8">
         <div className="mb-6">

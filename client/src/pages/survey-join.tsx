@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
+import { FlowHeader } from "@/components/flow-header";
 import {
   ArrowLeft, Check, MapPin, ChevronRight, UserCheck,
   Calendar, Users, Sparkles, Zap, DollarSign, Compass, UtensilsCrossed
@@ -115,16 +116,9 @@ export default function SurveyJoin() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/85" />
 
-        {/* Back */}
-        <div className="relative z-10 px-5 pt-5 flex-shrink-0">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm"
-            data-testid="button-back-welcome"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
+        {/* Header */}
+        <div className="relative z-10 flex-shrink-0">
+          <FlowHeader onBack={() => navigate("/")} variant="transparent" />
         </div>
 
         {/* Content — pinned to bottom */}
@@ -226,27 +220,22 @@ export default function SurveyJoin() {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-3 bg-background border-b border-border/60">
-          <button
-            onClick={goBack}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="w-3 h-3" />
-            <span>Vancouver · {MOCK_ORGANISER}'s Group Trip</span>
-          </div>
-          {hasPersonalLink ? (
-            <div className="flex items-center gap-1 text-xs text-primary font-medium">
-              <UserCheck className="w-3.5 h-3.5" />
-              {prefilledName}
-            </div>
-          ) : (
-            <div className="w-9" />
-          )}
-        </div>
+        <FlowHeader
+          onBack={goBack}
+          rightContent={
+            hasPersonalLink ? (
+              <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                <UserCheck className="w-3.5 h-3.5" />
+                {prefilledName}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="w-3 h-3" />
+                <span>{MOCK_ORGANISER}'s trip</span>
+              </div>
+            )
+          }
+        />
       </div>
 
       <div className="flex-1 flex flex-col pb-32 pt-20">

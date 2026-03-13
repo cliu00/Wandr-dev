@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, AlertCircle } from "lucide-react";
+import { FlowHeader } from "@/components/flow-header";
 
 const MESSAGES = [
   "Mapping hidden gems…",
@@ -193,7 +194,8 @@ export default function Generating() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-background overflow-y-auto"
           >
-            <div className="max-w-2xl mx-auto px-6 py-12">
+            <FlowHeader onBack={() => navigate("/")} />
+            <div className="max-w-2xl mx-auto px-6 py-8">
               {stuck && (
                 <div className="mb-8 flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
                   <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />

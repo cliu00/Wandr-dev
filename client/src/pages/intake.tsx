@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
+import { FlowHeader } from "@/components/flow-header";
 import {
   ArrowLeft, X, Heart, Users, Compass, Utensils, Timer,
   CalendarDays, ChevronDown, MapPin, Sparkles, Baby, Zap,
@@ -167,33 +168,20 @@ export default function Intake() {
             aria-label="Quiz progress"
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-3 bg-background border-b border-border/60">
-          <button
-            onClick={goBack}
-            aria-label={step === 1 ? "Exit quiz" : "Previous question"}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-            data-testid="button-back"
-          >
-            {step === 1
-              ? <X className="w-4 h-4" aria-hidden="true" />
-              : <ArrowLeft className="w-4 h-4" aria-hidden="true" />}
-          </button>
-
-          {contextLabel && (
-            <span className="text-xs text-muted-foreground tracking-wide truncate mx-3">
-              {contextLabel}
-            </span>
-          )}
-
-          <div className="text-right flex-shrink-0" data-testid="text-step-counter">
-            <div className="text-sm text-muted-foreground font-medium">{step}/{totalSteps}</div>
-            {isSkippable && (
-              <div className="text-[10px] text-muted-foreground/40 leading-tight mt-0.5 tracking-wide">
-                Details improve results
-              </div>
-            )}
-          </div>
-        </div>
+        <FlowHeader
+          onBack={step > 1 ? goBack : undefined}
+          onExit={step === 1 ? goBack : undefined}
+          rightContent={
+            <div className="text-right" data-testid="text-step-counter">
+              <div className="text-sm font-medium">{step}/{totalSteps}</div>
+              {isSkippable && (
+                <div className="text-[10px] leading-tight mt-0.5 tracking-wide opacity-40">
+                  Details improve results
+                </div>
+              )}
+            </div>
+          }
+        />
       </div>
 
       {/* Step content */}

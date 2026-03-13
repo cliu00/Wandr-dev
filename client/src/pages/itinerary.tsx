@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
+import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
+import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
@@ -54,18 +55,8 @@ export default function ItineraryView() {
     <div className="min-h-screen bg-background">
       {/* Sticky nav header — compact, just back + day tabs */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate("/")}
-            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Back to home"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <span className="text-xs text-muted-foreground tracking-wide">
-            Wandr · {itinerary.destination}
-          </span>
+        <div className="max-w-4xl mx-auto">
+          <FlowHeader onBack={() => navigate("/")} />
         </div>
 
         {/* Day tab selector */}
