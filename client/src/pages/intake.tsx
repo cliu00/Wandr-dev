@@ -21,7 +21,7 @@ interface IntakeState {
   groupType:     GroupType;
   // Universal
   energy:        number;
-  budget:        string[];
+  budget:        string;
   activityTypes: string[];
   food:          string[];
   anchorActivity: string;
@@ -92,7 +92,7 @@ export default function Intake() {
     startDate:     undefined,
     groupType,
     energy:        50,
-    budget:        [],
+    budget:        "",
     activityTypes: [],
     food:          [],
     anchorActivity: "",
@@ -726,33 +726,24 @@ function StepEnergy({ state, setState, groupType }: { state: IntakeState; setSta
 // ── Budget ─────────────────────────────────────────────────────────────────────
 function StepBudget({ state, setState, groupType }: { state: IntakeState; setState: any; groupType: GroupType }) {
   const headings: Record<GroupType, string> = {
-    solo:   "Daily budget per person?",
-    duo:    "Daily budget per person?",
-    group:  "Daily budget per person?",
-    family: "Daily budget per adult?",
+    solo:   "What's your spend style?",
+    duo:    "What's your spend style?",
+    group:  "What's the group's spend style?",
+    family: "What's your spend style?",
   };
   const subtexts: Record<GroupType, string> = {
-    solo:   "We'll find the perfect balance of value and quality.",
-    duo:    "Select all that apply — we'll find your sweet spot.",
-    group:  "Select all that feel right — we'll find the group's sweet spot.",
-    family: "Select all that apply. We'll include family pricing where relevant.",
+    solo:   "We'll match every recommendation to how you like to travel.",
+    duo:    "We'll shape the whole trip around it.",
+    group:  "We'll balance quality and value for everyone.",
+    family: "We'll include family pricing where relevant.",
   };
 
   const options = [
-    { value: "under-100", label: "Under $100", sub: "Budget-friendly" },
-    { value: "100-200",   label: "$100–200",   sub: "Comfortable" },
-    { value: "200-350",   label: "$200–350",   sub: "Treat yourself" },
-    { value: "350-plus",  label: "$350+",      sub: "Luxury" },
+    { value: "under-100", label: "Budget-friendly" },
+    { value: "100-200",   label: "Comfortable"     },
+    { value: "200-350",   label: "Treat yourself"  },
+    { value: "350-plus",  label: "Luxury"           },
   ];
-
-  function toggle(value: string) {
-    setState((s: IntakeState) => ({
-      ...s,
-      budget: s.budget.includes(value)
-        ? s.budget.filter((b) => b !== value)
-        : [...s.budget, value],
-    }));
-  }
 
   return (
     <div>
@@ -762,11 +753,11 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
       <p className="text-muted-foreground mb-8 text-sm">{subtexts[groupType]}</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
-          const active = state.budget.includes(opt.value);
+          const active = state.budget === opt.value;
           return (
             <button
               key={opt.value}
-              onClick={() => toggle(opt.value)}
+              onClick={() => setState((s: IntakeState) => ({ ...s, budget: opt.value }))}
               className={`p-5 rounded-2xl border-2 text-left transition-all ${
                 active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
               }`}
@@ -775,7 +766,6 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
               <div className={`font-semibold text-lg ${active ? "text-primary" : "text-foreground"}`}>
                 {opt.label}
               </div>
-              <div className="text-sm text-muted-foreground mt-0.5">{opt.sub}</div>
             </button>
           );
         })}
