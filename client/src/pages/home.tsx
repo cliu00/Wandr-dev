@@ -1,11 +1,63 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby } from "lucide-react";
+import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
-import { CURATED_ESCAPES } from "@/lib/mock-data";
+import { CURATED_ESCAPES, type CuratedEscape } from "@/lib/mock-data";
 
 type TripType = "solo" | "duo" | "group" | "family";
+
+function EscapeCard({
+  escape,
+  distanceLabel,
+  onClick,
+}: {
+  escape: CuratedEscape;
+  distanceLabel: string;
+  onClick: () => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      className="flex-shrink-0 cursor-pointer group snap-start"
+      style={{ width: "272px" }}
+      data-testid={`card-escape-${escape.id}`}
+    >
+      <div className="relative rounded-2xl overflow-hidden bg-muted" style={{ height: "336px" }}>
+        {imgError ? (
+          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex flex-col items-center justify-center gap-2 text-primary/40">
+            <ImageOff className="w-8 h-8" />
+          </div>
+        ) : (
+          <img
+            src={escape.imageUrl}
+            alt={escape.destination}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={() => setImgError(true)}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+
+        <div className="absolute top-3 right-3">
+          <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {distanceLabel}
+          </span>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h3 className="font-serif text-white text-2xl font-normal leading-tight">
+            {escape.destination}
+          </h3>
+          <p className="text-white/70 text-sm mt-1 leading-snug">
+            {escape.tagline}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -226,39 +278,12 @@ export default function Home() {
             style={{ scrollbarWidth: "none" }}
           >
             {CURATED_ESCAPES.map((escape) => (
-              <div
+              <EscapeCard
                 key={escape.id}
+                escape={escape}
+                distanceLabel={distanceLabel(escape.lat, escape.lng)}
                 onClick={() => handleEscapeClick(escape)}
-                className="flex-shrink-0 w-68 cursor-pointer group snap-start"
-                style={{ width: "272px" }}
-                data-testid={`card-escape-${escape.id}`}
-              >
-                <div className="relative rounded-2xl overflow-hidden h-84" style={{ height: "336px" }}>
-                  <img
-                    src={escape.imageUrl}
-                    alt={escape.destination}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-
-                  {/* Distance badge — replaces price */}
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {distanceLabel(escape.lat, escape.lng)}
-                    </span>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="font-serif text-white text-2xl font-normal leading-tight">
-                      {escape.destination}
-                    </h3>
-                    <p className="text-white/70 text-sm mt-1 leading-snug">
-                      {escape.tagline}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              />
             ))}
           </div>
         </div>

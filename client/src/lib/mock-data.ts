@@ -72,12 +72,12 @@ export interface SurveyParticipant {
 }
 
 export const STOCK_IMAGES: Record<string, string> = {
-  "vancouver-hero": "https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1600&q=85",
+  "vancouver-hero": "https://images.unsplash.com/photo-1560814304-4f05b62af116?w=1600&q=85",
   "toronto-hero": "https://images.unsplash.com/photo-1517090186835-e348b621c9ca?w=1600&q=85",
   "montreal-hero": "https://images.unsplash.com/photo-1519178614-68673b201f36?w=1600&q=85",
   "quebec-hero": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=85",
-  "calgary-hero": "https://images.unsplash.com/photo-1576502200272-341a883b9c30?w=1600&q=85",
-  "victoria-hero": "https://images.unsplash.com/photo-1559181567-c3190ca9be46?w=1600&q=85",
+  "calgary-hero": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=85",
+  "victoria-hero": "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=1600&q=85",
   "banff-hero": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=85",
   "cafe": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
   "museum": "https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800&q=80",
@@ -88,7 +88,7 @@ export const STOCK_IMAGES: Record<string, string> = {
   "bar": "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",
   "architecture": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80",
   "hotel-rest": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80",
-  "vancouver-market": "https://images.unsplash.com/photo-1487530811015-780780169993?w=800&q=80",
+  "vancouver-market": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
   "vancouver-gallery": "https://images.unsplash.com/photo-1551918120-9739cb430c6d?w=800&q=80",
   "vancouver-cafe": "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&q=80",
   "vancouver-park": "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80",
