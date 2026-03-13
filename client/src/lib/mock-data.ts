@@ -73,7 +73,7 @@ export interface SurveyParticipant {
 
 export const STOCK_IMAGES: Record<string, string> = {
   "vancouver-hero": "https://images.unsplash.com/photo-1560814304-4f05b62af116?w=1600&q=85",
-  "toronto-hero": "https://images.unsplash.com/photo-1517090186835-e348b621c9ca?w=1600&q=85",
+  "toronto-hero": "https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1600&q=85",
   "montreal-hero": "https://images.unsplash.com/photo-1519178614-68673b201f36?w=1600&q=85",
   "quebec-hero": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=85",
   "calgary-hero": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=85",
