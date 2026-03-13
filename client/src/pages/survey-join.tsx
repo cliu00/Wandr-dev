@@ -1,13 +1,16 @@
 import { useState, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Check, MapPin, ChevronRight, UserCheck, Calendar, Users, Sparkles } from "lucide-react";
+import {
+  ArrowLeft, Check, MapPin, ChevronRight, UserCheck,
+  Calendar, Users, Sparkles, Zap, DollarSign, Compass, UtensilsCrossed
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Star, Utensils, Timer } from "lucide-react";
 
-type JoinStep = "welcome" | "identity" | "energy" | "budget" | "activities" | "food" | "done";
+type JoinStep = "welcome" | "identity" | "energy" | "budget" | "activities" | "food";
 
 const slideVariants = {
   enter: { x: 60, opacity: 0 },
@@ -15,8 +18,10 @@ const slideVariants = {
   exit: { x: -60, opacity: 0 },
 };
 
-// Mock organiser name — in production this would come from the token lookup
 const MOCK_ORGANISER = "Jordan";
+
+// Forest green fallback for when the hero image fails to load
+const HERO_FALLBACK = "hsl(155, 35%, 18%)";
 
 export default function SurveyJoin() {
   const [, navigate] = useLocation();
@@ -26,11 +31,9 @@ export default function SurveyJoin() {
   const prefilledName = params.get("name") || "";
   const hasPersonalLink = prefilledName.length > 0;
 
-  // Personal link flow: welcome → preference steps (no identity)
-  // Generic link flow: identity → preference steps
   const STEPS: JoinStep[] = hasPersonalLink
-    ? ["welcome", "energy", "budget", "activities", "food", "done"]
-    : ["identity", "energy", "budget", "activities", "food", "done"];
+    ? ["welcome", "energy", "budget", "activities", "food"]
+    : ["identity", "energy", "budget", "activities", "food"];
 
   const [step, setStep] = useState<JoinStep>(STEPS[0]);
   const [selfName, setSelfName] = useState("");
@@ -39,15 +42,30 @@ export default function SurveyJoin() {
   const [budget, setBudget] = useState<string | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
   const [food, setFood] = useState<string | null>(null);
+  const [heroLoaded, setHeroLoaded] = useState(false);
 
   const name = hasPersonalLink ? prefilledName : selfName;
 
-  // Progress counts only the preference steps, not welcome or done
   const PROGRESS_STEPS: JoinStep[] = ["energy", "budget", "activities", "food"];
   const progressIndex = PROGRESS_STEPS.indexOf(step as any);
   const progress = progressIndex < 0 ? 0 : ((progressIndex + 1) / PROGRESS_STEPS.length) * 100;
 
+  const isLastStep = step === "food";
+
   function goNext() {
+    if (isLastStep) {
+      navigate("/generating");
+      return;
+    }
+    const idx = STEPS.indexOf(step);
+    if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
+  }
+
+  function skipStep() {
+    if (isLastStep) {
+      navigate("/generating");
+      return;
+    }
     const idx = STEPS.indexOf(step);
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
   }
@@ -69,21 +87,36 @@ export default function SurveyJoin() {
     return true;
   }
 
-  // ── Welcome screen (personal link only) ───────────────────────────────
+  // Skippable steps — energy is always skippable; others skip if nothing selected
+  const isSkippable = step === "energy" || step === "budget" || step === "activities" || step === "food";
+
+  // ── Welcome screen ─────────────────────────────────────────────────────
   if (step === "welcome") {
     return (
-      <div className="min-h-screen flex flex-col relative">
-        {/* Hero background */}
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
+        {/* Hero background with solid fallback */}
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0"
+          style={{ backgroundColor: HERO_FALLBACK }}
+        />
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=90)`,
+            backgroundImage: `url(https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=80)`,
+            opacity: heroLoaded ? 1 : 0,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/80" />
+        {/* Preload trigger */}
+        <img
+          src="https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=80"
+          className="hidden"
+          onLoad={() => setHeroLoaded(true)}
+          alt=""
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/85" />
 
         {/* Back */}
-        <div className="relative z-10 px-5 pt-5">
+        <div className="relative z-10 px-5 pt-5 flex-shrink-0">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm"
@@ -94,12 +127,12 @@ export default function SurveyJoin() {
           </button>
         </div>
 
-        {/* Content */}
+        {/* Content — pinned to bottom */}
         <div className="relative z-10 flex-1 flex flex-col justify-end px-6 pb-8 max-w-xl mx-auto w-full">
 
           {/* Invite badge */}
-          <div className="flex items-center gap-2 mb-5">
-            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium">
+          <div className="mb-5">
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium border border-white/20">
               <UserCheck className="w-3.5 h-3.5" />
               Personal invite from {MOCK_ORGANISER}
             </div>
@@ -110,132 +143,79 @@ export default function SurveyJoin() {
             Hey {prefilledName},
           </h1>
           <p className="text-white/80 text-lg mb-6 leading-relaxed">
-            {MOCK_ORGANISER} is planning a trip to Vancouver and wants to make sure it works for you too.
+            {MOCK_ORGANISER} is planning a group trip to Vancouver and wants to make sure it works for everyone.
           </p>
 
-          {/* Trip details card */}
+          {/* Trip details */}
           <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-4 mb-5 border border-white/20">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-white/60 text-xs">
-                  <MapPin className="w-3 h-3" />
-                  Destination
+            <div className="grid grid-cols-3 divide-x divide-white/15">
+              <div className="flex flex-col gap-1 pr-4">
+                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
+                  <MapPin className="w-3 h-3" /> Destination
                 </div>
                 <div className="text-white text-sm font-semibold">Vancouver</div>
               </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-white/60 text-xs">
-                  <Calendar className="w-3 h-3" />
-                  Dates
+              <div className="flex flex-col gap-1 px-4">
+                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
+                  <Calendar className="w-3 h-3" /> Dates
                 </div>
                 <div className="text-white text-sm font-semibold">Apr 18–20</div>
               </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-white/60 text-xs">
-                  <Users className="w-3 h-3" />
-                  Group
+              <div className="flex flex-col gap-1 pl-4">
+                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
+                  <Users className="w-3 h-3" /> Group
                 </div>
-                <div className="text-white text-sm font-semibold">3 people</div>
+                <div className="text-white text-sm font-semibold">3 people · 2 nights</div>
               </div>
             </div>
           </div>
 
-          {/* How it works */}
+          {/* How it works — aligned to the actual 4 quiz steps */}
           <div className="mb-7">
-            <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-3">How group planning works</p>
-            <div className="flex flex-col gap-2.5">
+            <p className="text-white/45 text-xs uppercase tracking-widest font-semibold mb-3">
+              What you'll be asked
+            </p>
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: <Check className="w-3.5 h-3.5" />, text: "Answer 4 quick questions about your travel style — takes under 2 minutes." },
-                { icon: <Sparkles className="w-3.5 h-3.5" />, text: "Wandr blends everyone's input and builds one itinerary that works for the whole group." },
-                { icon: <MapPin className="w-3.5 h-3.5" />, text: "You'll get notified when the final plan is ready — no group chat debates needed." },
-              ].map(({ icon, text }, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white/80 flex-shrink-0 mt-0.5">
-                    {icon}
-                  </span>
-                  <p className="text-white/75 text-sm leading-relaxed">{text}</p>
+                { icon: <Zap className="w-3.5 h-3.5" />, label: "Your energy level", sub: "Chill or full throttle?" },
+                { icon: <DollarSign className="w-3.5 h-3.5" />, label: "Daily budget", sub: "Your comfort range" },
+                { icon: <Compass className="w-3.5 h-3.5" />, label: "Activities", sub: "What excites you most" },
+                { icon: <UtensilsCrossed className="w-3.5 h-3.5" />, label: "Dining style", sub: "Fine dining or local gems?" },
+              ].map(({ icon, label, sub }) => (
+                <div key={label} className="flex items-start gap-2.5 bg-white/8 rounded-xl p-3 border border-white/10">
+                  <span className="text-white/60 flex-shrink-0 mt-0.5">{icon}</span>
+                  <div>
+                    <div className="text-white text-xs font-semibold leading-tight">{label}</div>
+                    <div className="text-white/50 text-xs leading-tight mt-0.5">{sub}</div>
+                  </div>
                 </div>
               ))}
             </div>
+            <p className="text-white/45 text-xs mt-3 leading-relaxed">
+              Wandr blends everyone's answers and builds one itinerary that works for the whole group.
+              You can skip any question you're not sure about.
+            </p>
           </div>
 
           {/* CTA */}
           <Button
             size="lg"
-            className="w-full rounded-full bg-white text-foreground hover:bg-white/90 gap-2 text-base font-semibold"
+            className="w-full rounded-full bg-white text-foreground hover:bg-white/90 gap-2 font-semibold"
             onClick={goNext}
             data-testid="button-accept-invite"
           >
-            Accept & add my preferences
+            Add my preferences
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <p className="text-center text-white/45 text-xs mt-3">
-            Your answers are only used to shape this trip — not stored or shared.
+          <p className="text-center text-white/35 text-xs mt-3">
+            Takes under 2 minutes · Skip any question you'd like
           </p>
         </div>
       </div>
     );
   }
 
-  // ── Done screen ────────────────────────────────────────────────────────
-  if (step === "done") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center relative px-6">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=90)`,
-            zIndex: -1,
-          }}
-        />
-        <div className="absolute inset-0 bg-black/65" style={{ zIndex: -1 }} />
-
-        <div className="text-center max-w-sm w-full">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mx-auto mb-6">
-            <Check className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="font-serif text-3xl font-bold text-white mb-3">
-            Thanks, {name}!
-          </h1>
-          <p className="text-white/75 text-lg mb-8 leading-relaxed">
-            Your preferences have been added to the Vancouver group plan.
-          </p>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-left mb-6">
-            <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
-              <MapPin className="w-4 h-4" />
-              <span>Vancouver · Apr 18–20</span>
-            </div>
-            <p className="text-white text-sm">
-              {MOCK_ORGANISER} will generate the final itinerary once everyone responds. We'll
-              notify you when it's ready.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Button
-              className="rounded-full gap-2 bg-white text-foreground hover:bg-white/90"
-              onClick={() => navigate("/survey/status")}
-              data-testid="button-view-status"
-            >
-              <Users className="w-4 h-4" />
-              View group status
-            </Button>
-            <Button
-              variant="ghost"
-              className="rounded-full border-white/30 text-white/80 hover:text-white hover:bg-white/10"
-              onClick={() => navigate("/")}
-              data-testid="button-back-home"
-            >
-              Back to Wandr
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Main survey ────────────────────────────────────────────────────────
+  // ── Main quiz ──────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress bar + header */}
@@ -258,7 +238,6 @@ export default function SurveyJoin() {
             <MapPin className="w-3 h-3" />
             <span>Vancouver · {MOCK_ORGANISER}'s Group Trip</span>
           </div>
-          {/* Identity badge — name locked in via personal link */}
           {hasPersonalLink ? (
             <div className="flex items-center gap-1 text-xs text-primary font-medium">
               <UserCheck className="w-3.5 h-3.5" />
@@ -270,7 +249,7 @@ export default function SurveyJoin() {
         </div>
       </div>
 
-      <div className={`flex-1 flex flex-col pb-28 pt-20`}>
+      <div className="flex-1 flex flex-col pb-32 pt-20">
         <div className="flex-1 max-w-2xl w-full mx-auto px-6 py-8">
           <AnimatePresence mode="wait">
             <motion.div
@@ -281,7 +260,8 @@ export default function SurveyJoin() {
               exit="exit"
               transition={{ duration: 0.3 }}
             >
-              {/* ── Identity step (generic link only) ── */}
+
+              {/* ── Identity (generic link only) ── */}
               {step === "identity" && (
                 <div>
                   <h2 className="font-serif text-3xl font-bold mb-2">You've been invited!</h2>
@@ -472,12 +452,13 @@ export default function SurveyJoin() {
                   </div>
                 </div>
               )}
+
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Sticky CTA */}
+      {/* Sticky footer — Back / Skip / Continue */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 px-4 pt-4 pb-5">
         <div className="max-w-2xl mx-auto flex gap-3">
           <Button
@@ -497,9 +478,21 @@ export default function SurveyJoin() {
             onClick={goNext}
             data-testid="button-continue"
           >
-            {step === "food" ? "Submit my preferences →" : "Continue"}
+            {isLastStep ? "Submit & generate itinerary →" : "Continue"}
           </Button>
         </div>
+        {/* Skip link — shown on all preference steps */}
+        {isSkippable && (
+          <div className="max-w-2xl mx-auto mt-2.5 text-center">
+            <button
+              onClick={skipStep}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-skip"
+            >
+              {isLastStep ? "Skip & generate without this →" : "Skip this question →"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
