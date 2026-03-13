@@ -113,12 +113,6 @@ export default function Home() {
             Masterfully Planned.
           </h1>
 
-          <div className="w-24 h-px bg-accent my-7 mx-auto" />
-
-          <p className="text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed tracking-wide">
-            Wandr plans personalised Canadian adventures for solo travellers, couples, groups, and families.
-          </p>
-
           {/* Trip type selector */}
           <div
             role="group"
