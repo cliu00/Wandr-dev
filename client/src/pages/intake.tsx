@@ -68,8 +68,8 @@ const PERSONA_CONTEXT: Record<GroupType, string> = {
 };
 
 const FINAL_CTA: Record<GroupType, string> = {
-  solo:   "Curate My Escape →",
-  duo:    "Curate Our Escape →",
+  solo:   "Plan My Adventure →",
+  duo:    "Plan Our Adventure →",
   group:  "Invite My Companions →",
   family: "Plan Our Adventure →",
 };
