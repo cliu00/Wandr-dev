@@ -133,7 +133,7 @@ export default function Intake() {
     else goNext();
   }
   function handleSubmit() {
-    navigate("/generating");
+    navigate(`/generating?groupType=${groupType}`);
   }
 
   function canContinue(): boolean {

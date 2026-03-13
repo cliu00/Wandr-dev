@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,8 @@ function WandrRouteAnimation() {
 
 export default function Generating() {
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const groupType = new URLSearchParams(search).get("groupType") || "solo";
   const [phase, setPhase] = useState<1 | 2>(1);
   const [msgIndex, setMsgIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -121,14 +123,14 @@ export default function Generating() {
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(2), 4000);
-    const t2 = setTimeout(() => navigate("/itinerary/vancouver-2day"), 6500);
+    const t2 = setTimeout(() => navigate(`/itinerary/vancouver-2day?groupType=${groupType}`), 6500);
     const t3 = setTimeout(() => setStuck(true), 11000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [navigate]);
+  }, [navigate, groupType]);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -208,7 +210,7 @@ export default function Generating() {
                     </p>
                     <Button
                       size="sm"
-                      onClick={() => navigate("/itinerary/vancouver-2day")}
+                      onClick={() => navigate(`/itinerary/vancouver-2day?groupType=${groupType}`)}
                       className="gap-1.5 rounded-full"
                       data-testid="button-go-to-itinerary"
                     >

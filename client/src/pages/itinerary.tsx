@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
@@ -16,9 +16,10 @@ export default function ItineraryView() {
   const [saved, setSaved] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
+  const search = useSearch();
 
   const itinerary = MOCK_ITINERARY;
+  const urlGroupType = new URLSearchParams(search).get("groupType") || itinerary.groupType;
   const currentDay = itinerary.days.find((d) => d.dayNumber === activeDay) ?? itinerary.days[0];
 
   function handleSave() {
@@ -115,7 +116,7 @@ export default function ItineraryView() {
               {itinerary.days.length > 1 && ` – ${itinerary.days[itinerary.days.length - 1]?.date}`}
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border capitalize">
-              {itinerary.groupType === "group" ? "Group trip" : itinerary.groupType === "solo" ? "Solo" : itinerary.groupType === "couple" ? "Duo" : "Family"}
+              {urlGroupType === "solo" ? "Solo" : urlGroupType === "duo" ? "Duo" : urlGroupType === "family" ? "Family" : "Group trip"}
             </span>
           </div>
         </div>
