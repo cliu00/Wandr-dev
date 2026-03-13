@@ -174,36 +174,6 @@ export default function ItineraryView() {
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 pb-32 md:pb-8">
 
-        {/* Invite crew banner — shown for non-solo trips until dismissed */}
-        {isGroupTrip && !inviteDismissed && (
-          <div className="mb-6 flex items-start gap-4 px-5 py-4 rounded-2xl bg-primary/6 border border-primary/15">
-            <Users className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground leading-snug">
-                Your itinerary is ready — now invite your companions.
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-                Share a link so everyone can add their preferences. We'll blend all the input and update this itinerary.
-              </p>
-              <button
-                onClick={handleInvite}
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline underline-offset-2 transition-colors"
-                data-testid="button-invite-banner"
-              >
-                Invite others →
-              </button>
-            </div>
-            <button
-              onClick={() => setInviteDismissed(true)}
-              aria-label="Dismiss invite prompt"
-              className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-dismiss-invite"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
         {/* Active day content */}
         <div className="mb-10">
 
@@ -244,11 +214,41 @@ export default function ItineraryView() {
           </div>
         )}
 
+        {/* Invite crew banner — shown at end of itinerary for non-solo trips */}
+        {isGroupTrip && !inviteDismissed && activeDay === itinerary.days.length && (
+          <div className="mb-6 flex items-start gap-4 px-5 py-4 rounded-2xl bg-primary/6 border border-primary/15">
+            <Users className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground leading-snug">
+                Love it? Now invite your companions.
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                Share a link so everyone can add their preferences. We'll blend all the input and update this itinerary.
+              </p>
+              <button
+                onClick={handleInvite}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline underline-offset-2 transition-colors"
+                data-testid="button-invite-banner"
+              >
+                Invite others →
+              </button>
+            </div>
+            <button
+              onClick={() => setInviteDismissed(true)}
+              aria-label="Dismiss invite prompt"
+              className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-dismiss-invite"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* End of itinerary CTA */}
         {activeDay === itinerary.days.length && (
           <div className="border border-border rounded-3xl p-6 md:p-8 text-center">
             <h3 className="font-serif text-2xl font-light text-foreground mb-1">
-              Your escape is ready.
+              Your adventure is ready.
             </h3>
             <p className="text-sm text-muted-foreground mb-8">
               What would you like to do next?
