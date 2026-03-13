@@ -900,28 +900,28 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
 
   const options = [
     {
-      value: "fine-dining",
-      icon:  <UtensilsCrossed className="w-5 h-5" aria-hidden="true" />,
-      label: "Fine dining & reservations",
-      sub:   "The best tables in the city — booked in advance.",
-    },
-    {
-      value: "great-meals",
-      icon:  <Star className="w-5 h-5" aria-hidden="true" />,
-      label: "Great restaurants, no fuss",
-      sub:   "Quality food without the tasting-menu commitment.",
-    },
-    {
-      value: "local-casual",
+      value: "street-food",
       icon:  <MapPin className="w-5 h-5" aria-hidden="true" />,
-      label: "Local gems & casual spots",
-      sub:   "Neighbourhood favourites, cafés, and hidden finds.",
+      label: "Street food & markets",
+      sub:   "Stalls, vendors, food halls — the hunt is half the fun.",
     },
     {
-      value: "quick-bites",
-      icon:  <Timer className="w-5 h-5" aria-hidden="true" />,
-      label: "Quick bites, keep moving",
-      sub:   "Fuel up fast — dining isn't the focus.",
+      value: "neighbourhood",
+      icon:  <Coffee className="w-5 h-5" aria-hidden="true" />,
+      label: "Neighbourhood gems",
+      sub:   "Mom-and-pop spots, family-run kitchens, beloved locals.",
+    },
+    {
+      value: "sit-down",
+      icon:  <UtensilsCrossed className="w-5 h-5" aria-hidden="true" />,
+      label: "Proper sit-downs",
+      sub:   "Full menus, good wine, no rush — conversation over courses.",
+    },
+    {
+      value: "special-evening",
+      icon:  <Sparkles className="w-5 h-5" aria-hidden="true" />,
+      label: "One special evening",
+      sub:   "A memorable dinner as a trip highlight — not every meal needs to be an event.",
     },
   ];
 
