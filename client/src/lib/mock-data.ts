@@ -46,8 +46,6 @@ export interface CuratedEscape {
   endDate: string;
   durationDays: number;
   pricePerDay: number;
-  lat: number;
-  lng: number;
   tags: string[];
 }
 
@@ -97,7 +95,7 @@ export const MOCK_ITINERARY: Itinerary = {
   country: "Canada",
   durationDays: 2,
   groupType: "group",
-  participants: [],
+  participants: ["Alice", "Bob"],
   days: [
     {
       dayNumber: 1,
@@ -106,7 +104,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-morning",
           timeSlot: "morning",
-          curatorName: "",
+          curatorName: "Alice's pick",
           primary: {
             name: "Café Bica",
             type: "Local espresso bar · Gastown",
@@ -125,7 +123,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-afternoon",
           timeSlot: "afternoon",
-          curatorName: "",
+          curatorName: "Bob's pick",
           primary: {
             name: "Vancouver Art Gallery",
             type: "Art museum · Downtown",
@@ -144,7 +142,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-evening",
           timeSlot: "evening",
-          curatorName: "",
+          curatorName: "Everyone",
           primary: {
             name: "Burdock & Co",
             type: "West Coast tasting menu · Main St",
@@ -169,7 +167,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-morning",
           timeSlot: "morning",
-          curatorName: "",
+          curatorName: "Bob's pick",
           primary: {
             name: "Granville Island Public Market",
             type: "Indoor market · False Creek",
@@ -188,7 +186,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-rest",
           timeSlot: "rest",
-          curatorName: "",
+          curatorName: "Everyone",
           primary: {
             name: "Downtime at Hotel",
             type: "Rest & recharge",
@@ -206,7 +204,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-evening",
           timeSlot: "evening",
-          curatorName: "",
+          curatorName: "Everyone",
           primary: {
             name: "The Diamond",
             type: "Craft cocktail bar · Gastown",
@@ -239,8 +237,6 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Apr 20",
     durationDays: 3,
     pricePerDay: 130,
-    lat: 49.2827,
-    lng: -123.1207,
     tags: ["Nature", "Culture", "Dining"],
   },
   {
@@ -254,8 +250,6 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "May 11",
     durationDays: 3,
     pricePerDay: 120,
-    lat: 43.6532,
-    lng: -79.3832,
     tags: ["Culture", "Dining", "History"],
   },
   {
@@ -269,8 +263,6 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Jun 7",
     durationDays: 2,
     pricePerDay: 100,
-    lat: 45.5017,
-    lng: -73.5673,
     tags: ["Dining", "Culture", "History"],
   },
   {
@@ -284,8 +276,6 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Mar 29",
     durationDays: 2,
     pricePerDay: 95,
-    lat: 46.8139,
-    lng: -71.2080,
     tags: ["History", "Culture", "Relaxation"],
   },
   {
@@ -299,8 +289,6 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Jul 14",
     durationDays: 3,
     pricePerDay: 150,
-    lat: 51.1784,
-    lng: -115.5708,
     tags: ["Nature", "Adventure", "Relaxation"],
   },
   {
@@ -314,84 +302,7 @@ export const CURATED_ESCAPES: CuratedEscape[] = [
     endDate: "Apr 6",
     durationDays: 2,
     pricePerDay: 110,
-    lat: 48.4284,
-    lng: -123.3656,
     tags: ["Nature", "Relaxation", "Culture"],
-  },
-];
-
-export type TripStatus = "upcoming" | "past" | "draft";
-
-export interface SavedTrip {
-  id: string;
-  destination: string;
-  country: string;
-  tagline: string;
-  imageUrl: string;
-  startDate: string;
-  endDate: string;
-  durationDays: number;
-  groupType: "solo" | "duo" | "group" | "family";
-  companions?: string[];
-  status: TripStatus;
-  itineraryId: string;
-}
-
-export const MOCK_SAVED_TRIPS: SavedTrip[] = [
-  {
-    id: "saved-vancouver",
-    destination: "Vancouver",
-    country: "Canada",
-    tagline: "Ocean, mountains & market mornings",
-    imageUrl: STOCK_IMAGES["vancouver-hero"],
-    startDate: "Apr 18",
-    endDate: "Apr 19",
-    durationDays: 2,
-    groupType: "group",
-    companions: ["Alice", "Bob", "Charlie"],
-    status: "upcoming",
-    itineraryId: "vancouver-2day",
-  },
-  {
-    id: "saved-banff",
-    destination: "Banff",
-    country: "Canada",
-    tagline: "Glaciers, hot springs & pure wilderness",
-    imageUrl: STOCK_IMAGES["banff-hero"],
-    startDate: "Feb 14",
-    endDate: "Feb 16",
-    durationDays: 3,
-    groupType: "duo",
-    companions: ["Jordan"],
-    status: "past",
-    itineraryId: "vancouver-2day",
-  },
-  {
-    id: "saved-montreal",
-    destination: "Montréal",
-    country: "Canada",
-    tagline: "Old world charm meets electric food scene",
-    imageUrl: STOCK_IMAGES["montreal-hero"],
-    startDate: "Jan 10",
-    endDate: "Jan 11",
-    durationDays: 2,
-    groupType: "solo",
-    status: "past",
-    itineraryId: "vancouver-2day",
-  },
-  {
-    id: "draft-quebec",
-    destination: "Québec City",
-    country: "Canada",
-    tagline: "Cobblestones, history & winter warmth",
-    imageUrl: STOCK_IMAGES["quebec-hero"],
-    startDate: "—",
-    endDate: "—",
-    durationDays: 2,
-    groupType: "duo",
-    companions: ["Sam"],
-    status: "draft",
-    itineraryId: "vancouver-2day",
   },
 ];
 

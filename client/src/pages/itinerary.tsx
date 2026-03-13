@@ -1,46 +1,37 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
-import { FlowHeader } from "@/components/flow-header";
-import { useAuth } from "@/lib/auth-context";
+import { ArrowLeft, Share2, Map, X, Bed, Bookmark, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
+import { ItineraryMap } from "@/components/itinerary-map";
 import { MOCK_ITINERARY } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
-import { copyToClipboard } from "@/lib/clipboard";
 
 export default function ItineraryView() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [showMobileMap, setShowMobileMap] = useState(false);
+  const [showRestBlocks, setShowRestBlocks] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeDay, setActiveDay] = useState(1);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
 
   const itinerary = MOCK_ITINERARY;
-  const currentDay = itinerary.days.find((d) => d.dayNumber === activeDay) ?? itinerary.days[0];
 
   function handleSave() {
-    if (user) {
-      setSaved(true);
-      toast({ title: "Itinerary saved", description: "Added to your trips." });
-    } else {
-      setShowAuthModal(true);
-    }
+    setSaved(true);
+    toast({
+      title: "Itinerary saved",
+      description: "Added to your trips.",
+    });
   }
 
-  async function handleShare() {
-    const ok = await copyToClipboard("https://wandr.app/itinerary/share/vancouver-abc123");
-    if (ok) {
-      toast({ title: "Link copied", description: "Share this link with your companions." });
-    } else {
-      toast({
-        title: "Couldn't copy automatically",
-        description: "Copy this link manually: wandr.app/itinerary/share/vancouver-abc123",
-        variant: "destructive",
-      });
-    }
+  function handleShare() {
+    navigator.clipboard
+      .writeText("https://wandr.app/itinerary/share/vancouver-abc123")
+      .catch(() => {});
+    toast({
+      title: "Link copied",
+      description: "Share this link with your crew.",
+    });
   }
 
   function handleInvite() {
@@ -48,184 +39,186 @@ export default function ItineraryView() {
   }
 
   function handleRegenerate() {
-    navigate("/");
+    navigate("/generating");
   }
+
+  function handleMarkerClick(dayNumber: number, blockIndex: number) {
+    const el = document.getElementById(`block-d${dayNumber}-${blockIndex}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
+    }
+  }
+
+  const filteredDays = itinerary.days.map((day) => ({
+    ...day,
+    blocks: showRestBlocks
+      ? day.blocks
+      : day.blocks.filter((b) => b.timeSlot !== "rest"),
+  }));
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky nav header — compact, just back + day tabs */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-4xl mx-auto">
-          <FlowHeader onBack={() => navigate("/")} />
-        </div>
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/")}
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
 
-        {/* Day tab selector */}
-        {itinerary.days.length > 1 && (
-          <div className="border-t border-border/40">
-            <div className="max-w-4xl mx-auto px-4">
-              <div
-                className="flex gap-1 py-2 overflow-x-auto"
-                role="tablist"
-                aria-label="Itinerary days"
+          <div className="text-center">
+            <div
+              className="font-serif text-base font-semibold text-foreground"
+              data-testid="text-itinerary-title"
+            >
+              {itinerary.destination}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {itinerary.durationDays}-day itinerary
+            </div>
+          </div>
+
+          {/* Desktop action row */}
+          <div className="hidden md:flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSave}
+              className={`gap-1.5 text-xs ${saved ? "text-primary" : ""}`}
+              data-testid="button-save"
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-primary" : ""}`} />
+              {saved ? "Saved" : "Save"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              className="gap-1.5 text-xs"
+              data-testid="button-share"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleInvite}
+              className="gap-1.5 text-xs"
+              data-testid="button-invite"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Invite Others
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRegenerate}
+              className="gap-1.5 text-xs"
+              data-testid="button-regenerate"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Regenerate
+            </Button>
+          </div>
+
+          {/* Mobile: map + share icons */}
+          <div className="flex md:hidden items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowMobileMap(true)}
+              data-testid="button-view-map-mobile"
+            >
+              <Map className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              data-testid="button-share-mobile"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto flex">
+        {/* Left — Itinerary */}
+        <div className="flex-1 min-w-0 px-4 md:px-8 py-8 md:max-w-[58%]">
+          {/* Controls row */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            {itinerary.groupType !== "solo" ? (
+              <p className="text-sm text-muted-foreground">
+                Curated for{" "}
+                <span className="font-medium text-foreground">
+                  {itinerary.participants.join(" & ")}
+                </span>
+              </p>
+            ) : (
+              <div />
+            )}
+
+            {/* Rest blocks toggle */}
+            <button
+              onClick={() => setShowRestBlocks((v) => !v)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-full border text-xs font-medium transition-all ${
+                showRestBlocks
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-card border-border text-muted-foreground hover:border-primary/30"
+              }`}
+              data-testid="button-toggle-rest"
+            >
+              <Bed className="w-3.5 h-3.5" />
+              Rest blocks
+              <span
+                className={`w-7 h-4 rounded-full transition-colors relative flex-shrink-0 ${
+                  showRestBlocks ? "bg-primary" : "bg-muted-foreground/30"
+                }`}
               >
-                {itinerary.days.map((day) => (
-                  <button
-                    key={day.dayNumber}
-                    role="tab"
-                    aria-selected={activeDay === day.dayNumber}
-                    onClick={() => setActiveDay(day.dayNumber)}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      activeDay === day.dayNumber
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    }`}
-                    data-testid={`button-day-${day.dayNumber}`}
-                  >
-                    Day {day.dayNumber}
-                    <span className={`text-[10px] font-normal ${activeDay === day.dayNumber ? "opacity-70" : "opacity-50"}`}>
-                      {day.date}
-                    </span>
-                  </button>
+                <span
+                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
+                    showRestBlocks ? "translate-x-0.5" : "translate-x-3"
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+
+          {filteredDays.map((day) => (
+            <div key={day.dayNumber} className="mb-10">
+              <div className="flex items-baseline gap-3 mb-5">
+                <h2 className="font-serif text-2xl font-bold text-foreground">
+                  Day {day.dayNumber}
+                </h2>
+                <span className="text-muted-foreground text-sm">{day.date}</span>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {day.blocks.map((block, idx) => (
+                  <ActivityCard
+                    key={block.id}
+                    block={block}
+                    index={idx}
+                    dayNumber={day.dayNumber}
+                  />
                 ))}
               </div>
             </div>
-          </div>
-        )}
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-8">
-
-        {/* Page title hero */}
-        <div className="mb-8 pb-6 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-            Your Wandr Itinerary
-          </p>
-          <h1
-            className="font-serif text-5xl md:text-6xl font-light text-foreground leading-none mb-4"
-            data-testid="text-itinerary-title"
-          >
-            {itinerary.destination}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
-              {itinerary.durationDays} {itinerary.durationDays === 1 ? "day" : "days"}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
-              {itinerary.days[0]?.date}
-              {itinerary.days.length > 1 && ` – ${itinerary.days[itinerary.days.length - 1]?.date}`}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border capitalize">
-              {itinerary.groupType === "group" ? "Group trip" : itinerary.groupType === "solo" ? "Solo" : itinerary.groupType === "couple" ? "Duo" : "Family"}
-            </span>
-          </div>
+          ))}
         </div>
 
-        {/* Active day content */}
-        <div className="mb-10">
-
-          <div className="flex flex-col gap-4">
-            {currentDay.blocks.map((block, idx) => (
-              <ActivityCard
-                key={block.id}
-                block={block}
-                index={idx}
-                dayNumber={currentDay.dayNumber}
-              />
-            ))}
-          </div>
+        {/* Right — Map (desktop only) */}
+        <div className="hidden md:block sticky top-14 h-[calc(100vh-3.5rem)] flex-1 border-l border-border">
+          <ItineraryMap itinerary={itinerary} onMarkerClick={handleMarkerClick} />
         </div>
-
-        {/* Day navigation footer */}
-        {itinerary.days.length > 1 && (
-          <div className="flex items-center justify-between mb-10">
-            <button
-              onClick={() => setActiveDay((d) => Math.max(1, d - 1))}
-              disabled={activeDay === 1}
-              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              data-testid="button-prev-day"
-            >
-              ← Day {activeDay - 1}
-            </button>
-            <span className="text-xs text-muted-foreground">
-              {activeDay} / {itinerary.days.length}
-            </span>
-            <button
-              onClick={() => setActiveDay((d) => Math.min(itinerary.days.length, d + 1))}
-              disabled={activeDay === itinerary.days.length}
-              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              data-testid="button-next-day"
-            >
-              Day {activeDay + 1} →
-            </button>
-          </div>
-        )}
-
-        {/* End of itinerary CTA */}
-        {activeDay === itinerary.days.length && (
-          <div className="border border-border rounded-3xl p-6 md:p-8">
-            <h3 className="font-serif text-2xl font-light text-foreground mb-1">
-              Your adventure is ready.
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              What would you like to do next?
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {/* 1 — Save */}
-              <button
-                onClick={handleSave}
-                className={`flex flex-col items-start gap-3 p-4 rounded-2xl border text-left transition-colors ${
-                  saved ? "border-primary/40 bg-primary/5" : "border-border bg-card hover:border-primary/40"
-                }`}
-                data-testid="button-save-cta"
-              >
-                <Bookmark className={`w-5 h-5 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">{saved ? "Saved to your trips" : "Save this itinerary"}</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Keep it in your account so you can come back any time.</p>
-                </div>
-              </button>
-
-              {/* 2 — Share */}
-              <button
-                onClick={handleShare}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-share-cta"
-              >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Share a link</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Copy a read-only link — send it to anyone to view the itinerary.</p>
-                </div>
-              </button>
-
-              {/* 3 — Invite */}
-              <button
-                onClick={handleInvite}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-invite-cta"
-              >
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Invite companions to co-plan</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Companions answer their own preferences. Wandr blends everyone's input and updates this itinerary.</p>
-                </div>
-              </button>
-
-              {/* 4 — Start over */}
-              <button
-                onClick={handleRegenerate}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-regenerate-cta"
-              >
-                <RotateCcw className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Start over</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Go back to the beginning and plan a different trip.</p>
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile sticky action bar */}
@@ -263,55 +256,40 @@ export default function ItineraryView() {
             data-testid="button-regenerate-mobile"
           >
             <RefreshCw className="w-5 h-5" />
-            Start over
+            Regenerate
+          </button>
+          <button
+            onClick={() => setShowMobileMap(true)}
+            className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
+            data-testid="button-map-mobile"
+          >
+            <Map className="w-5 h-5" />
+            Map
           </button>
         </div>
       </div>
 
-      {/* Auth modal */}
-      {showAuthModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-          onClick={() => setShowAuthModal(false)}
-          data-testid="modal-auth-backdrop"
-        >
-          <div
-            className="w-full max-w-sm bg-background rounded-3xl border border-border p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-            data-testid="modal-auth"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="font-serif text-xl font-bold text-foreground">Save your trip</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">A free account keeps it safe.</p>
-              </div>
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="button-close-auth"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex flex-col gap-3">
+      {/* Mobile Map Sheet */}
+      {showMobileMap && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-background">
+            <div className="absolute top-4 right-4 z-10">
               <Button
-                className="w-full rounded-full gap-2"
-                onClick={() => { setShowAuthModal(false); navigate("/sign-up"); }}
-                data-testid="button-signup"
+                size="icon"
+                variant="secondary"
+                onClick={() => setShowMobileMap(false)}
+                data-testid="button-close-map"
               >
-                <UserPlus className="w-4 h-4" />
-                Create a free account
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full rounded-full gap-2"
-                onClick={() => { setShowAuthModal(false); navigate("/sign-in"); }}
-                data-testid="button-login"
-              >
-                <LogIn className="w-4 h-4" />
-                Log in
+                <X className="w-4 h-4" />
               </Button>
             </div>
+            <ItineraryMap
+              itinerary={itinerary}
+              onMarkerClick={(day, idx) => {
+                setShowMobileMap(false);
+                setTimeout(() => handleMarkerClick(day, idx), 100);
+              }}
+            />
           </div>
         </div>
       )}
