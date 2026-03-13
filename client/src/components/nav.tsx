@@ -130,28 +130,16 @@ export function Nav({ variant = "solid" }: NavProps) {
               )}
             </div>
           ) : (
-            /* Logged-out state */
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/sign-in")}
-                data-testid="button-login"
-                className={isTransparent ? "text-white/85 hover:text-white hover:bg-white/10 text-sm" : "text-sm"}
-              >
-                Log in
-              </Button>
-
-              <Button
-                variant={isTransparent ? "outline" : "default"}
-                size="sm"
-                onClick={() => navigate("/sign-up")}
-                data-testid="button-signup"
-                className={isTransparent ? "text-white border-white/40 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-sm" : "text-sm"}
-              >
-                Sign up
-              </Button>
-            </>
+            /* Logged-out state — single entry point */
+            <Button
+              variant={isTransparent ? "outline" : "default"}
+              size="sm"
+              onClick={() => navigate("/sign-in")}
+              data-testid="button-signin"
+              className={isTransparent ? "text-white border-white/40 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-sm" : "text-sm"}
+            >
+              Sign in
+            </Button>
           )}
         </div>
       </div>
