@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Gbjpqgova__IRDVd6cljh"
+uri = "file://public/wandr-ux-flow.pptx"
+type = "slides"
+title = "Wandr — User Journey Map (PowerPoint)"
