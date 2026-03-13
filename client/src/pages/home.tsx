@@ -105,7 +105,7 @@ export default function Home() {
 
         <div className="relative z-10 w-full max-w-3xl mx-auto px-6 flex flex-col items-center text-center">
           <h1
-            className="font-serif text-6xl md:text-8xl font-light text-white leading-[1.05] mb-2 tracking-wide"
+            className="font-serif text-7xl md:text-9xl font-light text-white leading-[1.0] mb-2 tracking-wide"
             data-testid="text-hero-headline"
           >
             Quick Getaways,
