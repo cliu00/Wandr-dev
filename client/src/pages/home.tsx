@@ -139,10 +139,10 @@ export default function Home() {
 
           {/* Trip type context */}
           <p className="text-white/55 text-sm mb-4 tracking-wide min-h-[1.25rem] transition-all duration-300">
-            {tripType === "solo" && "Your solo adventure, thoughtfully curated."}
-            {tripType === "duo" && "Planning for two — every detail, personalised."}
-            {tripType === "group" && "A group adventure everyone will love."}
-            {tripType === "family" && "Family-friendly from start to finish."}
+            {tripType === "solo" && "Built around your pace, no compromises."}
+            {tripType === "duo" && "Balanced for two people who want different things."}
+            {tripType === "group" && "One plan everyone actually agrees on."}
+            {tripType === "family" && "Activities for everyone — including the adults."}
           </p>
 
           {/* Search bar */}
