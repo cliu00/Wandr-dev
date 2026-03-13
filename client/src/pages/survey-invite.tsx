@@ -25,7 +25,7 @@ function makePersonalLinkFull(name: string, token: string): string {
   return `${window.location.origin}/survey/join?name=${slug}&token=${token}`;
 }
 
-interface Companion {
+interface Wandrer {
   name: string;
   token: string;
   copied: boolean;
@@ -35,7 +35,7 @@ export default function SurveyInvite() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const [companions, setCompanions] = useState<Companion[]>([
+  const [companions, setCompanions] = useState<Wandrer[]>([
     { name: "", token: makeToken("", 0), copied: false },
   ]);
 
@@ -123,10 +123,10 @@ export default function SurveyInvite() {
         {/* Title */}
         <div>
           <h1 className="font-serif text-3xl font-light text-foreground mb-2 leading-tight">
-            Invite companions to co-plan
+            Invite your wandrers
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Each companion gets their own personal link. When they open it, the survey already knows
+            Each wandrer gets their own personal link. When they open it, the survey already knows
             who they are — no name entry needed. Wandr blends everyone's preferences automatically.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function SurveyInvite() {
         {/* How it works */}
         <div className="flex flex-col gap-2">
           {[
-            { n: "1", text: "Enter each companion's name below — a personal link is generated instantly." },
+            { n: "1", text: "Enter each wandrer's name below — a personal link is generated instantly." },
             { n: "2", text: "Copy and send each person their unique link directly (text, email, DM)." },
             { n: "3", text: "They answer 4 quick questions. Once everyone responds, you generate the group itinerary." },
           ].map(({ n, text }) => (
@@ -151,7 +151,7 @@ export default function SurveyInvite() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Companions
+              Your wandrers
             </label>
             {hasAnyFilled && filledCompanions.length > 1 && (
               <button
@@ -186,7 +186,7 @@ export default function SurveyInvite() {
                       type="text"
                       value={companion.name}
                       onChange={(e) => updateName(i, e.target.value)}
-                      placeholder={`Companion ${i + 1} name`}
+                      placeholder={`Wandrer ${i + 1} name`}
                       className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
                       data-testid={`input-name-${i}`}
                     />
@@ -195,7 +195,7 @@ export default function SurveyInvite() {
                         onClick={() => removeCompanion(i)}
                         className="text-muted-foreground hover:text-foreground transition-colors p-1 flex-shrink-0"
                         data-testid={`button-remove-${i}`}
-                        aria-label="Remove companion"
+                        aria-label="Remove wandrer"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -237,7 +237,7 @@ export default function SurveyInvite() {
             data-testid="button-add-person"
           >
             <Plus className="w-4 h-4" />
-            Add another companion
+            Invite another wandrer
           </button>
         </div>
 
@@ -263,7 +263,7 @@ export default function SurveyInvite() {
           </Button>
           {!hasAnyFilled && (
             <p className="text-center text-xs text-muted-foreground">
-              Add at least one companion to generate links.
+              Invite at least one wandrer to generate personal links.
             </p>
           )}
         </div>

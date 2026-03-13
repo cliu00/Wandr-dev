@@ -327,9 +327,9 @@ export default function SurveyJoin() {
               {/* ── Budget ── */}
               {step === "budget" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">Your daily budget per person?</h2>
+                  <h2 className="font-serif text-3xl font-bold mb-2">What's your daily budget?</h2>
                   <p className="text-muted-foreground mb-8">
-                    We'll find the sweet spot for the whole group.
+                    Share yours — Wandr will find the right balance once everyone weighs in.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {[

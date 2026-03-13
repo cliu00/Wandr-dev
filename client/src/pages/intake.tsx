@@ -34,7 +34,7 @@ interface IntakeState {
   groupDynamic:  string | null;
   // Family-specific
   kidsAges:      string[];
-  familyNeeds:   string;
+  familyNeeds:   string[];
 }
 
 // ─── Step sequences per persona ───────────────────────────────────────────────
@@ -70,7 +70,7 @@ const PERSONA_CONTEXT: Record<GroupType, string> = {
 const FINAL_CTA: Record<GroupType, string> = {
   solo:   "Plan My Adventure →",
   duo:    "Plan Our Adventure →",
-  group:  "Invite My Companions →",
+  group:  "Invite My Wandrers →",
   family: "Plan Our Adventure →",
 };
 
@@ -101,7 +101,7 @@ export default function Intake() {
     duoStyle:      null,
     groupDynamic:  null,
     kidsAges:      [],
-    familyNeeds:   "",
+    familyNeeds:   [],
   });
 
   const STEPS    = STEP_SEQUENCES[groupType];
@@ -695,13 +695,13 @@ function StepEnergy({ state, setState, groupType }: { state: IntakeState; setSta
   const headings: Record<GroupType, string> = {
     solo:   "What's your energy this trip?",
     duo:    "What's your energy as a pair?",
-    group:  "What's the group's overall vibe?",
+    group:  "What's your energy for this trip?",
     family: "How much do you want to pack in?",
   };
   const subtexts: Record<GroupType, string> = {
     solo:   "From full chill to full throttle.",
     duo:    "We'll match the pace to both of you.",
-    group:  "We'll build in flexibility so no one gets left behind.",
+    group:  "Share yours first — Wandr blends in your wandrers' input.",
     family: "We'll leave room for downtime — families need it.",
   };
   const labels: Record<GroupType, [string, string, string]> = {
@@ -740,13 +740,13 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
   const headings: Record<GroupType, string> = {
     solo:   "What's your spend style?",
     duo:    "What's your spend style?",
-    group:  "What's the group's spend style?",
+    group:  "What's your spend style?",
     family: "What's your spend style?",
   };
   const subtexts: Record<GroupType, string> = {
     solo:   "We'll match every recommendation to how you like to travel.",
     duo:    "We'll shape the whole trip around it.",
-    group:  "We'll balance quality and value for everyone.",
+    group:  "Wandr will find the sweet spot once your wandrers weigh in.",
     family: "We'll include family pricing where relevant.",
   };
 
@@ -791,13 +791,13 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
   const headings: Record<GroupType, string> = {
     solo:   "What kinds of experiences are you looking for?",
     duo:    "What do you two enjoy most?",
-    group:  "What does the group enjoy?",
+    group:  "What do you enjoy most?",
     family: "What does your family enjoy most?",
   };
   const subtexts: Record<GroupType, string> = {
     solo:   "Pick all that excite you.",
     duo:    "Pick everything that appeals to both of you — or just one of you.",
-    group:  "Pick all that apply. We'll find the highest-overlap picks.",
+    group:  "Pick what excites you — Wandr blends everyone's picks.",
     family: "Pick anything the whole family would enjoy.",
   };
 
@@ -864,7 +864,7 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
         <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
           {groupType === "solo" || groupType === "duo"
             ? "Anything specific to plan around — activities, reservations, or must-dos?"
-            : "Anything else on your group's must-do list?"}
+            : "Anything specific you'd like to plan around?"}
         </label>
         <textarea
           placeholder={placeholders[groupType]}
@@ -997,27 +997,70 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
 }
 
 // ── Family needs ───────────────────────────────────────────────────────────────
+const FAMILY_NEEDS_OPTIONS = [
+  { value: "stroller-friendly",   label: "Stroller-friendly",    sub: "Flat paths, ramps, easy terrain" },
+  { value: "wheelchair-access",   label: "Wheelchair accessible", sub: "Step-free venues & pathways" },
+  { value: "kid-friendly-dining", label: "Kid-friendly dining",   sub: "Kid menus, patience included" },
+  { value: "hands-on-kids",       label: "Hands-on for kids",     sub: "Interactive museums, science, play" },
+  { value: "outdoor-space",       label: "Lots of outdoor space", sub: "Parks, open areas, room to run" },
+  { value: "easy-pacing",         label: "Easy pacing",           sub: "Short distances, no marathon walks" },
+  { value: "educational",         label: "Educational stops",     sub: "History, science, discovery" },
+  { value: "early-finish",        label: "Early day structure",   sub: "Plans that wrap by 7 pm" },
+];
+
 function StepFamilyNeeds({ state, setState }: { state: IntakeState; setState: any }) {
+  function toggle(value: string) {
+    setState((s: IntakeState) => ({
+      ...s,
+      familyNeeds: s.familyNeeds.includes(value)
+        ? s.familyNeeds.filter((v) => v !== value)
+        : [...s.familyNeeds, value],
+    }));
+  }
+
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        Anything we should plan around?
+        What does your family need?
       </h2>
       <p className="text-muted-foreground mb-8 text-sm">
-        Dietary restrictions, accessibility needs, nap schedules, early dinners — anything that shapes the day.
+        Select anything that matters — Wandr will plan around it.
       </p>
-      <textarea
-        placeholder={
-          "e.g. Nut allergy\nStroller-friendly routes only\nEarly dinners before 6pm\nMy 5-year-old loves trains\nWheelchair accessible venues needed"
-        }
-        value={state.familyNeeds}
-        onChange={(e) => setState((s: IntakeState) => ({ ...s, familyNeeds: e.target.value }))}
-        rows={5}
-        className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
-        data-testid="input-family-needs"
-      />
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        {FAMILY_NEEDS_OPTIONS.map((opt) => {
+          const active = state.familyNeeds.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+              }`}
+              data-testid={`button-family-need-${opt.value}`}
+            >
+              <div className={`text-sm font-semibold leading-tight ${active ? "text-primary" : "text-foreground"}`}>
+                {opt.label}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{opt.sub}</div>
+            </button>
+          );
+        })}
+      </div>
+      <div>
+        <label className="block text-xs text-muted-foreground mb-2 tracking-wide">
+          Anything specific? Allergies, nap schedules, must-see spots for the kids…
+        </label>
+        <textarea
+          placeholder={"e.g. Nut allergy · My 4-year-old loves dinosaurs · Need a nap break after lunch"}
+          value={typeof state.activityNotes === "string" ? state.activityNotes : ""}
+          onChange={(e) => setState((s: IntakeState) => ({ ...s, activityNotes: e.target.value }))}
+          rows={3}
+          className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground/70 outline-none focus:border-primary/50 transition-colors resize-none leading-relaxed"
+          data-testid="input-family-notes"
+        />
+      </div>
       <p className="text-xs text-muted-foreground mt-3">
-        Leave blank if there's nothing specific — we'll build a family-friendly plan by default.
+        Skip if nothing specific applies — Wandr builds family-friendly by default.
       </p>
     </div>
   );
