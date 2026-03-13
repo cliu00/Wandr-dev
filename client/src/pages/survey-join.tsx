@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Star, Utensils } from "lucide-react";
 
-type JoinStep = "welcome" | "identity" | "energy" | "budget" | "activities" | "food";
+type JoinStep = "welcome" | "identity" | "groupDynamic" | "energy" | "budget" | "activities" | "food";
 
 const slideVariants = {
   enter: { x: 60, opacity: 0 },
@@ -33,12 +33,13 @@ export default function SurveyJoin() {
   const hasPersonalLink = prefilledName.length > 0;
 
   const STEPS: JoinStep[] = hasPersonalLink
-    ? ["welcome", "energy", "budget", "activities", "food"]
-    : ["identity", "energy", "budget", "activities", "food"];
+    ? ["welcome", "groupDynamic", "energy", "budget", "activities", "food"]
+    : ["identity", "groupDynamic", "energy", "budget", "activities", "food"];
 
   const [step, setStep] = useState<JoinStep>(STEPS[0]);
   const [selfName, setSelfName] = useState("");
   const [email, setEmail] = useState("");
+  const [groupDynamic, setGroupDynamic] = useState<string | null>(null);
   const [energy, setEnergy] = useState(50);
   const [budget, setBudget] = useState<string | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
@@ -49,7 +50,7 @@ export default function SurveyJoin() {
 
   const name = hasPersonalLink ? prefilledName : selfName;
 
-  const PROGRESS_STEPS: JoinStep[] = ["energy", "budget", "activities", "food"];
+  const PROGRESS_STEPS: JoinStep[] = ["groupDynamic", "energy", "budget", "activities", "food"];
   const progressIndex = PROGRESS_STEPS.indexOf(step as any);
   const progress = progressIndex < 0 ? 0 : ((progressIndex + 1) / PROGRESS_STEPS.length) * 100;
 
@@ -84,6 +85,7 @@ export default function SurveyJoin() {
 
   function canContinue() {
     if (step === "identity") return selfName.trim().length > 0;
+    if (step === "groupDynamic") return groupDynamic !== null;
     if (step === "budget") return budget !== null;
     if (step === "activities") return activities.length > 0;
     if (step === "food") return food.length > 0;
@@ -91,7 +93,7 @@ export default function SurveyJoin() {
   }
 
   // Skippable steps — energy is always skippable; others skip if nothing selected
-  const isSkippable = step === "energy" || step === "budget" || step === "activities" || step === "food";
+  const isSkippable = step === "groupDynamic" || step === "energy" || step === "budget" || step === "activities" || step === "food";
 
   // ── Welcome screen ─────────────────────────────────────────────────────
   if (step === "welcome") {
@@ -166,13 +168,14 @@ export default function SurveyJoin() {
             </div>
           </div>
 
-          {/* How it works — aligned to the actual 4 quiz steps */}
+          {/* How it works — aligned to the actual 5 quiz steps */}
           <div className="mb-7">
             <p className="text-white/45 text-xs uppercase tracking-widest font-semibold mb-3">
               What you'll be asked
             </p>
             <div className="grid grid-cols-2 gap-2">
               {[
+                { icon: <Users className="w-3.5 h-3.5" />, label: "Group dynamic", sub: "How you like to travel together" },
                 { icon: <Zap className="w-3.5 h-3.5" />, label: "Your energy level", sub: "Chill or full throttle?" },
                 { icon: <DollarSign className="w-3.5 h-3.5" />, label: "Daily budget", sub: "Your comfort range" },
                 { icon: <Compass className="w-3.5 h-3.5" />, label: "Activities", sub: "What excites you most" },
@@ -286,6 +289,62 @@ export default function SurveyJoin() {
                         data-testid="input-email"
                       />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Group Dynamic ── */}
+              {step === "groupDynamic" && (
+                <div>
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+                    How does your group like to travel?
+                  </h2>
+                  <p className="text-muted-foreground mb-8 text-sm">
+                    Wandr will structure the itinerary around your group's natural rhythm.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      {
+                        value: "together",
+                        icon: <Users className="w-5 h-5" />,
+                        label: "Together the whole time",
+                        sub: "We move as a pack. One plan, one experience, everyone in.",
+                      },
+                      {
+                        value: "loose",
+                        icon: <Compass className="w-5 h-5" />,
+                        label: "Loosely together",
+                        sub: "Same city, different interests. We meet for meals and highlights.",
+                      },
+                      {
+                        value: "mix",
+                        icon: <Zap className="w-5 h-5" />,
+                        label: "A mix of both",
+                        sub: "Group moments for the big things, personal time in between.",
+                      },
+                    ].map((opt) => {
+                      const active = groupDynamic === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setGroupDynamic(opt.value)}
+                          className={`w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+                          }`}
+                          data-testid={`button-group-dynamic-${opt.value}`}
+                        >
+                          <span className={`flex-shrink-0 mt-0.5 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                            {opt.icon}
+                          </span>
+                          <div>
+                            <div className={`font-semibold text-base mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>
+                              {opt.label}
+                            </div>
+                            <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
