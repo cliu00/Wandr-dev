@@ -179,12 +179,6 @@ export default function Home() {
             </Button>
           </div>
         </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40">
-          <div className="w-px h-10 bg-white/20" />
-          <span className="text-xs tracking-widest uppercase">Explore</span>
-        </div>
       </section>
 
       {/* How It Works Section */}
