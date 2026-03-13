@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw } from "lucide-react";
+import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
