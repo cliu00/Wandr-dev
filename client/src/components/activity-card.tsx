@@ -197,7 +197,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
               data-testid={`button-rest-d${dayNumber}-${index}`}
             >
               <Coffee className="w-3 h-3" />
-              Take a rest instead
+              Skip this block — I need a slow morning
             </Button>
           </div>
         )}
