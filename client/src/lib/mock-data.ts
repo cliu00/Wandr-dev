@@ -106,7 +106,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-morning",
           timeSlot: "morning",
-          curatorName: "Alice's pick",
+          curatorName: "",
           primary: {
             name: "Café Bica",
             type: "Local espresso bar · Gastown",
@@ -125,7 +125,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-afternoon",
           timeSlot: "afternoon",
-          curatorName: "Bob's pick",
+          curatorName: "",
           primary: {
             name: "Vancouver Art Gallery",
             type: "Art museum · Downtown",
@@ -144,7 +144,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d1-evening",
           timeSlot: "evening",
-          curatorName: "Everyone",
+          curatorName: "",
           primary: {
             name: "Burdock & Co",
             type: "West Coast tasting menu · Main St",
@@ -169,7 +169,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-morning",
           timeSlot: "morning",
-          curatorName: "Bob's pick",
+          curatorName: "",
           primary: {
             name: "Granville Island Public Market",
             type: "Indoor market · False Creek",
@@ -188,7 +188,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-rest",
           timeSlot: "rest",
-          curatorName: "Everyone",
+          curatorName: "",
           primary: {
             name: "Downtime at Hotel",
             type: "Rest & recharge",
@@ -206,7 +206,7 @@ export const MOCK_ITINERARY: Itinerary = {
         {
           id: "d2-evening",
           timeSlot: "evening",
-          curatorName: "Everyone",
+          curatorName: "",
           primary: {
             name: "The Diamond",
             type: "Craft cocktail bar · Gastown",

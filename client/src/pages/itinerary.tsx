@@ -79,59 +79,6 @@ export default function ItineraryView() {
             </p>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            {/* Save — primary, always visible */}
-            <button
-              onClick={handleSave}
-              aria-label={saved ? "Saved" : "Save itinerary"}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                saved
-                  ? "border-primary/40 bg-primary/8 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
-              }`}
-              data-testid="button-save"
-            >
-              <Bookmark className={`w-3 h-3 ${saved ? "fill-primary" : ""}`} />
-              <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
-            </button>
-
-            {/* Share */}
-            <button
-              onClick={handleShare}
-              aria-label="Share itinerary"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-share"
-            >
-              <Share2 className="w-3 h-3" />
-              <span className="hidden md:inline">Share</span>
-            </button>
-
-            {/* Invite — hidden on mobile */}
-            <button
-              onClick={handleInvite}
-              aria-label="Invite others"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-invite"
-            >
-              <Users className="w-3 h-3" />
-              <span className="hidden md:inline">Invite</span>
-            </button>
-
-            {/* Divider */}
-            <span className="hidden sm:block w-px h-4 bg-border mx-1" aria-hidden="true" />
-
-            {/* Start over */}
-            <button
-              onClick={handleRegenerate}
-              aria-label="Start over"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-regenerate"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span className="hidden md:inline">Start over</span>
-            </button>
-          </div>
         </div>
 
         {/* Day tab selector */}

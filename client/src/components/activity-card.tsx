@@ -82,7 +82,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
       }`}
     >
       {!isBaseRest && (
-        <div className="relative h-44 overflow-hidden bg-muted">
+        <div className="relative h-56 overflow-hidden bg-muted">
           {swapping ? (
             <Skeleton className="w-full h-full" />
           ) : imgError ? (
@@ -106,17 +106,12 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${timeConfig.color}`}>
-              {timeConfig.icon}
-              {timeConfig.label}
-            </span>
-            {block.curatorName && (
-              <span className="text-xs text-muted-foreground">{block.curatorName}</span>
-            )}
-          </div>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${timeConfig.color}`}>
+            {timeConfig.icon}
+            {timeConfig.label}
+          </span>
           {!isBaseRest && (
-            <span className="text-xs font-semibold text-muted-foreground flex-shrink-0">
+            <span className="text-sm font-medium text-muted-foreground flex-shrink-0">
               {activity.costRange}
             </span>
           )}
@@ -130,7 +125,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
           </h3>
         )}
 
-        <p className="text-xs text-muted-foreground tracking-wide uppercase mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           {activity.type}
         </p>
 
@@ -140,7 +135,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
             <Skeleton className="h-4 w-4/5 mb-4" />
           </>
         ) : (
-          <p className="text-sm text-foreground/80 leading-relaxed mb-4">
+          <p className="text-base text-foreground/80 leading-relaxed mb-4">
             {activity.description}
           </p>
         )}
@@ -153,7 +148,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
                 <span className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">
                   Why this for you
                 </span>
-                <p className="text-sm italic text-muted-foreground mt-0.5 leading-relaxed">
+                <p className="text-sm text-foreground/70 mt-0.5 leading-relaxed">
                   {activity.whyForYou}
                 </p>
               </div>
