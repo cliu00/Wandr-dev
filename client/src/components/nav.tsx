@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Sun, Moon, LogOut, ChevronDown } from "lucide-react";
+import { Sun, Moon, LogOut, ChevronDown, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/theme-provider";
 import { useAuth } from "@/lib/auth-context";
@@ -108,6 +108,14 @@ export function Nav({ variant = "solid" }: NavProps) {
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                     <div className="p-1.5">
+                      <button
+                        onClick={() => { setShowUserMenu(false); navigate("/trips"); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        data-testid="button-my-trips"
+                      >
+                        <Bookmark className="w-4 h-4" />
+                        My trips
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

@@ -19,6 +19,7 @@ import Terms from "@/pages/terms";
 import Contact from "@/pages/contact";
 import Faq from "@/pages/faq";
 import Brand from "@/pages/brand";
+import Trips from "@/pages/trips";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/survey/status" component={SurveyStatus} />
       <Route path="/sign-in" component={SignIn} />
       <Route path="/sign-up" component={SignUp} />
+      <Route path="/trips" component={Trips} />
       <Route path="/faq" component={Faq} />
       <Route path="/brand" component={Brand} />
       <Route path="/privacy" component={Privacy} />
