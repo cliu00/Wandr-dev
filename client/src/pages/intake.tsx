@@ -909,7 +909,7 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
       value: "neighbourhood",
       icon:  <Coffee className="w-5 h-5" aria-hidden="true" />,
       label: "Neighbourhood gems",
-      sub:   "Mom-and-pop spots, family-run kitchens, beloved locals.",
+      sub:   "Mom-and-pop spots, family-run kitchens — beloved by locals.",
     },
     {
       value: "sit-down",
@@ -920,8 +920,8 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
     {
       value: "special-evening",
       icon:  <Sparkles className="w-5 h-5" aria-hidden="true" />,
-      label: "One special evening",
-      sub:   "A memorable dinner as a trip highlight — not every meal needs to be an event.",
+      label: "One standout meal",
+      sub:   "A memorable table as a trip highlight — not every meal needs to be an event.",
     },
   ];
 
