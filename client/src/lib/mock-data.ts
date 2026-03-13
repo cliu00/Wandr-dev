@@ -97,7 +97,7 @@ export const MOCK_ITINERARY: Itinerary = {
   country: "Canada",
   durationDays: 2,
   groupType: "group",
-  participants: ["Alice", "Bob"],
+  participants: [],
   days: [
     {
       dayNumber: 1,

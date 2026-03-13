@@ -77,9 +77,6 @@ export default function ItineraryView() {
             </h1>
             <p className="text-[11px] text-muted-foreground mt-0.5 leading-none">
               {itinerary.durationDays}-day itinerary
-              {itinerary.groupType !== "solo" && itinerary.participants.length > 0 && (
-                <> · {itinerary.participants.join(" & ")}</>
-              )}
             </p>
           </div>
 
