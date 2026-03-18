@@ -139,6 +139,25 @@ export default function Intake() {
     else goNext();
   }
   function handleSubmit() {
+    const preferences = {
+      destination:   state.destination,
+      startDate:     state.startDate ? format(state.startDate, "yyyy-MM-dd") : undefined,
+      durationDays:  state.duration ?? 2,
+      groupType,
+      energy:        state.energy,
+      budget:        state.budget,
+      activityTypes: state.activityTypes,
+      food:          state.food,
+      anchorActivity: state.anchorActivity || undefined,
+      activityNotes:  state.activityNotes || undefined,
+      dietaryNotes:   state.dietaryNotes || undefined,
+      soloVibe:      state.soloVibe,
+      duoStyle:      state.duoStyle,
+      groupDynamic:  state.groupDynamic,
+      kidsAges:      state.kidsAges,
+      familyNeeds:   state.familyNeeds,
+    };
+    sessionStorage.setItem("wandr_pending_preferences", JSON.stringify(preferences));
     navigate(`/generating?groupType=${groupType}`);
   }
 

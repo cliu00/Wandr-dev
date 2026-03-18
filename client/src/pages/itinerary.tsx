@@ -1,26 +1,37 @@
 import { useState } from "react";
-import { useLocation, useSearch } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X } from "lucide-react";
+import { useLocation, useParams } from "wouter";
+import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activity-card";
-import { MOCK_ITINERARY } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { copyToClipboard } from "@/lib/clipboard";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ItineraryView() {
   const [, navigate] = useLocation();
+  const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const search = useSearch();
 
-  const itinerary = MOCK_ITINERARY;
-  const urlGroupType = new URLSearchParams(search).get("groupType") || itinerary.groupType;
-  const currentDay = itinerary.days.find((d) => d.dayNumber === activeDay) ?? itinerary.days[0];
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["trip", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/trips/${id}`);
+      if (!res.ok) throw new Error("Failed to load itinerary");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+
+  const itinerary = data?.itinerary;
+  const urlGroupType = itinerary?.groupType || "solo";
+  const currentDay = itinerary?.days?.find((d: any) => d.dayNumber === activeDay) ?? itinerary?.days?.[0];
 
   function handleSave() {
     if (user) {
@@ -32,13 +43,14 @@ export default function ItineraryView() {
   }
 
   async function handleShare() {
-    const ok = await copyToClipboard("https://wandr.app/itinerary/share/vancouver-abc123");
+    const shareUrl = `${window.location.origin}/itinerary/${id}`;
+    const ok = await copyToClipboard(shareUrl);
     if (ok) {
       toast({ title: "Link copied", description: "Share this link with your companions." });
     } else {
       toast({
         title: "Couldn't copy automatically",
-        description: "Copy this link manually: wandr.app/itinerary/share/vancouver-abc123",
+        description: `Copy this link manually: ${shareUrl}`,
         variant: "destructive",
       });
     }
@@ -53,6 +65,38 @@ export default function ItineraryView() {
     params.set("destination", itinerary.destination);
     params.set("tripType", urlGroupType);
     navigate(`/intake?${params.toString()}`);
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <FlowHeader onBack={() => navigate("/")} />
+        <div className="max-w-4xl mx-auto px-4 md:px-8 pt-8">
+          <Skeleton className="h-10 w-48 mb-4" />
+          <Skeleton className="h-6 w-32 mb-8" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="mb-4 rounded-2xl border border-border bg-card p-5">
+              <Skeleton className="h-6 w-20 rounded-full mb-3" />
+              <Skeleton className="h-36 w-full rounded-xl mb-4" />
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !itinerary) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <h2 className="font-serif text-2xl font-light">We couldn't load this itinerary</h2>
+        <p className="text-sm text-muted-foreground">It may have been removed or the link may be incorrect.</p>
+        <Button onClick={() => navigate("/")} className="rounded-full mt-2">Back to home</Button>
+      </div>
+    );
   }
 
   return (
@@ -72,7 +116,7 @@ export default function ItineraryView() {
                 role="tablist"
                 aria-label="Itinerary days"
               >
-                {itinerary.days.map((day) => (
+                {itinerary.days.map((day: any) => (
                   <button
                     key={day.dayNumber}
                     role="tab"
@@ -128,7 +172,7 @@ export default function ItineraryView() {
         <div className="mb-10">
 
           <div className="flex flex-col gap-4">
-            {currentDay.blocks.map((block, idx) => (
+            {currentDay.blocks.map((block: any, idx: number) => (
               <ActivityCard
                 key={block.id}
                 block={block}

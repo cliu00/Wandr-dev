@@ -100,6 +100,8 @@ export default function Generating() {
   const [msgIndex, setMsgIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [stuck, setStuck] = useState(false);
+  const [tripId, setTripId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (phase !== 1) return;
@@ -111,26 +113,61 @@ export default function Generating() {
 
   useEffect(() => {
     const start = Date.now();
-    const totalMs = 6000;
     const frame = () => {
       const elapsed = Date.now() - start;
-      const pct = Math.min((elapsed / totalMs) * 100, 100);
+      // Progress bar fills to 90% while waiting for API, jumps to 100% on success
+      const pct = Math.min((elapsed / 15000) * 90, 90);
       setProgress(pct);
-      if (elapsed < totalMs) requestAnimationFrame(frame);
+      if (pct < 90) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
   }, []);
 
+  // Make the API call as soon as the page loads
   useEffect(() => {
+    const raw = sessionStorage.getItem("wandr_pending_preferences");
+    if (!raw) {
+      // No preferences found — redirect back to intake
+      navigate("/intake");
+      return;
+    }
+
+    const preferences = JSON.parse(raw);
+
     const t1 = setTimeout(() => setPhase(2), 4000);
-    const t2 = setTimeout(() => navigate(`/itinerary/vancouver-2day?groupType=${groupType}`), 6500);
-    const t3 = setTimeout(() => setStuck(true), 11000);
+    const t3 = setTimeout(() => setStuck(true), 30000);
+
+    fetch("/api/trips/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(preferences),
+    })
+      .then((res) => {
+        if (res.status === 429) {
+          throw new Error("limit_reached");
+        }
+        if (!res.ok) throw new Error("generation_failed");
+        return res.json();
+      })
+      .then((data) => {
+        sessionStorage.removeItem("wandr_pending_preferences");
+        setTripId(data.tripId);
+        setProgress(100);
+        // Small delay so the progress bar completes visually before navigating
+        setTimeout(() => {
+          navigate(`/itinerary/${data.tripId}`);
+        }, 800);
+      })
+      .catch((err) => {
+        clearTimeout(t3);
+        setError(err.message);
+      });
+
     return () => {
       clearTimeout(t1);
-      clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [navigate, groupType]);
+  }, [navigate]);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -198,7 +235,51 @@ export default function Generating() {
           >
             <FlowHeader onBack={() => navigate("/")} />
             <div className="max-w-2xl mx-auto px-6 py-8">
-              {stuck && (
+              {error === "limit_reached" && (
+                <div className="mb-8 flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                      Generation limit reached
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                      Sign up for a free account to generate unlimited itineraries.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate("/sign-up")}
+                      className="gap-1.5 rounded-full"
+                    >
+                      Create a free account
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {error === "generation_failed" && (
+                <div className="mb-8 flex items-start gap-3 p-4 rounded-2xl border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
+                      Something went wrong
+                    </p>
+                    <p className="text-xs text-red-700 dark:text-red-300 mb-3">
+                      We couldn't generate your itinerary. Please try again.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate("/intake")}
+                      className="gap-1.5 rounded-full"
+                    >
+                      Try again
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {stuck && !error && tripId && (
                 <div className="mb-8 flex items-start gap-3 p-4 rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
                   <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
@@ -210,7 +291,7 @@ export default function Generating() {
                     </p>
                     <Button
                       size="sm"
-                      onClick={() => navigate(`/itinerary/vancouver-2day?groupType=${groupType}`)}
+                      onClick={() => navigate(`/itinerary/${tripId}`)}
                       className="gap-1.5 rounded-full"
                       data-testid="button-go-to-itinerary"
                     >
