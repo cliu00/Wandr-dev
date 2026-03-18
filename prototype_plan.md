@@ -1,7 +1,7 @@
-# 48hrs — Design Prototype Plan
+# Wandr — Design Prototype Plan
 
 ## What We're Building
-A fully navigable design prototype of 48hrs — a luxury AI travel planning app.
+A fully navigable design prototype of Wandr — a luxury AI travel planning app.
 All screens and flows are complete with hardcoded mock data. No database, no backend,
 no real AI calls. The goal is to experience the full product as if it were live.
 

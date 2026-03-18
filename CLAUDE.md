@@ -1,7 +1,7 @@
-# 48HRS — Luxury AI Travel Planning App
+# Wandr — Luxury AI Travel Planning App
 
 ## Overview
-Design prototype of **48hrs** — a luxury AI travel planning app specializing in curated 2–4 day escapes. Pure frontend prototype with hardcoded mock data. No backend changes, no database, no real AI calls.
+Design prototype of **Wandr** — a luxury AI travel planning app specializing in curated 2–4 day escapes. Pure frontend prototype with hardcoded mock data. No backend changes, no database, no real AI calls.
 
 ## Architecture
 
