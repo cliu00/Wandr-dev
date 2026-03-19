@@ -186,8 +186,10 @@ export default function Home() {
     const ref = userLocation ?? VANCOUVER;
     const km = haversineKm(ref.lat, ref.lng, escapeLat, escapeLng);
     if (km < 20) return "Local";
-    if (km >= 1000) return `${(km / 1000).toFixed(1).replace(/\.0$/, "")}k km away`;
-    return `${km.toLocaleString()} km away`;
+    const hours = km / 90; // ~90 km/h average drive speed
+    if (hours < 1) return `${Math.round(hours * 60)} min drive`;
+    const rounded = Math.round(hours * 2) / 2; // round to nearest 0.5
+    return `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} hr drive`;
   }
 
   function handleCurate() {

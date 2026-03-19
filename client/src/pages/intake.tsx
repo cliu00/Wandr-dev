@@ -894,11 +894,12 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
     family: "Your budget sets the bar — we'll find the best within it.",
   };
 
+  const suffix = groupType === "group" ? "/person/day" : "/day";
   const options = [
-    { value: "under-100", label: "Budget-friendly", range: "~$50–100/day"  },
-    { value: "100-200",   label: "Comfortable",     range: "~$100–200/day" },
-    { value: "200-350",   label: "Treat yourself",  range: "~$200–350/day" },
-    { value: "350-plus",  label: "Luxury",           range: "$350+/day"    },
+    { value: "under-100", label: "Budget-friendly", range: `~$50–100${suffix}`  },
+    { value: "100-200",   label: "Comfortable",     range: `~$100–200${suffix}` },
+    { value: "200-350",   label: "Treat yourself",  range: `~$200–350${suffix}` },
+    { value: "350-plus",  label: "Luxury",           range: `$350+${suffix}`    },
   ];
 
   return (

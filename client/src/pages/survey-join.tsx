@@ -323,10 +323,10 @@ export default function SurveyJoin() {
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { value: "under-100", label: "Budget-friendly", range: "~$50–100/day" },
-                      { value: "100-200",   label: "Comfortable",     range: "~$100–200/day" },
-                      { value: "200-350",   label: "Treat yourself",  range: "~$200–350/day" },
-                      { value: "350-plus",  label: "Luxury",           range: "$350+/day" },
+                      { value: "under-100", label: "Budget-friendly", range: "~$50–100/person/day" },
+                      { value: "100-200",   label: "Comfortable",     range: "~$100–200/person/day" },
+                      { value: "200-350",   label: "Treat yourself",  range: "~$200–350/person/day" },
+                      { value: "350-plus",  label: "Luxury",           range: "$350+/person/day" },
                     ].map((opt) => {
                       const active = budget === opt.value;
                       return (
