@@ -191,7 +191,7 @@ export async function generateItinerary(
 
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 3000,
+    max_tokens: 5000,
     system: [
       {
         type: "text",
@@ -214,11 +214,16 @@ export async function generateItinerary(
     .replace(/\s*```\s*$/i, "")
     .trim();
 
+  // Log if the response was cut off (stop_reason = max_tokens)
+  if (message.stop_reason === "max_tokens") {
+    console.error(`Claude hit max_tokens limit — response truncated. Consider increasing max_tokens.`);
+  }
+
   let itineraryData: GeneratedItinerary;
   try {
     itineraryData = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Claude returned invalid JSON: ${cleaned.slice(0, 300)}`);
+    throw new Error(`Claude returned invalid JSON (stop_reason=${message.stop_reason}): ${cleaned.slice(0, 300)}`);
   }
 
   return { itineraryData, preferenceHash };

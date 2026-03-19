@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,89 @@ export default function Home() {
   const [destination, setDestination] = useState("");
   const [tripType, setTripType] = useState<TripType>("solo");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // ── Place autocomplete (Nominatim — US + Canada cities/states/provinces) ──
+  interface PlaceSuggestion { id: string; label: string; }
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside the search bar
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (searchBarRef.current && !searchBarRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
+
+  function onDestinationChange(value: string) {
+    setDestination(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    debounceRef.current = setTimeout(() => fetchSuggestions(value.trim()), 300);
+  }
+
+  async function fetchSuggestions(query: string) {
+    try {
+      // Photon (by Komoot) supports prefix matching — great for autocomplete.
+      // We filter client-side to US + Canada cities, states, and provinces only.
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=12&lang=en`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const seen = new Set<string>();
+      const results: PlaceSuggestion[] = [];
+
+      for (const feature of data.features ?? []) {
+        const p = feature.properties ?? {};
+        const cc = (p.countrycode ?? "").toUpperCase();
+
+        // US and Canada only
+        if (cc !== "US" && cc !== "CA") continue;
+
+        // Only city/town/village/state level — skip streets, airports, POIs, districts, counties
+        const type = (p.type ?? "") as string;
+        if (!["city", "town", "village", "state"].includes(type)) continue;
+
+        const name: string = p.name ?? "";
+        const state: string = p.state ?? "";
+        const country = cc === "CA" ? "Canada" : "USA";
+
+        if (!name) continue;
+
+        let label: string;
+        if (type === "state") {
+          // State/province level
+          label = `${name}, ${country}`;
+        } else {
+          label = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
+        }
+
+        if (!seen.has(label)) {
+          seen.add(label);
+          results.push({ id: String(p.osm_id ?? label), label });
+        }
+        if (results.length >= 6) break;
+      }
+
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+    } catch {
+      setShowSuggestions(false);
+    }
+  }
+
+  function selectSuggestion(label: string) {
+    // Use just the city/state part (before the country suffix) as the destination
+    const short = label.replace(/, (USA|Canada)$/, "");
+    setDestination(short);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -202,7 +285,7 @@ export default function Home() {
           </div>
 
           {/* Search bar — primary CTA */}
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-2xl relative" ref={searchBarRef}>
             <div
               className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-2 gap-2"
               data-testid="search-bar"
@@ -211,17 +294,22 @@ export default function Home() {
                 <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Where are you dreaming of?"
+                  placeholder="City, state, or province…"
                   aria-label="Destination"
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCurate()}
+                  onChange={(e) => onDestinationChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { setShowSuggestions(false); handleCurate(); }
+                    if (e.key === "Escape") setShowSuggestions(false);
+                  }}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   className="flex-1 text-gray-900 placeholder:text-gray-400 text-base outline-none bg-transparent py-2"
                   data-testid="input-destination"
+                  autoComplete="off"
                 />
               </div>
               <Button
-                onClick={handleCurate}
+                onClick={() => { setShowSuggestions(false); handleCurate(); }}
                 size="lg"
                 className="rounded-full px-8 gap-2 flex-shrink-0 text-base"
                 data-testid="button-curate-escape"
@@ -230,6 +318,22 @@ export default function Home() {
                 Plan My Adventure
               </Button>
             </div>
+
+            {/* Autocomplete dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.id}
+                    onMouseDown={(e) => { e.preventDefault(); selectSuggestion(s.label); }}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 transition-colors text-sm text-gray-800 border-b border-gray-50 last:border-0"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>

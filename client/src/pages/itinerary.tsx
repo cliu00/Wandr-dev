@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle } from "lucide-react";
+import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle, Sparkles } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,16 @@ export default function ItineraryView() {
   const [saved, setSaved] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [updatedBanner, setUpdatedBanner] = useState(false);
+  const seenVersionRef = useRef<number | null>(null);
+
+  // If the companion just submitted preferences, track the version they submitted on
+  // so we can show a "regenerating" state until the new version appears.
+  const submittedOnVersionKey = `wandr_submitted_on_${id}`;
+  const submittedOnVersion = sessionStorage.getItem(submittedOnVersionKey);
+  if (submittedOnVersion) sessionStorage.removeItem(submittedOnVersionKey);
+  const submittedOnVersionRef = useRef<number | null>(submittedOnVersion ? Number(submittedOnVersion) : null);
+  const [regenerating, setRegenerating] = useState(submittedOnVersionRef.current !== null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["trip", id],
@@ -27,10 +37,39 @@ export default function ItineraryView() {
       return res.json();
     },
     enabled: !!id,
+    // Poll every 3s for group trips so both people see updates quickly
+    refetchInterval: (query) => {
+      const d = query.state.data as any;
+      return d?.trip?.groupType === "group" ? 3000 : false;
+    },
   });
 
+  // Show banner when a new version is detected; clear "regenerating" state
+  useEffect(() => {
+    const version = data?.versionNumber;
+    if (version == null) return;
+    if (seenVersionRef.current === null) {
+      seenVersionRef.current = version;
+    } else if (version > seenVersionRef.current) {
+      seenVersionRef.current = version;
+      setUpdatedBanner(true);
+      setRegenerating(false);
+      const t = setTimeout(() => setUpdatedBanner(false), 6000);
+      return () => clearTimeout(t);
+    }
+    // If the version advanced past the submitted-on version, we're done regenerating
+    if (submittedOnVersionRef.current !== null && version > submittedOnVersionRef.current) {
+      setRegenerating(false);
+      submittedOnVersionRef.current = null;
+    }
+  }, [data?.versionNumber]);
+
   const itinerary = data?.itinerary;
-  const urlGroupType = itinerary?.groupType || "solo";
+  const tripData = data?.trip;
+  const isGroupTrip = tripData?.groupType === "group";
+  const urlGroupType = itinerary?.groupType || tripData?.groupType || "solo";
+  const contributorCount: number = data?.contributorCount ?? 1;
+  const currentVersionNumber: number = data?.versionNumber ?? 1;
   const currentDay = itinerary?.days?.find((d: any) => d.dayNumber === activeDay) ?? itinerary?.days?.[0];
 
   function handleSave() {
@@ -56,8 +95,19 @@ export default function ItineraryView() {
     }
   }
 
-  function handleInvite() {
-    navigate("/survey/invite");
+  async function handleInvite() {
+    if (isGroupTrip) {
+      // Copy the trip URL — companions open it and click "Add my preferences"
+      const shareUrl = `${window.location.origin}/itinerary/${id}`;
+      const ok = await copyToClipboard(shareUrl);
+      if (ok) {
+        toast({ title: "Link copied", description: "Share this link — companions can add their preferences." });
+      } else {
+        toast({ title: "Couldn't copy automatically", description: `Copy manually: ${shareUrl}`, variant: "destructive" });
+      }
+    } else {
+      navigate("/survey/invite");
+    }
   }
 
   function handleRegenerate() {
@@ -101,6 +151,26 @@ export default function ItineraryView() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* "Regenerating…" banner — shown while companion's AI call is in progress */}
+      {regenerating && !updatedBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="mt-4 px-5 py-2.5 bg-muted border border-border rounded-full shadow-lg text-sm font-medium flex items-center gap-2 text-foreground pointer-events-auto">
+            <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+            Merging preferences and updating itinerary…
+          </div>
+        </div>
+      )}
+
+      {/* "Itinerary updated" banner for group trips */}
+      {updatedBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="mt-4 px-5 py-2.5 bg-primary text-primary-foreground rounded-full shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto">
+            <Sparkles className="w-4 h-4" />
+            Itinerary updated with new preferences
+          </div>
+        </div>
+      )}
+
       {/* Sticky nav header — compact, just back + day tabs */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-4xl mx-auto">
@@ -208,6 +278,43 @@ export default function ItineraryView() {
           </div>
         )}
 
+        {/* Group trip — contributor status + "Add my preferences" prompt */}
+        {isGroupTrip && (
+          <div className="mb-6 p-5 rounded-2xl border border-primary/25 bg-primary/5">
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground mb-0.5">Group trip</p>
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                  Built from {contributorCount} {contributorCount === 1 ? "person's" : "people's"} preferences (v{currentVersionNumber}).
+                  Haven't added yours yet? Answer 5 quick questions and it updates automatically.
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    className="rounded-full gap-2"
+                    onClick={() => navigate(`/survey/join?tripId=${id}`)}
+                    data-testid="button-add-preferences"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Add my preferences
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full gap-2"
+                    onClick={handleInvite}
+                    data-testid="button-copy-link"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    Copy invite link
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* End of itinerary CTA */}
         {activeDay === itinerary.days.length && (
           <div className="border border-border rounded-3xl p-6 md:p-8">
@@ -254,8 +361,8 @@ export default function ItineraryView() {
               >
                 <Users className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Invite another wandrer</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Send a personal link — they answer 5 quick questions. Wandr blends everyone's input and refines this itinerary.</p>
+                  <p className="text-sm font-semibold text-foreground leading-snug">{isGroupTrip ? "Share with your group" : "Invite another wandrer"}</p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{isGroupTrip ? "Copy this itinerary link — companions can add their preferences and it updates automatically." : "Send a personal link — they answer 5 quick questions. Wandr blends everyone's input and refines this itinerary."}</p>
                 </div>
               </button>
 

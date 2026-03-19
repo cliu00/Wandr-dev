@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="hsl(155, 35%, 22%)"/>
+  <!-- Destination dot — gold -->
+  <circle cx="16" cy="7" r="3" fill="#b8965a"/>
+  <!-- Wandering path -->
+  <path d="M16 26 C16 20 8 18 8 14 C8 10 24 8 24 5.5"
+        stroke="white" stroke-width="2" stroke-linecap="round" stroke-opacity="0.85"/>
+  <!-- Origin dot — white -->
+  <circle cx="16" cy="26" r="2.5" fill="white" opacity="0.9"/>
+</svg>

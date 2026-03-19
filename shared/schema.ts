@@ -90,3 +90,59 @@ export const insertItineraryVersionSchema = createInsertSchema(itineraryVersions
 
 export type ItineraryVersion = typeof itineraryVersions.$inferSelect;
 export type InsertItineraryVersion = z.infer<typeof insertItineraryVersionSchema>;
+
+// ─── Group Trips ──────────────────────────────────────────────────────────────
+// One row per group planning event. Created when the organizer submits the
+// intake form with groupType="group". trip_id is populated later when the
+// organizer triggers generation and an itinerary is produced.
+
+export const groupTrips = pgTable("group_trips", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tripId: varchar("trip_id").references(() => trips.id), // null until generated
+  organizerName: varchar("organizer_name").notNull(),
+  destination: varchar("destination").notNull(),
+  startDate: varchar("start_date"),
+  durationDays: integer("duration_days").notNull(),
+  // open → all responses collected, generating → AI running, complete → itinerary ready
+  status: varchar("status").notNull().default("open"),
+  organizerPreferences: jsonb("organizer_preferences"), // organizer's own intake answers, used in merge
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGroupTripSchema = createInsertSchema(groupTrips).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type GroupTrip = typeof groupTrips.$inferSelect;
+export type InsertGroupTrip = z.infer<typeof insertGroupTripSchema>;
+
+// ─── Group Participants ────────────────────────────────────────────────────────
+// One row per invited person. The token is a random string embedded in their
+// personal join URL — it's how we identify who is submitting without requiring
+// a login. preferences is null until they complete the survey.
+
+export const groupParticipants = pgTable(
+  "group_participants",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    groupTripId: varchar("group_trip_id").notNull().references(() => groupTrips.id),
+    name: varchar("name").notNull(),
+    token: varchar("token").notNull().unique(), // embedded in join URL
+    responded: boolean("responded").notNull().default(false),
+    preferences: jsonb("preferences"),          // null until survey submitted
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_group_participants_group_trip_id").on(table.groupTripId),
+    index("idx_group_participants_token").on(table.token),
+  ]
+);
+
+export const insertGroupParticipantSchema = createInsertSchema(groupParticipants).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type GroupParticipant = typeof groupParticipants.$inferSelect;
+export type InsertGroupParticipant = z.infer<typeof insertGroupParticipantSchema>;

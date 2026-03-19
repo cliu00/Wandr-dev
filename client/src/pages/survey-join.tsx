@@ -1,17 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { FlowHeader } from "@/components/flow-header";
 import {
   ArrowLeft, MapPin, ChevronRight, UserCheck,
-  Calendar, Users, Sparkles, Zap, DollarSign, Compass, UtensilsCrossed
+  Users, Zap, DollarSign, Compass, UtensilsCrossed, Loader2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Star, Utensils } from "lucide-react";
 
-type JoinStep = "welcome" | "identity" | "groupDynamic" | "energy" | "budget" | "activities" | "food";
+type JoinStep = "identity" | "groupDynamic" | "energy" | "budget" | "activities" | "food" | "done";
 
 const slideVariants = {
   enter: { x: 60, opacity: 0 },
@@ -19,67 +19,103 @@ const slideVariants = {
   exit: { x: -60, opacity: 0 },
 };
 
-const MOCK_ORGANISER = "Jordan";
+const STEPS: JoinStep[] = ["identity", "groupDynamic", "energy", "budget", "activities", "food"];
+const PROGRESS_STEPS: JoinStep[] = ["groupDynamic", "energy", "budget", "activities", "food"];
 
-// Forest green fallback for when the hero image fails to load
-const HERO_FALLBACK = "hsl(155, 35%, 18%)";
+interface TripContext {
+  destination: string;
+  durationDays: number;
+  groupType: string;
+}
 
 export default function SurveyJoin() {
   const [, navigate] = useLocation();
   const search = useSearch();
 
   const params = useMemo(() => new URLSearchParams(search), [search]);
-  const prefilledName = params.get("name") || "";
-  const hasPersonalLink = prefilledName.length > 0;
+  const tripId = params.get("tripId") || "";
 
-  const STEPS: JoinStep[] = hasPersonalLink
-    ? ["welcome", "groupDynamic", "energy", "budget", "activities", "food"]
-    : ["identity", "groupDynamic", "energy", "budget", "activities", "food"];
+  const [tripContext, setTripContext] = useState<TripContext | null>(null);
+  const [contextError, setContextError] = useState(false);
 
-  const [step, setStep] = useState<JoinStep>(STEPS[0]);
+  useEffect(() => {
+    if (!tripId) { setContextError(true); return; }
+    fetch(`/api/trips/${tripId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data) => {
+        setTripContext({
+          destination: data.trip?.destination ?? "",
+          durationDays: data.trip?.durationDays ?? 2,
+          groupType: data.trip?.groupType ?? "group",
+        });
+      })
+      .catch(() => setContextError(true));
+  }, [tripId]);
+
+  const destination = tripContext?.destination || "";
+  const durationDays = tripContext?.durationDays ?? 2;
+
+  const [step, setStep] = useState<JoinStep>("identity");
   const [selfName, setSelfName] = useState("");
-  const [email, setEmail] = useState("");
   const [groupDynamic, setGroupDynamic] = useState<string | null>(null);
   const [energy, setEnergy] = useState(50);
   const [budget, setBudget] = useState<string | null>(null);
-  const [activities, setActivities] = useState<string[]>([]);
+  const [activityTypes, setActivityTypes] = useState<string[]>([]);
   const [activityNotes, setActivityNotes] = useState("");
   const [food, setFood] = useState<string[]>([]);
   const [dietaryNotes, setDietaryNotes] = useState("");
-  const [heroLoaded, setHeroLoaded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const name = hasPersonalLink ? prefilledName : selfName;
-
-  const PROGRESS_STEPS: JoinStep[] = ["groupDynamic", "energy", "budget", "activities", "food"];
   const progressIndex = PROGRESS_STEPS.indexOf(step as any);
   const progress = progressIndex < 0 ? 0 : ((progressIndex + 1) / PROGRESS_STEPS.length) * 100;
 
   const isLastStep = step === "food";
 
-  function goNext() {
-    if (isLastStep) {
-      navigate("/survey/status");
-      return;
+  async function submitPreferences() {
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/survey/${tripId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: selfName,
+          groupDynamic,
+          energy,
+          budget,
+          activityTypes,
+          food,
+          activityNotes,
+          dietaryNotes,
+        }),
+      });
+      // Store the current version number so the itinerary page knows regeneration is in progress
+      if (res.ok) {
+        const tripRes = await fetch(`/api/trips/${tripId}`);
+        if (tripRes.ok) {
+          const tripData = await tripRes.json();
+          sessionStorage.setItem(`wandr_submitted_on_${tripId}`, String(tripData.versionNumber ?? 1));
+        }
+      }
+      setStep("done");
+    } catch {
+      setStep("done");
+    } finally {
+      setSubmitting(false);
     }
-    const idx = STEPS.indexOf(step);
-    if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
   }
 
-  function skipStep() {
-    if (isLastStep) {
-      navigate("/survey/status");
-      return;
-    }
+  function goNext() {
+    if (isLastStep) { submitPreferences(); return; }
     const idx = STEPS.indexOf(step);
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1]);
   }
 
   function goBack() {
     const idx = STEPS.indexOf(step);
-    if (idx === 0) {
-      navigate("/");
-      return;
-    }
+    if (idx === 0) { navigate(`/itinerary/${tripId}`); return; }
     setStep(STEPS[idx - 1]);
   }
 
@@ -87,134 +123,57 @@ export default function SurveyJoin() {
     if (step === "identity") return selfName.trim().length > 0;
     if (step === "groupDynamic") return groupDynamic !== null;
     if (step === "budget") return budget !== null;
-    if (step === "activities") return activities.length > 0;
+    if (step === "activities") return activityTypes.length > 0;
     if (step === "food") return food.length > 0;
     return true;
   }
 
-  // Skippable steps — energy is always skippable; others skip if nothing selected
   const isSkippable = step === "groupDynamic" || step === "energy" || step === "budget" || step === "activities" || step === "food";
 
-  // ── Welcome screen ─────────────────────────────────────────────────────
-  if (step === "welcome") {
+  // ── Error state ─────────────────────────────────────────────────────────
+  if (contextError) {
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
-        {/* Hero background with solid fallback */}
-        <div
-          className="absolute inset-0"
-          style={{ backgroundColor: HERO_FALLBACK }}
-        />
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-          style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=80)`,
-            opacity: heroLoaded ? 1 : 0,
-          }}
-        />
-        {/* Preload trigger */}
-        <img
-          src="https://images.unsplash.com/photo-1559511260-4f2f4a89b638?w=1920&q=80"
-          className="hidden"
-          onLoad={() => setHeroLoaded(true)}
-          alt=""
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/85" />
-
-        {/* Header */}
-        <div className="relative z-10 flex-shrink-0">
-          <FlowHeader onBack={() => navigate("/")} variant="transparent" />
-        </div>
-
-        {/* Content — pinned to bottom */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end px-6 pb-8 max-w-xl mx-auto w-full">
-
-          {/* Invite badge */}
-          <div className="mb-5">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium border border-white/20">
-              <UserCheck className="w-3.5 h-3.5" />
-              Personal invite from {MOCK_ORGANISER}
-            </div>
-          </div>
-
-          {/* Greeting */}
-          <h1 className="font-serif text-4xl font-light text-white mb-2 leading-tight">
-            Hey {prefilledName},
-          </h1>
-          <p className="text-white/80 text-lg mb-6 leading-relaxed">
-            {MOCK_ORGANISER} is planning a group trip to Vancouver and wants to make sure it works for everyone.
-          </p>
-
-          {/* Trip details */}
-          <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-4 mb-5 border border-white/20">
-            <div className="grid grid-cols-3 divide-x divide-white/15">
-              <div className="flex flex-col gap-1 pr-4">
-                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
-                  <MapPin className="w-3 h-3" /> Destination
-                </div>
-                <div className="text-white text-sm font-semibold">Vancouver</div>
-              </div>
-              <div className="flex flex-col gap-1 px-4">
-                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
-                  <Calendar className="w-3 h-3" /> Dates
-                </div>
-                <div className="text-white text-sm font-semibold">Apr 18–20</div>
-              </div>
-              <div className="flex flex-col gap-1 pl-4">
-                <div className="flex items-center gap-1.5 text-white/55 text-xs mb-0.5">
-                  <Users className="w-3 h-3" /> Group
-                </div>
-                <div className="text-white text-sm font-semibold">3 people · 2 nights</div>
-              </div>
-            </div>
-          </div>
-
-          {/* How it works — aligned to the actual 5 quiz steps */}
-          <div className="mb-7">
-            <p className="text-white/45 text-xs uppercase tracking-widest font-semibold mb-3">
-              What you'll be asked
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { icon: <Users className="w-3.5 h-3.5" />, label: "Group dynamic", sub: "How you like to travel together" },
-                { icon: <Zap className="w-3.5 h-3.5" />, label: "Your energy level", sub: "Chill or full throttle?" },
-                { icon: <DollarSign className="w-3.5 h-3.5" />, label: "Daily budget", sub: "Your comfort range" },
-                { icon: <Compass className="w-3.5 h-3.5" />, label: "Activities", sub: "What excites you most" },
-                { icon: <UtensilsCrossed className="w-3.5 h-3.5" />, label: "Dining style", sub: "Fine dining or local gems?" },
-              ].map(({ icon, label, sub }) => (
-                <div key={label} className="flex items-start gap-2.5 bg-white/8 rounded-xl p-3 border border-white/10">
-                  <span className="text-white/60 flex-shrink-0 mt-0.5">{icon}</span>
-                  <div>
-                    <div className="text-white text-xs font-semibold leading-tight">{label}</div>
-                    <div className="text-white/50 text-xs leading-tight mt-0.5">{sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-white/45 text-xs mt-3 leading-relaxed">
-              Wandr blends everyone's answers and builds one itinerary that works for the whole group.
-              You can skip any question you're not sure about.
-            </p>
-          </div>
-
-          {/* CTA */}
-          <Button
-            size="lg"
-            className="w-full rounded-full bg-white text-foreground hover:bg-white/90 gap-2 font-semibold"
-            onClick={goNext}
-            data-testid="button-accept-invite"
-          >
-            Add my preferences
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <p className="text-center text-white/35 text-xs mt-3">
-            Takes under 2 minutes · Skip any question you'd like
-          </p>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
+        <h1 className="font-serif text-2xl font-light text-foreground mb-2">Trip not found</h1>
+        <p className="text-muted-foreground text-sm mb-6">This link may be invalid or the trip no longer exists.</p>
+        <Button onClick={() => navigate("/")} className="rounded-full">Go to Wandr</Button>
       </div>
     );
   }
 
-  // ── Main quiz ──────────────────────────────────────────────────────────
+  // ── Loading state ────────────────────────────────────────────────────────
+  if (!tripContext) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // ── Done state ───────────────────────────────────────────────────────────
+  if (step === "done") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mb-2">
+          <UserCheck className="w-7 h-7 text-primary" />
+        </div>
+        <h1 className="font-serif text-3xl font-light text-foreground">You're in, {selfName}!</h1>
+        <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
+          Your preferences have been added. The itinerary is being updated — check back shortly.
+        </p>
+        <Button
+          onClick={() => navigate(`/itinerary/${tripId}`)}
+          className="rounded-full mt-2 gap-2"
+          data-testid="button-view-itinerary"
+        >
+          View updated itinerary
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Main quiz ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress bar + header */}
@@ -228,17 +187,12 @@ export default function SurveyJoin() {
         <FlowHeader
           onBack={goBack}
           rightContent={
-            hasPersonalLink ? (
-              <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                <UserCheck className="w-3.5 h-3.5" />
-                {prefilledName}
-              </div>
-            ) : (
+            destination ? (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="w-3 h-3" />
-                <span>{MOCK_ORGANISER}'s trip</span>
+                <span>{destination}</span>
               </div>
-            )
+            ) : undefined
           }
         />
       </div>
@@ -255,40 +209,25 @@ export default function SurveyJoin() {
               transition={{ duration: 0.3 }}
             >
 
-              {/* ── Identity (generic link only) ── */}
+              {/* ── Identity ── */}
               {step === "identity" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">You've been invited!</h2>
+                  <h2 className="font-serif text-3xl font-bold mb-2">Add your preferences</h2>
                   <p className="text-muted-foreground mb-8">
-                    Tell us your name so the organiser knows you've responded.
+                    Your answers shape the itinerary for {destination || "this trip"}. Takes under 2 minutes.
                   </p>
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1.5 block">
-                        Your name <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        value={selfName}
-                        onChange={(e) => setSelfName(e.target.value)}
-                        placeholder="e.g. Sarah"
-                        className="rounded-xl h-12"
-                        data-testid="input-name"
-                        onKeyDown={(e) => e.key === "Enter" && canContinue() && goNext()}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
-                        Email (optional)
-                      </label>
-                      <Input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="we'll notify you when the plan is ready"
-                        type="email"
-                        className="rounded-xl h-12"
-                        data-testid="input-email"
-                      />
-                    </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">
+                      Your name <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      value={selfName}
+                      onChange={(e) => setSelfName(e.target.value)}
+                      placeholder="e.g. Sarah"
+                      className="rounded-xl h-12"
+                      data-testid="input-name"
+                      onKeyDown={(e) => e.key === "Enter" && canContinue() && goNext()}
+                    />
                   </div>
                 </div>
               )}
@@ -353,9 +292,9 @@ export default function SurveyJoin() {
               {step === "energy" && (
                 <div>
                   <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-                    {name ? `What's your energy for this trip, ${name}?` : "What's your energy for this trip?"}
+                    {selfName ? `What's your energy, ${selfName}?` : "What's your energy for this trip?"}
                   </h2>
-                  <p className="text-muted-foreground mb-12 text-sm">Share yours first — Wandr blends in everyone's input.</p>
+                  <p className="text-muted-foreground mb-12 text-sm">Share yours — Wandr blends everyone's input.</p>
                   <div className="px-2">
                     <Slider
                       value={[energy]}
@@ -380,7 +319,7 @@ export default function SurveyJoin() {
                 <div>
                   <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">What's your spend style?</h2>
                   <p className="text-muted-foreground mb-8 text-sm">
-                    Wandr will find the sweet spot once everyone weighs in.
+                    Wandr finds the sweet spot once everyone weighs in.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -415,30 +354,28 @@ export default function SurveyJoin() {
                   <p className="text-muted-foreground mb-8 text-sm">Pick what excites you — Wandr blends everyone's picks.</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: "Hidden Gems",       sub: "Off-the-beaten-path spots locals love" },
-                      { label: "Iconic Landmarks",  sub: "The must-sees, done right" },
-                      { label: "Food & Drink",      sub: "Food tours • markets • local specialties" },
-                      { label: "History & Museums", sub: "Museums • historic sites • architecture" },
-                      { label: "Nature & Parks",    sub: "Parks • viewpoints • scenic walks" },
-                      { label: "Markets & Shopping",sub: "Local markets • boutiques • vintage finds" },
-                      { label: "Nightlife",         sub: "Bars • live music • late-night spots" },
-                      { label: "Art & Culture",     sub: "Galleries • street art • performances" },
+                      { value: "hidden-gems",       label: "Hidden Gems",        sub: "Off-the-beaten-path spots locals love" },
+                      { value: "iconic-landmarks",  label: "Iconic Landmarks",   sub: "The must-sees, done right" },
+                      { value: "food-drink",        label: "Food & Drink",       sub: "Food tours • markets • local specialties" },
+                      { value: "history-museums",   label: "History & Museums",  sub: "Museums • historic sites • architecture" },
+                      { value: "nature-parks",      label: "Nature & Parks",     sub: "Parks • viewpoints • scenic walks" },
+                      { value: "markets-shopping",  label: "Markets & Shopping", sub: "Local markets • boutiques • vintage finds" },
+                      { value: "nightlife",         label: "Nightlife",          sub: "Bars • live music • late-night spots" },
+                      { value: "art-culture",       label: "Art & Culture",      sub: "Galleries • street art • performances" },
                     ].map((opt) => {
-                      const active = activities.includes(opt.label);
+                      const active = activityTypes.includes(opt.value);
                       return (
                         <button
-                          key={opt.label}
+                          key={opt.value}
                           onClick={() =>
-                            setActivities((a) =>
-                              active ? a.filter((x) => x !== opt.label) : [...a, opt.label]
+                            setActivityTypes((a) =>
+                              active ? a.filter((x) => x !== opt.value) : [...a, opt.value]
                             )
                           }
                           className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                            active
-                              ? "border-primary bg-primary/8"
-                              : "border-border bg-card hover:border-primary/40"
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
                           }`}
-                          data-testid={`button-activity-${opt.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                          data-testid={`button-activity-${opt.value}`}
                         >
                           <div className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
                           <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{opt.sub}</div>
@@ -451,7 +388,7 @@ export default function SurveyJoin() {
                       Anything specific you'd like to plan around?
                     </label>
                     <textarea
-                      placeholder="e.g. A group boat tour, escape room, something active together, concert on Saturday…"
+                      placeholder="e.g. A group boat tour, escape room, something active together…"
                       value={activityNotes}
                       onChange={(e) => setActivityNotes(e.target.value)}
                       rows={3}
@@ -493,7 +430,7 @@ export default function SurveyJoin() {
                         value: "special-evening",
                         icon: <Sparkles className="w-5 h-5" />,
                         label: "One standout meal",
-                        sub: "A memorable table as a trip highlight — not every meal needs to be an event.",
+                        sub: "A memorable table as a trip highlight.",
                       },
                     ].map((opt) => {
                       const active = food.includes(opt.value);
@@ -538,7 +475,7 @@ export default function SurveyJoin() {
         </div>
       </div>
 
-      {/* Sticky footer — Back / Skip / Continue */}
+      {/* Sticky footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/60 px-4 pt-4 pb-5">
         <div className="max-w-2xl mx-auto flex gap-3">
           <Button
@@ -551,28 +488,34 @@ export default function SurveyJoin() {
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
-          <Button
-            size="lg"
-            className="flex-1 rounded-full"
-            disabled={!canContinue()}
-            onClick={goNext}
-            data-testid="button-continue"
-          >
-            {isLastStep ? "Submit & generate itinerary →" : "Continue"}
-          </Button>
-        </div>
-        {/* Skip link — shown on all preference steps */}
-        {isSkippable && (
-          <div className="max-w-2xl mx-auto mt-2.5 text-center">
-            <button
-              onClick={skipStep}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          {isSkippable && !canContinue() ? (
+            <Button
+              variant="ghost"
+              size="lg"
+              className="flex-1 rounded-full text-muted-foreground"
+              onClick={goNext}
               data-testid="button-skip"
             >
-              {isLastStep ? "Skip & generate without this →" : "Skip this question →"}
-            </button>
-          </div>
-        )}
+              Skip
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="flex-1 rounded-full"
+              disabled={!canContinue() || submitting}
+              onClick={goNext}
+              data-testid="button-continue"
+            >
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving…</>
+              ) : isLastStep ? (
+                "Submit preferences"
+              ) : (
+                <>Continue <ChevronRight className="w-4 h-4 ml-1" /></>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -123,9 +123,46 @@ export default function Generating() {
     requestAnimationFrame(frame);
   }, []);
 
-  // Step 1: POST preferences immediately to get a tripId, then poll for readiness
+  // Handles both solo (POST /api/trips/create) and group (tripId already exists) flows
   useEffect(() => {
+    const groupPendingTripId = sessionStorage.getItem("wandr_group_pending_trip_id");
     const raw = sessionStorage.getItem("wandr_pending_preferences");
+
+    // Group flow — tripId already created by POST /api/groups/:id/generate
+    if (groupPendingTripId) {
+      sessionStorage.removeItem("wandr_group_pending_trip_id");
+      setTripId(groupPendingTripId);
+      const t1 = setTimeout(() => setPhase(2), 4000);
+      const stuckTimeout = setTimeout(() => setStuck(true), 60000);
+      let cancelled = false;
+
+      const pollInterval = setInterval(async () => {
+        if (cancelled) return;
+        try {
+          const r = await fetch(`/api/trips/${groupPendingTripId}`);
+          const payload = await r.json();
+          if (payload.status === "ready") {
+            clearInterval(pollInterval);
+            clearTimeout(stuckTimeout);
+            setProgress(100);
+            setTimeout(() => navigate(`/itinerary/${groupPendingTripId}`), 800);
+          } else if (payload.status === "failed") {
+            clearInterval(pollInterval);
+            clearTimeout(stuckTimeout);
+            setError("generation_failed");
+          }
+        } catch { /* keep polling */ }
+      }, 2000);
+
+      return () => {
+        cancelled = true;
+        clearTimeout(t1);
+        clearInterval(pollInterval);
+        clearTimeout(stuckTimeout);
+      };
+    }
+
+    // Solo flow — POST preferences to create trip, then poll
     if (!raw) {
       navigate("/intake");
       return;

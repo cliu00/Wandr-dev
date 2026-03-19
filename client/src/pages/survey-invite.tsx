@@ -1,55 +1,47 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { FlowHeader } from "@/components/flow-header";
 import {
   Copy, Check, Users, ChevronRight,
-  Plus, X, Link2
+  Plus, X, Link2, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { copyToClipboard } from "@/lib/clipboard";
 
-const SESSION = "x7k9m"; // mock session tied to this trip
-
-function makeToken(name: string, index: number): string {
-  // deterministic fake token for prototype
-  const seeds = ["a1b2", "c3d4", "e5f6", "g7h8", "i9j0"];
-  return seeds[index % seeds.length];
-}
-
-function makePersonalLink(name: string, token: string): string {
-  return `wandr.app/join/${SESSION}/${token}`;
-}
-
-function makePersonalLinkFull(name: string, token: string): string {
-  const slug = encodeURIComponent(name.trim());
-  return `${window.location.origin}/survey/join?name=${slug}&token=${token}`;
-}
-
-interface Wandrer {
+interface Companion {
   name: string;
-  token: string;
+  token: string | null;  // null until API returns a real token
+  joinUrl: string | null;
   copied: boolean;
+}
+
+function displayLink(joinUrl: string | null, name: string): string {
+  if (joinUrl) return `${window.location.origin}${joinUrl}`;
+  return name.trim() ? `wandr.app/join/…` : "";
 }
 
 export default function SurveyInvite() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const [companions, setCompanions] = useState<Wandrer[]>([
-    { name: "", token: makeToken("", 0), copied: false },
+  const [companions, setCompanions] = useState<Companion[]>([
+    { name: "", token: null, joinUrl: null, copied: false },
   ]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const groupTripId = sessionStorage.getItem("wandr_group_trip_id");
 
   function updateName(index: number, value: string) {
     setCompanions((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, name: value } : c))
+      prev.map((c, i) => (i === index ? { ...c, name: value, token: null, joinUrl: null } : c))
     );
   }
 
   function addCompanion() {
     setCompanions((prev) => [
       ...prev,
-      { name: "", token: makeToken("", prev.length), copied: false },
+      { name: "", token: null, joinUrl: null, copied: false },
     ]);
   }
 
@@ -59,8 +51,8 @@ export default function SurveyInvite() {
 
   async function copyPersonalLink(index: number) {
     const c = companions[index];
-    if (!c.name.trim()) return;
-    const url = makePersonalLinkFull(c.name, c.token);
+    if (!c.joinUrl) return;
+    const url = `${window.location.origin}${c.joinUrl}`;
     const ok = await copyToClipboard(url);
     if (ok) {
       setCompanions((prev) =>
@@ -78,17 +70,17 @@ export default function SurveyInvite() {
     } else {
       toast({
         title: "Couldn't copy automatically",
-        description: `Copy manually: ${makePersonalLink(c.name, c.token)}`,
+        description: `Copy manually: ${url}`,
         variant: "destructive",
       });
     }
   }
 
   async function copyAllLinks() {
-    const filled = companions.filter((c) => c.name.trim());
+    const filled = companions.filter((c) => c.joinUrl);
     if (!filled.length) return;
     const text = filled
-      .map((c) => `${c.name}: ${makePersonalLinkFull(c.name, c.token)}`)
+      .map((c) => `${c.name}: ${window.location.origin}${c.joinUrl}`)
       .join("\n");
     const ok = await copyToClipboard(text);
     toast({
@@ -100,13 +92,58 @@ export default function SurveyInvite() {
     });
   }
 
+  async function handleTrackResponses() {
+    if (!groupTripId) {
+      toast({ title: "Session expired", description: "Please start over.", variant: "destructive" });
+      navigate("/intake");
+      return;
+    }
+
+    const filledNames = companions.map((c) => c.name.trim()).filter(Boolean);
+    if (!filledNames.length) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/groups/${groupTripId}/participants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ names: filledNames }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create participants");
+      const data = await res.json();
+
+      // Update companions with real tokens and join URLs from the API
+      setCompanions((prev) => {
+        let apiIndex = 0;
+        return prev.map((c) => {
+          if (!c.name.trim()) return c;
+          const participant = data.participants[apiIndex++];
+          return participant
+            ? { ...c, token: participant.token, joinUrl: participant.joinUrl }
+            : c;
+        });
+      });
+
+      navigate(`/survey/status?groupTripId=${groupTripId}`);
+    } catch {
+      toast({
+        title: "Something went wrong",
+        description: "Couldn't generate invite links. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const filledCompanions = companions.filter((c) => c.name.trim());
   const hasAnyFilled = filledCompanions.length > 0;
+  const linksReady = companions.some((c) => c.joinUrl !== null);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <FlowHeader onBack={() => navigate("/itinerary/vancouver-2day")} />
+      <FlowHeader onBack={() => navigate("/")} />
 
       <div className="flex-1 max-w-xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
 
@@ -124,9 +161,9 @@ export default function SurveyInvite() {
         {/* How it works */}
         <div className="flex flex-col gap-2">
           {[
-            { n: "1", text: "Enter each wandrer's name below — a personal link is generated instantly." },
-            { n: "2", text: "Copy and send each person their unique link directly (text, email, DM)." },
-            { n: "3", text: "They answer 5 quick questions. Once everyone responds, you generate the group itinerary." },
+            { n: "1", text: "Enter each wandrer's name below." },
+            { n: "2", text: "Click \"Track responses\" — personal links are generated instantly." },
+            { n: "3", text: "Copy and send each link. Once everyone responds, generate the group itinerary." },
           ].map(({ n, text }) => (
             <div key={n} className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -137,13 +174,13 @@ export default function SurveyInvite() {
           ))}
         </div>
 
-        {/* Companion list with personal links */}
+        {/* Companion list */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Your wandrers
             </label>
-            {hasAnyFilled && filledCompanions.length > 1 && (
+            {linksReady && filledCompanions.length > 1 && (
               <button
                 onClick={copyAllLinks}
                 className="text-xs text-primary hover:text-primary/70 transition-colors font-medium"
@@ -157,7 +194,7 @@ export default function SurveyInvite() {
           <div className="flex flex-col gap-3">
             {companions.map((companion, i) => {
               const hasName = companion.name.trim().length > 0;
-              const personalLink = makePersonalLink(companion.name, companion.token);
+              const linkText = displayLink(companion.joinUrl, companion.name);
 
               return (
                 <div
@@ -192,12 +229,12 @@ export default function SurveyInvite() {
                     )}
                   </div>
 
-                  {/* Personal link row — only shown when name is filled */}
-                  {hasName && (
+                  {/* Personal link row — shown once links have been generated */}
+                  {companion.joinUrl && (
                     <div className="flex items-center gap-2 px-3 pb-3 border-t border-border/50 pt-2.5">
                       <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                       <span className="flex-1 text-xs text-muted-foreground font-mono truncate">
-                        {personalLink}
+                        {linkText}
                       </span>
                       <button
                         onClick={() => copyPersonalLink(i)}
@@ -244,16 +281,18 @@ export default function SurveyInvite() {
         <div className="flex flex-col gap-3">
           <Button
             className="w-full rounded-full gap-2"
-            onClick={() => navigate("/survey/status")}
+            disabled={!hasAnyFilled || submitting}
+            onClick={handleTrackResponses}
             data-testid="button-track-responses"
           >
-            <Users className="w-4 h-4" />
-            Track responses
-            <ChevronRight className="w-4 h-4" />
+            {submitting
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating links…</>
+              : <><Users className="w-4 h-4" /> Track responses <ChevronRight className="w-4 h-4" /></>
+            }
           </Button>
           {!hasAnyFilled && (
             <p className="text-center text-xs text-muted-foreground">
-              Invite at least one wandrer to generate personal links.
+              Invite at least one wandrer to continue.
             </p>
           )}
         </div>

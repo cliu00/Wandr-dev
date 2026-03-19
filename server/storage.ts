@@ -5,6 +5,8 @@ import {
   anonymousSessions,
   trips,
   itineraryVersions,
+  groupTrips,
+  groupParticipants,
   type User,
   type InsertUser,
   type AnonymousSession,
@@ -12,6 +14,10 @@ import {
   type InsertTrip,
   type ItineraryVersion,
   type InsertItineraryVersion,
+  type GroupTrip,
+  type InsertGroupTrip,
+  type GroupParticipant,
+  type InsertGroupParticipant,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -41,6 +47,21 @@ export interface IStorage {
   getLatestItineraryVersion(tripId: string): Promise<ItineraryVersion | undefined>;
   getItineraryByHash(preferenceHash: string): Promise<ItineraryVersion | undefined>;
   getAllItineraryVersions(tripId: string): Promise<ItineraryVersion[]>;
+
+  // Group trips
+  createGroupTrip(data: InsertGroupTrip): Promise<GroupTrip>;
+  getGroupTrip(id: string): Promise<GroupTrip | undefined>;
+  updateGroupTripStatus(id: string, status: string): Promise<void>;
+  linkGroupTripToTrip(id: string, tripId: string): Promise<void>;
+
+  // Group participants
+  createParticipant(data: InsertGroupParticipant): Promise<GroupParticipant>;
+  getParticipantByToken(token: string): Promise<GroupParticipant | undefined>;
+  getParticipantsByGroup(groupTripId: string): Promise<GroupParticipant[]>;
+  updateParticipantResponse(token: string, preferences: Record<string, any>): Promise<void>;
+
+  // Extra group trip lookups
+  getGroupTripByTripId(tripId: string): Promise<GroupTrip | undefined>;
 }
 
 // ─── Database Storage ─────────────────────────────────────────────────────────
@@ -179,6 +200,73 @@ export class DatabaseStorage implements IStorage {
       .from(itineraryVersions)
       .where(eq(itineraryVersions.tripId, tripId))
       .orderBy(desc(itineraryVersions.versionNumber));
+  }
+
+  // ── Group Trips ────────────────────────────────────────────────────────────
+
+  async createGroupTrip(data: InsertGroupTrip): Promise<GroupTrip> {
+    const [created] = await db.insert(groupTrips).values(data).returning();
+    return created;
+  }
+
+  async getGroupTrip(id: string): Promise<GroupTrip | undefined> {
+    const [groupTrip] = await db
+      .select()
+      .from(groupTrips)
+      .where(eq(groupTrips.id, id));
+    return groupTrip;
+  }
+
+  async updateGroupTripStatus(id: string, status: string): Promise<void> {
+    await db
+      .update(groupTrips)
+      .set({ status })
+      .where(eq(groupTrips.id, id));
+  }
+
+  async linkGroupTripToTrip(id: string, tripId: string): Promise<void> {
+    await db
+      .update(groupTrips)
+      .set({ tripId, status: "complete" })
+      .where(eq(groupTrips.id, id));
+  }
+
+  // ── Group Participants ─────────────────────────────────────────────────────
+
+  async createParticipant(data: InsertGroupParticipant): Promise<GroupParticipant> {
+    const [created] = await db.insert(groupParticipants).values(data).returning();
+    return created;
+  }
+
+  async getParticipantByToken(token: string): Promise<GroupParticipant | undefined> {
+    const [participant] = await db
+      .select()
+      .from(groupParticipants)
+      .where(eq(groupParticipants.token, token));
+    return participant;
+  }
+
+  async getParticipantsByGroup(groupTripId: string): Promise<GroupParticipant[]> {
+    return db
+      .select()
+      .from(groupParticipants)
+      .where(eq(groupParticipants.groupTripId, groupTripId))
+      .orderBy(groupParticipants.createdAt);
+  }
+
+  async updateParticipantResponse(token: string, preferences: Record<string, any>): Promise<void> {
+    await db
+      .update(groupParticipants)
+      .set({ preferences, responded: true })
+      .where(eq(groupParticipants.token, token));
+  }
+
+  async getGroupTripByTripId(tripId: string): Promise<GroupTrip | undefined> {
+    const [groupTrip] = await db
+      .select()
+      .from(groupTrips)
+      .where(eq(groupTrips.tripId, tripId));
+    return groupTrip;
   }
 }
 
