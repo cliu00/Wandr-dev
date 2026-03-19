@@ -884,10 +884,10 @@ function StepBudget({ state, setState, groupType }: { state: IntakeState; setSta
     family: "What's your spend style?",
   };
   const subtexts: Record<GroupType, string> = {
-    solo:   "We'll match every recommendation to how you like to travel.",
-    duo:    "We'll shape the whole trip around it.",
-    group:  "Wandr will find the sweet spot once your wandrers weigh in.",
-    family: "We'll include family pricing where relevant.",
+    solo:   "Your budget sets the bar — we'll find the best within it.",
+    duo:    "Your budget sets the bar — we'll find the best within it.",
+    group:  "Your budget sets the bar — we'll find the best within it.",
+    family: "Your budget sets the bar — we'll find the best within it.",
   };
 
   const options = [
@@ -938,10 +938,10 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
     family: "What does your family enjoy most?",
   };
   const subtexts: Record<GroupType, string> = {
-    solo:   "Pick all that excite you.",
-    duo:    "Pick everything that appeals to both of you — or just one of you.",
-    group:  "Pick what excites you — Wandr blends everyone's picks.",
-    family: "Pick anything the whole family would enjoy.",
+    solo:   "Your picks shape every activity, neighbourhood, and stop we suggest.",
+    duo:    "Your picks shape every activity, neighbourhood, and stop we suggest.",
+    group:  "Your picks shape every activity, neighbourhood, and stop we suggest.",
+    family: "Your picks shape every activity, neighbourhood, and stop we suggest.",
   };
 
   const allOptions = [
@@ -1047,16 +1047,16 @@ function StepAnchor({ state, setState }: { state: IntakeState; setState: any }) 
 // ── Food ──────────────────────────────────────────────────────────────────────
 function StepFood({ state, setState, groupType }: { state: IntakeState; setState: any; groupType: GroupType }) {
   const headings: Record<GroupType, string> = {
-    solo:   "How do you like to eat and drink?",
-    duo:    "What's your dining style as a pair?",
-    group:  "How do you like to eat?",
-    family: "How does your family like to eat?",
+    solo:   "What's your dining style?",
+    duo:    "What's your dining style?",
+    group:  "What's your dining style?",
+    family: "What's your dining style?",
   };
   const subtexts: Record<GroupType, string> = {
-    solo:   "We'll match every recommendation to how you actually eat.",
-    duo:    "Select all that feel right — even one of you is enough.",
-    group:  "Share yours — Wandr blends it with your wandrers' picks.",
-    family: "Select all that work. We'll keep it practical.",
+    solo:   "Good food isn't a footnote — we'll build it into the plan.",
+    duo:    "Good food isn't a footnote — we'll build it into the plan.",
+    group:  "Good food isn't a footnote — we'll build it into the plan.",
+    family: "Good food isn't a footnote — we'll build it into the plan.",
   };
 
   const options = [
@@ -1138,7 +1138,7 @@ function StepFood({ state, setState, groupType }: { state: IntakeState; setState
           data-testid="input-dietary-notes"
         />
         <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
-          We'll make every effort to suggest places that support mainstream needs — gluten-free, vegetarian, vegan, keto, and more. For complex restrictions or severe allergies, we recommend calling venues ahead of your visit. We can't guarantee a perfect match for every requirement.
+          We'll make every effort to suggest places that support mainstream needs — gluten-free, vegetarian, vegan, keto, and more. For complex restrictions or severe allergies, we recommend contacting venues ahead of your visit. We can't guarantee a perfect match for every requirement.
         </p>
       </div>
     </div>
