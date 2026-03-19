@@ -59,7 +59,7 @@ const STEP_SEQUENCES: Record<GroupType, string[]> = {
 };
 
 // Steps where "Skip" is not available
-const REQUIRED_STEPS = new Set(["partyType", "durationDate", "kidsAges", "budget"]);
+const REQUIRED_STEPS = new Set(["partyType", "durationDate", "kidsAges"]);
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
@@ -143,6 +143,10 @@ export default function Intake() {
     else goNext();
   }
   function handleSubmit() {
+    if (!state.destination.trim()) {
+      navigate("/?missingDestination=1");
+      return;
+    }
     const startDate = state.startDate ? format(state.startDate, "yyyy-MM-dd") : undefined;
     const durationDays = state.duration ?? 2;
 

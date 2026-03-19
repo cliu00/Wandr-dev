@@ -8,12 +8,12 @@ import { z } from "zod";
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
 const createTripSchema = z.object({
-  destination: z.string().default(""),
+  destination: z.string().min(1, "Destination is required"),
   startDate: z.string().optional(),
   durationDays: z.number().int().min(1).max(4),
   groupType: z.enum(["solo", "duo", "group", "family"]),
   energy: z.number().min(0).max(100),
-  budget: z.enum(["under-100", "100-200", "200-350", "350-plus"]),
+  budget: z.enum(["under-100", "100-200", "200-350", "350-plus"]).optional(),
   activityTypes: z.array(z.string()).default([]),
   food: z.array(z.string()).default([]),
   anchorActivity: z.string().optional(),

@@ -11,7 +11,7 @@ export interface IntakePreferences {
   durationDays: number;
   groupType: "solo" | "duo" | "group" | "family";
   energy: number;           // 0–100 slider (0 = Decompress, 50 = Balanced, 100 = Pack it in)
-  budget: string;           // "under-100" | "100-200" | "200-350" | "350-plus"
+  budget?: string;          // "under-100" | "100-200" | "200-350" | "350-plus" — optional
   activityTypes: string[];  // "hidden-gems" | "iconic-landmarks" | "food-drink" | "history-museums" | "nature-parks" | "markets-shopping" | "nightlife" | "art-culture"
   food: string[];           // "street-food" | "neighbourhood" | "sit-down" | "special-evening"
   anchorActivity?: string;
@@ -140,7 +140,8 @@ function buildUserMessage(prefs: IntakePreferences): string {
     : prefs.energy <= 80 ? "active"
     : "high energy";
 
-  const budgetLabel = prefs.budget === "under-100"  ? "$50–100/day"
+  const budgetLabel = !prefs.budget ? null
+    : prefs.budget === "under-100"  ? "$50–100/day"
     : prefs.budget === "100-200" ? "$100–200/day"
     : prefs.budget === "200-350" ? "$200–350/day"
     : "$350+/day";
@@ -173,7 +174,7 @@ function buildUserMessage(prefs: IntakePreferences): string {
   ].filter(Boolean).join("\n");
 
   return `Generate a ${prefs.durationDays}-day itinerary for ${prefs.destination}.
-Group: ${prefs.groupType} | Energy: ${energyLabel} | Budget: ${budgetLabel}
+Group: ${prefs.groupType} | Energy: ${energyLabel}${budgetLabel ? ` | Budget: ${budgetLabel}` : ""}
 Activities: ${activityList}
 Food: ${foodList}
 ${extras}

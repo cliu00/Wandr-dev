@@ -79,10 +79,21 @@ export default function Home() {
   const [tripType, setTripType] = useState<TripType>("solo");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Auto-trigger error if redirected back from intake without a destination
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("missingDestination")) {
+      setDestinationError(true);
+      setTimeout(() => setDestinationError(false), 600);
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
   // ── Place autocomplete (Nominatim — US + Canada cities/states/provinces) ──
   interface PlaceSuggestion { id: string; label: string; }
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [destinationError, setDestinationError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
@@ -180,8 +191,13 @@ export default function Home() {
   }
 
   function handleCurate() {
+    if (!destination.trim()) {
+      setDestinationError(true);
+      setTimeout(() => setDestinationError(false), 600);
+      return;
+    }
     const params = new URLSearchParams();
-    if (destination) params.set("destination", destination);
+    params.set("destination", destination.trim());
     params.set("tripType", tripType);
     navigate(`/intake?${params.toString()}`);
   }
@@ -287,23 +303,23 @@ export default function Home() {
           {/* Search bar — primary CTA */}
           <div className="w-full max-w-2xl relative" ref={searchBarRef}>
             <div
-              className="w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-2 gap-2"
+              className={`w-full bg-white rounded-full shadow-2xl flex items-center overflow-hidden p-2 gap-2 transition-all duration-150 ${destinationError ? "ring-2 ring-red-400 animate-[shake_0.4s_ease-in-out]" : ""}`}
               data-testid="search-bar"
             >
               <div className="flex items-center gap-3 flex-1 px-5">
-                <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <MapPin className={`w-5 h-5 flex-shrink-0 transition-colors ${destinationError ? "text-red-400" : "text-gray-400"}`} />
                 <input
                   type="text"
-                  placeholder="City, state, or province…"
+                  placeholder={destinationError ? "Please enter a destination first" : "City, state, or province…"}
                   aria-label="Destination"
                   value={destination}
-                  onChange={(e) => onDestinationChange(e.target.value)}
+                  onChange={(e) => { setDestinationError(false); onDestinationChange(e.target.value); }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") { setShowSuggestions(false); handleCurate(); }
                     if (e.key === "Escape") setShowSuggestions(false);
                   }}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  className="flex-1 text-gray-900 placeholder:text-gray-400 text-base outline-none bg-transparent py-2"
+                  className={`flex-1 text-base outline-none bg-transparent py-2 transition-colors ${destinationError ? "placeholder:text-red-400" : "text-gray-900 placeholder:text-gray-400"}`}
                   data-testid="input-destination"
                   autoComplete="off"
                 />
