@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { FlowHeader } from "@/components/flow-header";
@@ -8,9 +8,9 @@ import {
   Coffee, UtensilsCrossed, Star, User, Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { DayPicker } from "react-day-picker";
-import { format, addDays } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
 type GroupType = "solo" | "duo" | "group" | "family";
@@ -19,6 +19,7 @@ interface IntakeState {
   destination:   string;
   duration:      number | null;
   startDate:     Date | undefined;
+  endDate:       Date | undefined;
   groupType:     GroupType;
   // Universal
   energy:        number;
@@ -49,7 +50,7 @@ interface IntakeState {
 //   5. Activities        (universal, persona-adapted copy)
 //   6. Food & dining     (universal, persona-adapted copy)
 const STEP_SEQUENCES: Record<GroupType, string[]> = {
-  solo:   ["durationDate", "soloVibe",     "energy", "budget", "activities", "food"],
+  solo:   ["durationDate", "energy", "budget", "activities", "food"],
   // TODO (MVP v2): Duo flow
   duo:    ["durationDate", "duoStyle",     "energy", "budget", "activities", "food"],
   group:  ["durationDate", "groupDynamic", "energy", "budget", "activities", "food"],
@@ -100,6 +101,7 @@ export default function Intake() {
     destination:   prefillDest,
     duration:      null,
     startDate:     undefined,
+    endDate:       undefined,
     groupType:     initialGroupType,
     energy:        50,
     budget:        "",
@@ -144,6 +146,7 @@ export default function Intake() {
     const preferences = {
       destination:   state.destination,
       startDate:     state.startDate ? format(state.startDate, "yyyy-MM-dd") : undefined,
+      endDate:       state.endDate ? format(state.endDate, "yyyy-MM-dd") : undefined,
       durationDays:  state.duration ?? 2,
       groupType,
       energy:        state.energy,
@@ -166,7 +169,7 @@ export default function Intake() {
   function canContinue(): boolean {
     switch (currentStepKey) {
       case "partyType":     return partyTypeSelected;
-      case "durationDate":  return state.duration !== null;
+      case "durationDate":  return true;
       case "soloVibe":      return state.soloVibe !== null;
       case "duoStyle":      return state.duoStyle !== null;
       case "groupDynamic":  return state.groupDynamic !== null;
@@ -174,11 +177,6 @@ export default function Intake() {
       default:              return true;
     }
   }
-
-  const endDate =
-    state.startDate && state.duration
-      ? addDays(state.startDate, state.duration - 1)
-      : null;
 
   const contextLabel = [
     prefillDest && `${prefillDest} ·`,
@@ -230,7 +228,7 @@ export default function Intake() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               {currentStepKey === "partyType"     && <StepPartyType    groupType={groupType} onSelect={(t) => { setGroupType(t); setPartyTypeSelected(true); }} />}
-              {currentStepKey === "durationDate"  && <StepDurationDate state={state} setState={setState} endDate={endDate} groupType={groupType} />}
+              {currentStepKey === "durationDate"  && <StepDurationDate state={state} setState={setState} groupType={groupType} />}
               {currentStepKey === "soloVibe"      && <StepSoloVibe     state={state} setState={setState} />}
               {/* TODO (MVP v2): Duo flow — uncomment when re-enabling duo group type */}
               {/* {currentStepKey === "duoStyle"      && <StepDuoStyle     state={state} setState={setState} />} */}
@@ -429,15 +427,38 @@ function StepPartyType({
 }
 
 // ── Duration + Date ────────────────────────────────────────────────────────────
+const MAX_DAYS = 4;
+
+function cappedRange(a: Date, b: Date): DateRange {
+  const [from, to] = a <= b ? [a, b] : [b, a];
+  const cappedTo = differenceInDays(to, from) >= MAX_DAYS ? addDays(from, MAX_DAYS - 1) : to;
+  return { from, to: cappedTo };
+}
+
+/** Parse the day number from an rdp day button and combine with a known month. */
+function parseDayButton(btn: Element, month: Date, todayDate: Date): Date | null {
+  const dayNum = parseInt(btn.textContent?.trim() ?? "", 10);
+  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return null;
+  const date = new Date(month.getFullYear(), month.getMonth(), dayNum);
+  // Reject past dates
+  const todayNorm = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+  if (date < todayNorm) return null;
+  return date;
+}
+
 function StepDurationDate({
-  state, setState, endDate, groupType,
+  state, setState, groupType,
 }: {
   state: IntakeState;
   setState: any;
-  endDate: Date | null;
   groupType: GroupType;
 }) {
   const today = new Date();
+
+  const anchorRef        = useRef<Date | undefined>();
+  const currentEndRef    = useRef<Date | undefined>();
+  const displayedMonthRef = useRef<Date>(today);
+  const [dragRange, setDragRange] = useState<DateRange | undefined>();
 
   const headings: Record<GroupType, string> = {
     solo:   "How long is your adventure?",
@@ -446,7 +467,63 @@ function StepDurationDate({
     family: "How many days are you planning for?",
   };
 
-  const options = [1, 2, 3, 4];
+  useEffect(() => {
+    const todaySnap = new Date();
+
+    function getDayUnderCursor(x: number, y: number): Date | null {
+      const el = document.elementFromPoint(x, y);
+      const btn = el?.closest("button[name='day']") ?? el?.closest(".rdp-day");
+      if (!btn || (btn as HTMLButtonElement).disabled) return null;
+      return parseDayButton(btn, displayedMonthRef.current, todaySnap);
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      if (!anchorRef.current) return;
+      const date = getDayUnderCursor(e.clientX, e.clientY);
+      if (!date) return;
+      currentEndRef.current = date;
+      setDragRange(cappedRange(anchorRef.current, date));
+    }
+
+    function onMouseUp() {
+      if (!anchorRef.current) return;
+      const from = anchorRef.current;
+      const to   = currentEndRef.current ?? from;
+      const range = cappedRange(from, to);
+      const duration = differenceInDays(range.to!, range.from!) + 1;
+      setState((s: IntakeState) => ({ ...s, startDate: range.from, endDate: range.to, duration }));
+      anchorRef.current    = undefined;
+      currentEndRef.current = undefined;
+      setDragRange(undefined);
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup",   onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup",   onMouseUp);
+    };
+  }, []); // uses only refs and stable setState
+
+  function handleWrapperMouseDown(e: React.MouseEvent) {
+    const btn = (e.target as Element).closest("button[name='day']") ??
+                (e.target as Element).closest(".rdp-day");
+    if (!btn || (btn as HTMLButtonElement).disabled) return;
+    e.preventDefault();
+    const date = parseDayButton(btn, displayedMonthRef.current, today);
+    if (!date) return;
+    anchorRef.current     = date;
+    currentEndRef.current = date;
+    setDragRange({ from: date, to: date });
+    setState((s: IntakeState) => ({ ...s, startDate: undefined, endDate: undefined, duration: null }));
+  }
+
+  const displayRange: DateRange | undefined =
+    dragRange ?? (state.startDate ? { from: state.startDate, to: state.endDate } : undefined);
+
+  const summaryFrom = displayRange?.from;
+  const summaryTo   = displayRange?.to;
+  const summaryDays = summaryFrom && summaryTo ? differenceInDays(summaryTo, summaryFrom) + 1 : 1;
 
   return (
     <div>
@@ -461,68 +538,38 @@ function StepDurationDate({
         {headings[groupType]}
       </h2>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {options.map((n) => {
-          const selected = state.duration === n;
-          return (
-            <button
-              key={n}
-              onClick={() => setState((s: IntakeState) => ({ ...s, duration: n }))}
-              className={`aspect-square flex flex-col items-center justify-center rounded-2xl border-2 transition-all ${
-                selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:border-primary/50 text-foreground"
-              }`}
-              data-testid={`button-duration-${n}`}
-            >
-              <span className={`font-serif text-5xl font-light leading-none ${selected ? "text-primary-foreground" : "text-foreground"}`}>
-                {n}
-              </span>
-              <span className={`text-[11px] uppercase tracking-widest mt-2 font-medium ${selected ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                {n === 1 ? "day" : "days"}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2 mb-3">
-        <CalendarDays className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-        <span className="text-sm font-medium text-foreground">When are you going?</span>
-        {state.startDate && (
-          <span className="text-sm text-primary font-medium ml-auto">
-            {endDate
-              ? `${format(state.startDate, "MMM d")} – ${format(endDate, "MMM d, yyyy")}`
-              : format(state.startDate, "MMMM d, yyyy")}
-          </span>
-        )}
-      </div>
-
-      <div className="border border-border rounded-2xl overflow-hidden bg-card">
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <div
+        className="border border-border rounded-2xl overflow-hidden bg-card select-none"
+        onMouseDown={handleWrapperMouseDown}
+      >
         <div className="flex justify-center p-2">
           <style>{`
             .rdp-day_selected { background-color: hsl(155 35% 22%) !important; color: white !important; }
-            .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: hsl(155 35% 22% / 0.08) !important; }
+            .rdp-day_range_middle { background-color: hsl(155 35% 22% / 0.12) !important; color: hsl(155 35% 22%) !important; border-radius: 0 !important; }
+            .rdp-day_range_start, .rdp-day_range_end { background-color: hsl(155 35% 22%) !important; color: white !important; }
+            .rdp-button:hover:not([disabled]):not(.rdp-day_selected):not(.rdp-day_range_middle) { background-color: hsl(155 35% 22% / 0.08) !important; }
             .rdp { --rdp-accent-color: hsl(155 35% 22%); }
             .rdp-caption_label { font-family: var(--font-serif); font-weight: 400; font-size: 1rem; letter-spacing: 0.04em; }
           `}</style>
           <DayPicker
-            mode="single"
-            selected={state.startDate}
-            onSelect={(date) => setState((s: IntakeState) => ({ ...s, startDate: date || undefined }))}
+            mode="range"
+            selected={displayRange}
+            onSelect={() => {}}
+            onMonthChange={(m) => { displayedMonthRef.current = m; }}
             fromDate={today}
             numberOfMonths={1}
           />
         </div>
-        {state.startDate && (
+        {summaryFrom && (
           <div className="px-4 pb-3 flex items-center justify-between border-t border-border">
             <p className="text-sm text-primary font-medium pt-3">
-              {endDate
-                ? `${format(state.startDate, "MMM d")} – ${format(endDate, "MMM d, yyyy")}`
-                : `Departing ${format(state.startDate, "MMMM d, yyyy")}`}
+              {summaryTo && summaryTo.getTime() !== summaryFrom.getTime()
+                ? `${format(summaryFrom, "MMM d")} – ${format(summaryTo, "MMM d, yyyy")} · ${summaryDays} day${summaryDays > 1 ? "s" : ""}`
+                : `Departing ${format(summaryFrom, "MMMM d, yyyy")}`}
             </p>
             <button
-              onClick={() => setState((s: IntakeState) => ({ ...s, startDate: undefined }))}
+              onClick={() => setState((s: IntakeState) => ({ ...s, startDate: undefined, endDate: undefined, duration: null }))}
               className="text-xs text-muted-foreground hover:text-foreground underline pt-3"
             >
               Clear
@@ -530,21 +577,6 @@ function StepDurationDate({
           </div>
         )}
       </div>
-
-      {!state.startDate && (
-        <div className="mt-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            Dates help us suggest seasonal events and local happenings.{" "}
-            <button
-              onClick={() => {}}
-              className="text-muted-foreground/60 hover:text-muted-foreground underline underline-offset-2 transition-colors"
-              data-testid="button-toggle-dates"
-            >
-              Skip for now
-            </button>
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -789,38 +821,55 @@ function StepEnergy({ state, setState, groupType }: { state: IntakeState; setSta
     group:  "What's your energy for this trip?",
     family: "How much do you want to pack in?",
   };
-  const subtexts: Record<GroupType, string> = {
-    solo:   "From full chill to full throttle.",
-    duo:    "We'll match the pace to both of you.",
-    group:  "Share yours first — Wandr blends in your wandrers' input.",
-    family: "We'll leave room for downtime — families need it.",
-  };
-  const labels: Record<GroupType, [string, string, string]> = {
-    solo:   ["Decompress",    "Balanced",       "Pack it in"],
-    duo:    ["Take it slow",  "Mix it up",      "Full days"],
-    group:  ["Relaxed pace", "Some of both",   "Action-packed"],
-    family: ["Very relaxed", "Moderate",       "Active"],
+  const options: Record<GroupType, { label: string; sub: string; value: number }[]> = {
+    solo: [
+      { label: "Decompress",  sub: "Slow down, breathe, no agenda.",          value: 0   },
+      { label: "Balanced",    sub: "Mix of activity and breathing room.",       value: 50  },
+      { label: "Pack it in",  sub: "Every hour counts — full days, full send.", value: 100 },
+    ],
+    duo: [
+      { label: "Take it slow", sub: "Leisurely pace, plenty of time to linger.", value: 0   },
+      { label: "Mix it up",    sub: "Active moments balanced with downtime.",     value: 50  },
+      { label: "Full days",    sub: "Back-to-back experiences, morning to night.", value: 100 },
+    ],
+    group: [
+      { label: "Relaxed pace",  sub: "No rush — everyone moves comfortably.",       value: 0   },
+      { label: "Some of both",  sub: "Active highlights with room to recharge.",     value: 50  },
+      { label: "Action-packed", sub: "High energy, always something happening.",     value: 100 },
+    ],
+    family: [
+      { label: "Very relaxed", sub: "Short outings, lots of downtime.",          value: 0   },
+      { label: "Moderate",     sub: "A good mix without wearing anyone out.",     value: 50  },
+      { label: "Active",       sub: "Full days — the kids can handle it.",        value: 100 },
+    ],
   };
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+      <h2 className="font-serif text-4xl font-light text-foreground mb-8 leading-tight">
         {headings[groupType]}
       </h2>
-      <p className="text-muted-foreground mb-12 text-sm">{subtexts[groupType]}</p>
-      <div className="px-2">
-        <Slider
-          value={[state.energy]}
-          onValueChange={([v]) => setState((s: IntakeState) => ({ ...s, energy: v }))}
-          min={0}
-          max={100}
-          step={1}
-          className="mb-6"
-          data-testid="slider-energy"
-        />
-        <div className="flex justify-between text-sm text-muted-foreground">
-          {labels[groupType].map((l) => <span key={l}>{l}</span>)}
-        </div>
+      <div className="flex flex-col gap-3">
+        {options[groupType].map((opt) => {
+          const active = state.energy === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setState((s: IntakeState) => ({ ...s, energy: opt.value }))}
+              className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all ${
+                active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+              }`}
+              data-testid={`button-energy-${opt.value}`}
+            >
+              <div>
+                <div className={`font-semibold text-base mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>
+                  {opt.label}
+                </div>
+                <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
