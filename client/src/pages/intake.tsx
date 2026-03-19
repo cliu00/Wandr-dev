@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { FlowHeader } from "@/components/flow-header";
@@ -444,17 +444,6 @@ function cappedRange(a: Date, b: Date): DateRange {
   return { from, to: cappedTo };
 }
 
-/** Parse the day number from an rdp day button and combine with a known month. */
-function parseDayButton(btn: Element, month: Date, todayDate: Date): Date | null {
-  const dayNum = parseInt(btn.textContent?.trim() ?? "", 10);
-  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return null;
-  const date = new Date(month.getFullYear(), month.getMonth(), dayNum);
-  // Reject past dates
-  const todayNorm = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
-  if (date < todayNorm) return null;
-  return date;
-}
-
 function StepDurationDate({
   state, setState, groupType,
 }: {
@@ -463,11 +452,8 @@ function StepDurationDate({
   groupType: GroupType;
 }) {
   const today = new Date();
-
-  const anchorRef        = useRef<Date | undefined>();
-  const currentEndRef    = useRef<Date | undefined>();
   const displayedMonthRef = useRef<Date>(today);
-  const [dragRange, setDragRange] = useState<DateRange | undefined>();
+  const [capTooltipVisible, setCapTooltipVisible] = useState(false);
 
   const headings: Record<GroupType, string> = {
     solo:   "How long is your adventure?",
@@ -476,63 +462,44 @@ function StepDurationDate({
     family: "How many days are you planning for?",
   };
 
-  useEffect(() => {
-    const todaySnap = new Date();
-
-    function getDayUnderCursor(x: number, y: number): Date | null {
-      const el = document.elementFromPoint(x, y);
-      const btn = el?.closest("button[name='day']") ?? el?.closest(".rdp-day");
-      if (!btn || (btn as HTMLButtonElement).disabled) return null;
-      return parseDayButton(btn, displayedMonthRef.current, todaySnap);
+  function handleSelect(range: DateRange | undefined) {
+    if (!range) {
+      setState((s: IntakeState) => ({ ...s, startDate: undefined, endDate: undefined, duration: null }));
+      return;
     }
-
-    function onMouseMove(e: MouseEvent) {
-      if (!anchorRef.current) return;
-      const date = getDayUnderCursor(e.clientX, e.clientY);
-      if (!date) return;
-      currentEndRef.current = date;
-      setDragRange(cappedRange(anchorRef.current, date));
+    if (range.from && range.to) {
+      const capped = cappedRange(range.from, range.to);
+      const duration = differenceInDays(capped.to!, capped.from!) + 1;
+      setState((s: IntakeState) => ({ ...s, startDate: capped.from, endDate: capped.to, duration }));
+    } else if (range.from) {
+      setState((s: IntakeState) => ({ ...s, startDate: range.from, endDate: undefined, duration: null }));
     }
-
-    function onMouseUp() {
-      if (!anchorRef.current) return;
-      const from = anchorRef.current;
-      const to   = currentEndRef.current ?? from;
-      const range = cappedRange(from, to);
-      const duration = differenceInDays(range.to!, range.from!) + 1;
-      setState((s: IntakeState) => ({ ...s, startDate: range.from, endDate: range.to, duration }));
-      anchorRef.current    = undefined;
-      currentEndRef.current = undefined;
-      setDragRange(undefined);
-    }
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup",   onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup",   onMouseUp);
-    };
-  }, []); // uses only refs and stable setState
-
-  function handleWrapperMouseDown(e: React.MouseEvent) {
-    const btn = (e.target as Element).closest("button[name='day']") ??
-                (e.target as Element).closest(".rdp-day");
-    if (!btn || (btn as HTMLButtonElement).disabled) return;
-    e.preventDefault();
-    const date = parseDayButton(btn, displayedMonthRef.current, today);
-    if (!date) return;
-    anchorRef.current     = date;
-    currentEndRef.current = date;
-    setDragRange({ from: date, to: date });
-    setState((s: IntakeState) => ({ ...s, startDate: undefined, endDate: undefined, duration: null }));
   }
 
   const displayRange: DateRange | undefined =
-    dragRange ?? (state.startDate ? { from: state.startDate, to: state.endDate } : undefined);
+    state.startDate ? { from: state.startDate, to: state.endDate } : undefined;
 
   const summaryFrom = displayRange?.from;
   const summaryTo   = displayRange?.to;
   const summaryDays = summaryFrom && summaryTo ? differenceInDays(summaryTo, summaryFrom) + 1 : 1;
+
+  // Disable dates beyond the 4-day cap once a start date is selected
+  const disabledDates = state.startDate
+    ? { after: addDays(state.startDate, MAX_DAYS - 1) }
+    : undefined;
+
+  function handleCalendarMouseOver(e: React.MouseEvent) {
+    const btn = (e.target as Element).closest("button") as HTMLButtonElement | null;
+    setCapTooltipVisible(!!(btn?.disabled && state.startDate));
+  }
+
+  function handleCalendarTouchStart(e: React.TouchEvent) {
+    const btn = (e.target as Element).closest("button") as HTMLButtonElement | null;
+    if (btn?.disabled && state.startDate) {
+      setCapTooltipVisible(true);
+      setTimeout(() => setCapTooltipVisible(false), 2000);
+    }
+  }
 
   return (
     <div>
@@ -543,15 +510,24 @@ function StepDurationDate({
         </p>
       </div>
 
-      <h2 className="font-serif text-4xl font-light text-foreground mb-8 leading-tight">
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
         {headings[groupType]}
       </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        When you're going matters — we'll tailor recommendations to the season and what's actually on.
+      </p>
 
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className="border border-border rounded-2xl overflow-hidden bg-card select-none"
-        onMouseDown={handleWrapperMouseDown}
+        className="relative border border-border rounded-2xl overflow-hidden bg-card"
+        onMouseOver={handleCalendarMouseOver}
+        onMouseLeave={() => setCapTooltipVisible(false)}
+        onTouchStart={handleCalendarTouchStart}
       >
+        {capTooltipVisible && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-lg bg-foreground text-background text-xs font-medium shadow-md pointer-events-none whitespace-nowrap">
+            Max 4 days
+          </div>
+        )}
         <div className="flex justify-center p-2">
           <style>{`
             .rdp-day_selected { background-color: hsl(155 35% 22%) !important; color: white !important; }
@@ -564,8 +540,9 @@ function StepDurationDate({
           <DayPicker
             mode="range"
             selected={displayRange}
-            onSelect={() => {}}
+            onSelect={handleSelect}
             onMonthChange={(m) => { displayedMonthRef.current = m; }}
+            disabled={disabledDates}
             fromDate={today}
             numberOfMonths={1}
           />
@@ -574,8 +551,8 @@ function StepDurationDate({
           <div className="px-4 pb-3 flex items-center justify-between border-t border-border">
             <p className="text-sm text-primary font-medium pt-3">
               {summaryTo && summaryTo.getTime() !== summaryFrom.getTime()
-                ? `${format(summaryFrom, "MMM d")} – ${format(summaryTo, "MMM d, yyyy")} · ${summaryDays} day${summaryDays > 1 ? "s" : ""}`
-                : `Departing ${format(summaryFrom, "MMMM d, yyyy")}`}
+                ? `${format(summaryFrom, "MMM d")} – ${format(summaryTo, "MMM d, yyyy")} · ${summaryDays} days`
+                : `${format(summaryFrom, "MMM d, yyyy")} · 1 day`}
             </p>
             <button
               onClick={() => setState((s: IntakeState) => ({ ...s, startDate: undefined, endDate: undefined, duration: null }))}
@@ -586,6 +563,7 @@ function StepDurationDate({
           </div>
         )}
       </div>
+      <p className="mt-2 text-xs text-muted-foreground text-center">Wandr is built for short escapes up to 4 days.</p>
     </div>
   );
 }
