@@ -77,7 +77,7 @@ const PERSONA_CONTEXT: Record<GroupType, string> = {
 const FINAL_CTA: Record<GroupType, string> = {
   solo:   "Plan My Adventure →",
   duo:    "Plan Our Adventure →",
-  group:  "Invite My Wandrers →",
+  group:  "Generate My Itinerary →",
   family: "Plan Our Adventure →",
 };
 
@@ -143,11 +143,16 @@ export default function Intake() {
     else goNext();
   }
   function handleSubmit() {
+    const startDate = state.startDate ? format(state.startDate, "yyyy-MM-dd") : undefined;
+    const durationDays = state.duration ?? 2;
+
+    // All group types (solo + group) go through the same generation path.
+    // The generated itinerary URL is what gets shared with companions.
     const preferences = {
       destination:   state.destination,
-      startDate:     state.startDate ? format(state.startDate, "yyyy-MM-dd") : undefined,
+      startDate,
       endDate:       state.endDate ? format(state.endDate, "yyyy-MM-dd") : undefined,
-      durationDays:  state.duration ?? 2,
+      durationDays,
       groupType,
       energy:        state.energy,
       budget:        state.budget,
