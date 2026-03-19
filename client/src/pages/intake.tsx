@@ -444,6 +444,7 @@ function cappedRange(a: Date, b: Date): DateRange {
   return { from, to: cappedTo };
 }
 
+
 function StepDurationDate({
   state, setState, groupType,
 }: {

@@ -124,8 +124,8 @@ ITINERARY DESIGN PRINCIPLES:
 2. Geo-cluster activities — minimise travel between blocks on the same day
 3. Match energy pacing to the traveller's level
 4. Prioritise hidden gems and local favourites over tourist traps
-5. "whyForYou": 1 sentence tied specifically to their preferences
-6. "description": 2 sentences max — specific and vivid
+5. "whyForYou": max 10 words tied specifically to their preferences
+6. "description": 1 sentence — specific and vivid
 7. Each block needs a backup option
 8. Cost estimates must be realistic for the destination and budget
 9. Image URLs: https://images.unsplash.com/photo-[ID]?w=800&q=80
@@ -190,9 +190,13 @@ export async function generateItinerary(
 ): Promise<AIServiceResult> {
   const preferenceHash = hashPreferences(preferences);
 
+  const maxTokens = preferences.durationDays <= 2 ? 3500
+    : preferences.durationDays === 3 ? 4500
+    : 5500;
+
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 5000,
+    max_tokens: maxTokens,
     system: [
       {
         type: "text",
