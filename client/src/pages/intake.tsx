@@ -815,40 +815,35 @@ function StepKidsAges({ state, setState }: { state: IntakeState; setState: any }
 
 // ── Energy ─────────────────────────────────────────────────────────────────────
 function StepEnergy({ state, setState, groupType }: { state: IntakeState; setState: any; groupType: GroupType }) {
-  const headings: Record<GroupType, string> = {
-    solo:   "What's your energy this trip?",
-    duo:    "What's your energy as a pair?",
-    group:  "What's your energy for this trip?",
-    family: "How much do you want to pack in?",
-  };
   const options: Record<GroupType, { label: string; sub: string; value: number }[]> = {
     solo: [
-      { label: "Decompress",  sub: "Slow down, breathe, no agenda.",          value: 0   },
-      { label: "Balanced",    sub: "Mix of activity and breathing room.",       value: 50  },
-      { label: "Pack it in",  sub: "Every hour counts — full days, full send.", value: 100 },
+      { label: "Keep it gentle",      sub: "Easy on the body — accessible spots, minimal exertion.", value: 0   },
+      { label: "Moderately active",   sub: "Some activity, nothing too demanding.",             value: 50  },
+      { label: "Bring it on",         sub: "Physically engaged days — keep me moving.",               value: 100 },
     ],
     duo: [
-      { label: "Take it slow", sub: "Leisurely pace, plenty of time to linger.", value: 0   },
-      { label: "Mix it up",    sub: "Active moments balanced with downtime.",     value: 50  },
-      { label: "Full days",    sub: "Back-to-back experiences, morning to night.", value: 100 },
+      { label: "Keep it gentle",      sub: "Easy on the body — accessible spots, minimal exertion.", value: 0   },
+      { label: "Moderately active",   sub: "Some activity, nothing too demanding.",             value: 50  },
+      { label: "Bring it on",         sub: "Physically engaged days — keep us moving.",               value: 100 },
     ],
     group: [
-      { label: "Relaxed pace",  sub: "No rush — everyone moves comfortably.",       value: 0   },
-      { label: "Some of both",  sub: "Active highlights with room to recharge.",     value: 50  },
-      { label: "Action-packed", sub: "High energy, always something happening.",     value: 100 },
+      { label: "Keep it gentle",      sub: "Easy on the body — accessible spots, minimal exertion.", value: 0   },
+      { label: "Moderately active",   sub: "Some activity, nothing too demanding.",             value: 50  },
+      { label: "Bring it on",         sub: "Physically engaged days — keep everyone moving.",         value: 100 },
     ],
     family: [
-      { label: "Very relaxed", sub: "Short outings, lots of downtime.",          value: 0   },
-      { label: "Moderate",     sub: "A good mix without wearing anyone out.",     value: 50  },
-      { label: "Active",       sub: "Full days — the kids can handle it.",        value: 100 },
+      { label: "Keep it gentle",      sub: "Easy on the body — accessible spots, minimal exertion.", value: 0   },
+      { label: "Moderately active",   sub: "Some activity, nothing too demanding.",             value: 50  },
+      { label: "Bring it on",         sub: "Physically engaged days — keep everyone moving.",         value: 100 },
     ],
   };
 
   return (
     <div>
-      <h2 className="font-serif text-4xl font-light text-foreground mb-8 leading-tight">
-        {headings[groupType]}
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        How physical do you want to get?
       </h2>
+      <p className="text-muted-foreground mb-8 text-sm">We'll match activities to what you're up for.</p>
       <div className="flex flex-col gap-3">
         {options[groupType].map((opt) => {
           const active = state.energy === opt.value;
