@@ -59,7 +59,7 @@ const STEP_SEQUENCES: Record<GroupType, string[]> = {
 };
 
 // Steps where "Skip" is not available
-const REQUIRED_STEPS = new Set(["partyType", "durationDate", "kidsAges"]);
+const REQUIRED_STEPS = new Set(["partyType", "durationDate", "kidsAges", "budget"]);
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
