@@ -111,9 +111,11 @@ export default function Home() {
 
   const TRIP_TYPES: { value: TripType; label: string; icon: React.ReactNode }[] = [
     { value: "solo", label: "Solo", icon: <User className="w-3.5 h-3.5" /> },
-    { value: "duo", label: "Duo", icon: <Handshake className="w-3.5 h-3.5" /> },
+    // TODO (MVP v2): Re-enable when duo flow is ready
+    // { value: "duo", label: "Duo", icon: <Handshake className="w-3.5 h-3.5" /> },
     { value: "group", label: "Group", icon: <Users className="w-3.5 h-3.5" /> },
-    { value: "family", label: "Family", icon: <Baby className="w-3.5 h-3.5" /> },
+    // TODO (MVP v2): Re-enable when family flow is ready
+    // { value: "family", label: "Family", icon: <Baby className="w-3.5 h-3.5" /> },
   ];
 
   const HOW_IT_WORKS = [

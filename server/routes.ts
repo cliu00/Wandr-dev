@@ -7,7 +7,7 @@ import { z } from "zod";
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
 const createTripSchema = z.object({
-  destination: z.string().min(1),
+  destination: z.string().default(""),
   startDate: z.string().optional(),
   durationDays: z.number().int().min(1).max(4),
   groupType: z.enum(["solo", "duo", "group", "family"]),
@@ -41,8 +41,9 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // ── POST /api/trips/create ─────────────────────────────────────────────────
-  // Accepts intake form preferences, generates an itinerary via Claude,
-  // stores it, and returns the trip ID for the client to navigate to.
+  // Accepts intake form preferences, creates the trip row immediately, fires
+  // AI generation in the background, and returns { tripId } right away.
+  // The client should poll GET /api/trips/:id until status === "ready".
 
   app.post("/api/trips/create", async (req: Request, res: Response) => {
     // 1. Validate the request body
@@ -69,36 +70,7 @@ export async function registerRoutes(
       }
     }
 
-    // 3. Hash the preferences — check if identical itinerary already exists
-    const preferenceHash = hashPreferences(preferences);
-    const existingVersion = await storage.getItineraryByHash(preferenceHash);
-
-    let itineraryData: any;
-    let usedCache = false;
-
-    if (existingVersion) {
-      // Cache hit — reuse itinerary data, skip the AI call
-      itineraryData = existingVersion.itineraryData;
-      usedCache = true;
-    } else {
-      // Cache miss — call Claude
-      try {
-        const result = await generateItinerary(preferences);
-        itineraryData = result.itineraryData;
-      } catch (err: any) {
-        console.error("AI generation failed:", err);
-        return res.status(500).json({
-          message: "Failed to generate itinerary. Please try again.",
-        });
-      }
-
-      // Only count against the limit when we actually called the AI
-      if (!isAuthenticated) {
-        await storage.incrementGenerationCount(sessionId);
-      }
-    }
-
-    // 4. Create the trip row
+    // 3. Create the trip row immediately so we have an ID to return
     const trip = await storage.createTrip({
       destination: preferences.destination,
       startDate: preferences.startDate,
@@ -109,23 +81,50 @@ export async function registerRoutes(
       anonymousSessionId: isAuthenticated ? null : sessionId,
     });
 
-    // 5. Store the itinerary version
-    await storage.createItineraryVersion({
-      tripId: trip.id,
-      versionNumber: 1,
-      itineraryData: itineraryData as any,
-      preferenceHash,
-      generatedBy: "solo",
-    });
+    // 4. Return immediately — client will poll GET /api/trips/:id
+    res.status(201).json({ tripId: trip.id });
 
-    return res.status(201).json({
-      tripId: trip.id,
-      usedCache,
-    });
+    // 5. Fire AI generation in the background (after response is sent)
+    const preferenceHash = hashPreferences(preferences);
+
+    (async () => {
+      try {
+        const existingVersion = await storage.getItineraryByHash(preferenceHash);
+
+        let itineraryData: any;
+        if (existingVersion) {
+          // Cache hit — reuse itinerary data, no AI call needed
+          itineraryData = existingVersion.itineraryData;
+        } else {
+          // Cache miss — call Claude
+          const result = await generateItinerary(preferences);
+          itineraryData = result.itineraryData;
+
+          // Only count against the limit when we actually called the AI
+          if (!isAuthenticated) {
+            await storage.incrementGenerationCount(sessionId);
+          }
+        }
+
+        await storage.createItineraryVersion({
+          tripId: trip.id,
+          versionNumber: 1,
+          itineraryData: itineraryData as any,
+          preferenceHash,
+          generatedBy: "solo",
+        });
+      } catch (err: any) {
+        console.error("Background AI generation failed for trip", trip.id, ":", err?.message ?? err);
+        // Mark the trip as failed so the client can show an error state
+        await storage.markTripFailed(trip.id).catch(() => {});
+      }
+    })();
   });
 
   // ── GET /api/trips/:id ─────────────────────────────────────────────────────
-  // Returns the trip metadata and its current (latest) itinerary version.
+  // Returns the trip with its latest itinerary version.
+  // While generation is in progress, returns { status: "generating" }.
+  // On failure, returns { status: "failed" }.
 
   app.get("/api/trips/:id", async (req: Request, res: Response) => {
     const id = req.params["id"] as string;
@@ -135,12 +134,19 @@ export async function registerRoutes(
       return res.status(404).json({ message: "Trip not found" });
     }
 
+    // Trip was marked as failed during background generation
+    if (trip.generationFailed) {
+      return res.json({ status: "failed", trip });
+    }
+
     const version = await storage.getLatestItineraryVersion(id);
     if (!version) {
-      return res.status(404).json({ message: "Itinerary not found" });
+      // Trip exists but no itinerary yet — generation is in progress
+      return res.json({ status: "generating", trip });
     }
 
     return res.json({
+      status: "ready",
       trip,
       itinerary: version.itineraryData,
       versionNumber: version.versionNumber,

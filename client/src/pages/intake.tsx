@@ -40,18 +40,20 @@ interface IntakeState {
 }
 
 // ─── Step sequences per persona ───────────────────────────────────────────────
-// All 4 flows share the same 5-slot structure:
+// MVP: Solo and Group flows only.
+// TODO (MVP v2): Re-enable duo and family when their steps are ready.
 //   1. Duration + dates  (universal)
-//   2. Persona identity  (solo vibe / duo style / group dynamic / kids ages)
+//   2. Persona identity  (solo vibe / group dynamic)
 //   3. Energy            (universal, persona-adapted copy)
 //   4. Budget            (universal, persona-adapted copy)
 //   5. Activities        (universal, persona-adapted copy)
 //   6. Food & dining     (universal, persona-adapted copy)
-//   7. Family needs      (family only)
 const STEP_SEQUENCES: Record<GroupType, string[]> = {
   solo:   ["durationDate", "soloVibe",     "energy", "budget", "activities", "food"],
+  // TODO (MVP v2): Duo flow
   duo:    ["durationDate", "duoStyle",     "energy", "budget", "activities", "food"],
   group:  ["durationDate", "groupDynamic", "energy", "budget", "activities", "food"],
+  // TODO (MVP v2): Family flow (includes kidsAges + familyNeeds steps)
   family: ["durationDate", "kidsAges",     "energy", "budget", "activities", "food", "familyNeeds"],
 };
 
@@ -230,15 +232,18 @@ export default function Intake() {
               {currentStepKey === "partyType"     && <StepPartyType    groupType={groupType} onSelect={(t) => { setGroupType(t); setPartyTypeSelected(true); }} />}
               {currentStepKey === "durationDate"  && <StepDurationDate state={state} setState={setState} endDate={endDate} groupType={groupType} />}
               {currentStepKey === "soloVibe"      && <StepSoloVibe     state={state} setState={setState} />}
-              {currentStepKey === "duoStyle"      && <StepDuoStyle     state={state} setState={setState} />}
+              {/* TODO (MVP v2): Duo flow — uncomment when re-enabling duo group type */}
+              {/* {currentStepKey === "duoStyle"      && <StepDuoStyle     state={state} setState={setState} />} */}
               {currentStepKey === "groupDynamic"  && <StepGroupDynamic state={state} setState={setState} />}
-              {currentStepKey === "kidsAges"      && <StepKidsAges     state={state} setState={setState} />}
+              {/* TODO (MVP v2): Family flow — uncomment when re-enabling family group type */}
+              {/* {currentStepKey === "kidsAges"      && <StepKidsAges     state={state} setState={setState} />} */}
               {currentStepKey === "energy"        && <StepEnergy       state={state} setState={setState} groupType={groupType} />}
               {currentStepKey === "budget"        && <StepBudget       state={state} setState={setState} groupType={groupType} />}
               {currentStepKey === "activities"    && <StepActivities   state={state} setState={setState} groupType={groupType} />}
               {currentStepKey === "anchor"        && <StepAnchor       state={state} setState={setState} />}
               {currentStepKey === "food"          && <StepFood         state={state} setState={setState} groupType={groupType} />}
-              {currentStepKey === "familyNeeds"   && <StepFamilyNeeds  state={state} setState={setState} />}
+              {/* TODO (MVP v2): Family flow — uncomment when re-enabling family group type */}
+              {/* {currentStepKey === "familyNeeds"   && <StepFamilyNeeds  state={state} setState={setState} />} */}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -369,24 +374,26 @@ function StepPartyType({
       label: "Solo",
       sub: "Built around your pace, no compromises.",
     },
-    {
-      value: "duo",
-      icon: <Handshake className="w-5 h-5" aria-hidden="true" />,
-      label: "Duo",
-      sub: "Balanced for two people who want different things.",
-    },
+    // TODO (MVP v2): Duo flow — re-enable when duoStyle step is ready
+    // {
+    //   value: "duo",
+    //   icon: <Handshake className="w-5 h-5" aria-hidden="true" />,
+    //   label: "Duo",
+    //   sub: "Balanced for two people who want different things.",
+    // },
     {
       value: "group",
       icon: <Users className="w-5 h-5" aria-hidden="true" />,
       label: "Group",
       sub: "One plan everyone actually agrees on.",
     },
-    {
-      value: "family",
-      icon: <Baby className="w-5 h-5" aria-hidden="true" />,
-      label: "Family",
-      sub: "Activities for everyone — including the adults.",
-    },
+    // TODO (MVP v2): Family flow — re-enable when kidsAges + familyNeeds steps are ready
+    // {
+    //   value: "family",
+    //   icon: <Baby className="w-5 h-5" aria-hidden="true" />,
+    //   label: "Family",
+    //   sub: "Activities for everyone — including the adults.",
+    // },
   ];
 
   return (
@@ -889,14 +896,14 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
   };
 
   const allOptions = [
-    { label: "Hidden Gems",       sub: "Off-the-beaten-path spots locals love" },
-    { label: "Iconic Landmarks",  sub: "The must-sees, done right" },
-    { label: "Food & Drink",      sub: "Food tours • markets • local specialties" },
-    { label: "History & Museums", sub: "Museums • historic sites • architecture" },
-    { label: "Nature & Parks",    sub: "Parks • viewpoints • scenic walks" },
-    { label: "Markets & Shopping",sub: "Local markets • boutiques • vintage finds" },
-    { label: "Nightlife",         sub: "Bars • live music • late-night spots" },
-    { label: "Art & Culture",     sub: "Galleries • street art • performances" },
+    { value: "hidden-gems",       label: "Hidden Gems",       sub: "Off-the-beaten-path spots locals love" },
+    { value: "iconic-landmarks",  label: "Iconic Landmarks",  sub: "The must-sees, done right" },
+    { value: "food-drink",        label: "Food & Drink",      sub: "Food tours • markets • local specialties" },
+    { value: "history-museums",   label: "History & Museums", sub: "Museums • historic sites • architecture" },
+    { value: "nature-parks",      label: "Nature & Parks",    sub: "Parks • viewpoints • scenic walks" },
+    { value: "markets-shopping",  label: "Markets & Shopping",sub: "Local markets • boutiques • vintage finds" },
+    { value: "nightlife",         label: "Nightlife",         sub: "Bars • live music • late-night spots" },
+    { value: "art-culture",       label: "Art & Culture",     sub: "Galleries • street art • performances" },
   ];
 
   // Family hides Nightlife
@@ -911,12 +918,12 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
     family: "e.g. Science centre, mini-golf, something hands-on for the kids…",
   };
 
-  function toggle(label: string) {
+  function toggle(value: string) {
     setState((s: IntakeState) => ({
       ...s,
-      activityTypes: s.activityTypes.includes(label)
-        ? s.activityTypes.filter((a) => a !== label)
-        : [...s.activityTypes, label],
+      activityTypes: s.activityTypes.includes(value)
+        ? s.activityTypes.filter((a) => a !== value)
+        : [...s.activityTypes, value],
     }));
   }
 
@@ -928,11 +935,11 @@ function StepActivities({ state, setState, groupType }: { state: IntakeState; se
       <p className="text-muted-foreground mb-8 text-sm">{subtexts[groupType]}</p>
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt) => {
-          const active = state.activityTypes.includes(opt.label);
+          const active = state.activityTypes.includes(opt.value);
           return (
             <button
-              key={opt.label}
-              onClick={() => toggle(opt.label)}
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
               className={`p-4 rounded-2xl border-2 text-left transition-all ${
                 active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
               }`}

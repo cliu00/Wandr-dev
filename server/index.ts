@@ -1,4 +1,7 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -21,6 +24,21 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Session middleware — gives every visitor a unique session ID
+// Uses in-memory store for dev; swap for connect-pg-simple in production
+const MStore = MemoryStore(session);
+app.use(session({
+  secret: process.env.SESSION_SECRET ?? "wandr-dev-secret",
+  resave: false,
+  saveUninitialized: true,
+  store: new MStore({ checkPeriod: 24 * 60 * 60 * 1000 }),
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true,
+    secure: false, // set to true in production with HTTPS
+  },
+}));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {

@@ -34,6 +34,7 @@ export interface IStorage {
   // Trips
   createTrip(trip: InsertTrip): Promise<Trip>;
   getTrip(id: string): Promise<Trip | undefined>;
+  markTripFailed(id: string): Promise<void>;
 
   // Itinerary versions
   createItineraryVersion(version: InsertItineraryVersion): Promise<ItineraryVersion>;
@@ -118,6 +119,13 @@ export class DatabaseStorage implements IStorage {
   async getTrip(id: string): Promise<Trip | undefined> {
     const [trip] = await db.select().from(trips).where(eq(trips.id, id));
     return trip;
+  }
+
+  async markTripFailed(id: string): Promise<void> {
+    await db
+      .update(trips)
+      .set({ generationFailed: true, updatedAt: new Date() })
+      .where(eq(trips.id, id));
   }
 
   // ── Itinerary Versions ─────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -46,6 +46,7 @@ export const trips = pgTable("trips", {
   groupType: varchar("group_type").notNull(),       // solo | duo | group | family
   preferences: jsonb("preferences").notNull(),      // full intake form payload
   currentVersion: integer("current_version").notNull().default(1),
+  generationFailed: boolean("generation_failed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

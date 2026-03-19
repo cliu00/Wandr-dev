@@ -123,19 +123,19 @@ export default function Generating() {
     requestAnimationFrame(frame);
   }, []);
 
-  // Make the API call as soon as the page loads
+  // Step 1: POST preferences immediately to get a tripId, then poll for readiness
   useEffect(() => {
     const raw = sessionStorage.getItem("wandr_pending_preferences");
     if (!raw) {
-      // No preferences found — redirect back to intake
       navigate("/intake");
       return;
     }
 
     const preferences = JSON.parse(raw);
-
     const t1 = setTimeout(() => setPhase(2), 4000);
-    const t3 = setTimeout(() => setStuck(true), 30000);
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let stuckTimeout: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
 
     fetch("/api/trips/create", {
       method: "POST",
@@ -143,29 +143,50 @@ export default function Generating() {
       body: JSON.stringify(preferences),
     })
       .then((res) => {
-        if (res.status === 429) {
-          throw new Error("limit_reached");
-        }
+        if (res.status === 429) throw new Error("limit_reached");
         if (!res.ok) throw new Error("generation_failed");
         return res.json();
       })
       .then((data) => {
+        if (cancelled) return;
+        const id = data.tripId as string;
+        setTripId(id);
         sessionStorage.removeItem("wandr_pending_preferences");
-        setTripId(data.tripId);
-        setProgress(100);
-        // Small delay so the progress bar completes visually before navigating
-        setTimeout(() => {
-          navigate(`/itinerary/${data.tripId}`);
-        }, 800);
+
+        // Start polling GET /api/trips/:id until status === "ready"
+        stuckTimeout = setTimeout(() => setStuck(true), 60000);
+
+        pollInterval = setInterval(async () => {
+          if (cancelled) return;
+          try {
+            const r = await fetch(`/api/trips/${id}`);
+            const payload = await r.json();
+
+            if (payload.status === "ready") {
+              clearInterval(pollInterval!);
+              clearTimeout(stuckTimeout!);
+              setProgress(100);
+              setTimeout(() => navigate(`/itinerary/${id}`), 800);
+            } else if (payload.status === "failed") {
+              clearInterval(pollInterval!);
+              clearTimeout(stuckTimeout!);
+              setError("generation_failed");
+            }
+            // status === "generating" → keep polling
+          } catch {
+            // network hiccup — keep polling
+          }
+        }, 2000);
       })
       .catch((err) => {
-        clearTimeout(t3);
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       });
 
     return () => {
+      cancelled = true;
       clearTimeout(t1);
-      clearTimeout(t3);
+      if (pollInterval) clearInterval(pollInterval);
+      if (stuckTimeout) clearTimeout(stuckTimeout);
     };
   }, [navigate]);
 

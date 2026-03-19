@@ -115,127 +115,71 @@ const SOLO_VIBE_LABELS: Record<string, string> = {
   "spontaneous": "The Spontaneous — follows the day; a rough outline but always open to whatever comes up",
 };
 
-function buildPrompt(prefs: IntakePreferences): string {
-  // Energy: 0–100 slider mapped to a descriptive label
-  const energyLabel = prefs.energy <= 20 ? "very relaxed — minimal walking, slow mornings, plenty of downtime"
-    : prefs.energy <= 40 ? "relaxed — unhurried pace, a couple of activities per day"
-    : prefs.energy <= 60 ? "balanced — mix of activity and rest, moderate walking"
-    : prefs.energy <= 80 ? "active — full days, multiple stops, energetic pace"
-    : "high energy — pack it in, maximise every hour, back-to-back experiences";
+// Static system prompt — same for every call, eligible for prompt caching
+const SYSTEM_PROMPT = `You are a world-class travel curator specialising in personalised, local, and authentic travel experiences.
+You create itineraries that feel curated by a knowledgeable local friend — never generic, never tourist-trap heavy.
 
-  // Budget: map intake form values to dollar ranges
-  const budgetLabel = prefs.budget === "under-100"  ? "Budget-friendly (~$50–100/day total spend)"
-    : prefs.budget === "100-200" ? "Comfortable (~$100–200/day total spend)"
-    : prefs.budget === "200-350" ? "Treat yourself (~$200–350/day total spend)"
-    : prefs.budget === "350-plus" ? "Luxury ($350+/day total spend)"
-    : "mid-range";
+ITINERARY DESIGN PRINCIPLES:
+1. Each day has exactly 3 blocks: morning, afternoon, evening
+2. Geo-cluster activities — minimise travel between blocks on the same day
+3. Match energy pacing to the traveller's level
+4. Prioritise hidden gems and local favourites over tourist traps
+5. "whyForYou": 1 sentence tied specifically to their preferences
+6. "description": 2 sentences max — specific and vivid
+7. Each block needs a backup option
+8. Cost estimates must be realistic for the destination and budget
+9. Image URLs: https://images.unsplash.com/photo-[ID]?w=800&q=80
 
-  // Activities: map values to full labels with descriptions
+OUTPUT: Return ONLY valid JSON, no markdown, no explanation. Structure:
+{"destination":"...","country":"...","durationDays":N,"groupType":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","imageUrl":"https://images.unsplash.com/photo-ID?w=800&q=80","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;
+
+function buildUserMessage(prefs: IntakePreferences): string {
+  const energyLabel = prefs.energy <= 20 ? "very relaxed"
+    : prefs.energy <= 40 ? "relaxed"
+    : prefs.energy <= 60 ? "balanced"
+    : prefs.energy <= 80 ? "active"
+    : "high energy";
+
+  const budgetLabel = prefs.budget === "under-100"  ? "$50–100/day"
+    : prefs.budget === "100-200" ? "$100–200/day"
+    : prefs.budget === "200-350" ? "$200–350/day"
+    : "$350+/day";
+
   const activityList = prefs.activityTypes.length
-    ? prefs.activityTypes.map(a => `  • ${ACTIVITY_LABELS[a] ?? a}`).join("\n")
-    : "  • Open to anything";
+    ? prefs.activityTypes.map(a => ACTIVITY_LABELS[a] ?? a).join(", ")
+    : "open to anything";
 
-  // Food: map values to full labels with descriptions
   const foodList = prefs.food.length
-    ? prefs.food.map(f => `  • ${FOOD_LABELS[f] ?? f}`).join("\n")
-    : "  • No specific preferences";
+    ? prefs.food.map(f => FOOD_LABELS[f] ?? f).join(", ")
+    : "no preference";
 
-  // Solo vibe: full description
   const personaContext = prefs.groupType === "solo" && prefs.soloVibe
-    ? `Solo traveller persona: ${SOLO_VIBE_LABELS[prefs.soloVibe] ?? prefs.soloVibe}`
+    ? `Persona: ${SOLO_VIBE_LABELS[prefs.soloVibe] ?? prefs.soloVibe}`
     : prefs.groupType === "duo" && prefs.duoStyle
-    ? `Travelling as a duo with style: "${prefs.duoStyle}"`
+    ? `Duo style: ${prefs.duoStyle}`
     : prefs.groupType === "group" && prefs.groupDynamic
-    ? `Group travel with dynamic: "${prefs.groupDynamic}"`
+    ? `Group dynamic: ${prefs.groupDynamic}`
     : prefs.groupType === "family" && prefs.kidsAges?.length
-    ? `Family trip with kids aged: ${prefs.kidsAges.join(", ")}.${prefs.familyNeeds?.length ? ` Family needs: ${prefs.familyNeeds.join(", ")}.` : ""}`
-    : "";
-
-  const anchorNote = prefs.anchorActivity
-    ? `Must-do anchor activity (work this into the itinerary): "${prefs.anchorActivity}"`
-    : "";
-
-  const activityNote = prefs.activityNotes
-    ? `Additional activity notes from the traveller: "${prefs.activityNotes}"`
-    : "";
-
-  const dietaryNote = prefs.dietaryNotes
-    ? `Dietary requirements: "${prefs.dietaryNotes}"`
+    ? `Family, kids aged: ${prefs.kidsAges.join(", ")}${prefs.familyNeeds?.length ? `. Needs: ${prefs.familyNeeds.join(", ")}` : ""}`
     : "";
 
   const startDate = prefs.startDate ?? new Date().toISOString().split("T")[0];
 
-  return `You are a world-class travel curator specialising in personalised, local, and authentic travel experiences.
-You create itineraries that feel curated by a knowledgeable local friend — never generic, never tourist-trap heavy.
+  const extras = [
+    personaContext,
+    prefs.anchorActivity ? `Must-do: "${prefs.anchorActivity}"` : "",
+    prefs.activityNotes  ? `Notes: "${prefs.activityNotes}"` : "",
+    prefs.dietaryNotes   ? `Dietary: "${prefs.dietaryNotes}"` : "",
+  ].filter(Boolean).join("\n");
 
-Generate a ${prefs.durationDays}-day itinerary for ${prefs.destination} based on the following traveller profile:
-
-TRAVELLER PROFILE:
-- Group type: ${prefs.groupType}
-- Energy level: ${energyLabel} (${prefs.energy}/100)
-- Budget: ${budgetLabel}
-- Preferred activity types:
-${activityList}
-- Food preferences:
-${foodList}
-${personaContext ? `- ${personaContext}` : ""}
-${anchorNote ? `- ${anchorNote}` : ""}
-${activityNote ? `- ${activityNote}` : ""}
-${dietaryNote ? `- ${dietaryNote}` : ""}
-
-ITINERARY DESIGN PRINCIPLES:
-1. Each day has exactly 3 blocks: morning, afternoon, evening
-2. Activities must be geographically clustered — minimise travel time between blocks on the same day
-3. Pace the energy across the day — match the traveller's energy level (e.g. low energy = relaxed starts, no back-to-back intense activities)
-4. Prioritise hidden gems and local favourites over well-known tourist spots where possible
-5. Each primary recommendation must include a specific "why this for you" explanation tied to their preferences
-6. Each block must have a backup option in case the primary is unavailable or not to their taste
-7. Cost estimates must be realistic for ${prefs.destination} at the ${prefs.budget} budget level
-8. For food blocks, respect dietary preferences: ${prefs.dietaryNotes || "none specified"}
-9. Image URLs must use this exact Unsplash format: https://images.unsplash.com/photo-[ID]?w=800&q=80
-
-REQUIRED OUTPUT FORMAT:
-Return ONLY a valid JSON object — no explanation, no markdown, no code blocks. Exactly this structure:
-
-{
-  "destination": "${prefs.destination}",
-  "country": "<country name>",
-  "durationDays": ${prefs.durationDays},
-  "groupType": "${prefs.groupType}",
-  "days": [
-    {
-      "dayNumber": 1,
-      "date": "${startDate}",
-      "blocks": [
-        {
-          "id": "day1-morning",
-          "timeSlot": "morning",
-          "primary": {
-            "name": "<specific place name>",
-            "type": "<cafe | restaurant | attraction | park | market | museum | bar | activity>",
-            "description": "<2-3 sentences describing the place and experience>",
-            "whyForYou": "<1-2 sentences specifically tied to this traveller's preferences>",
-            "costRange": "<e.g. $10–15 per person>",
-            "imageUrl": "https://images.unsplash.com/photo-<relevant-photo-id>?w=800&q=80",
-            "lat": <latitude as number>,
-            "lng": <longitude as number>
-          },
-          "backup": {
-            "name": "<specific backup place name>",
-            "type": "<type>",
-            "description": "<1-2 sentences>",
-            "costRange": "<cost range>"
-          }
-        }
-      ]
-    }
-  ]
-}
-
-Generate all ${prefs.durationDays} days, each with exactly 3 blocks (morning, afternoon, evening).
-Use block IDs in format: "day1-morning", "day1-afternoon", "day1-evening", "day2-morning", etc.
-Dates should increment from ${startDate}.
-Return ONLY the JSON. Nothing else.`;
+  return `Generate a ${prefs.durationDays}-day itinerary for ${prefs.destination}.
+Group: ${prefs.groupType} | Energy: ${energyLabel} | Budget: ${budgetLabel}
+Activities: ${activityList}
+Food: ${foodList}
+${extras}
+Start date: ${startDate}
+Block IDs: day1-morning, day1-afternoon, day1-evening, day2-morning, …
+Return ONLY the JSON.`;
 }
 
 // ─── Main Service Function ─────────────────────────────────────────────────────
@@ -244,12 +188,19 @@ export async function generateItinerary(
   preferences: IntakePreferences
 ): Promise<AIServiceResult> {
   const preferenceHash = hashPreferences(preferences);
-  const prompt = buildPrompt(preferences);
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4096,
-    messages: [{ role: "user", content: prompt }],
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 3000,
+    system: [
+      {
+        type: "text",
+        text: SYSTEM_PROMPT,
+        // @ts-ignore — cache_control is supported by the API but not yet in the TS types
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: buildUserMessage(preferences) }],
   });
 
   const rawText = message.content
@@ -257,11 +208,17 @@ export async function generateItinerary(
     .map((block) => (block as { type: "text"; text: string }).text)
     .join("");
 
+  // Strip markdown code fences if Claude wraps the JSON (e.g. ```json ... ```)
+  const cleaned = rawText
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+
   let itineraryData: GeneratedItinerary;
   try {
-    itineraryData = JSON.parse(rawText);
+    itineraryData = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Claude returned invalid JSON: ${rawText.slice(0, 200)}`);
+    throw new Error(`Claude returned invalid JSON: ${cleaned.slice(0, 300)}`);
   }
 
   return { itineraryData, preferenceHash };
