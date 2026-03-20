@@ -32,11 +32,6 @@ export default function ItineraryView() {
     if (user?.name && !inviterName) setInviterName(user.name);
   }, [user?.name]);
 
-  // Sync tripName from server (only on first load)
-  useEffect(() => {
-    if (tripData?.tripName && !tripName) setTripName(tripData.tripName);
-  }, [tripData?.tripName]);
-
   // If the companion just submitted preferences, track the version they submitted on
   // so we can show a "regenerating" state until the new version appears.
   const submittedOnVersionKey = `wandr_submitted_on_${id}`;
@@ -125,6 +120,11 @@ export default function ItineraryView() {
   const contributorCount: number = data?.contributorCount ?? 1;
   const currentVersionNumber: number = data?.versionNumber ?? 1;
   const currentDay = itinerary?.days?.find((d: any) => d.dayNumber === activeDay) ?? itinerary?.days?.[0];
+
+  // Sync tripName from server (only on first load, after tripData is available)
+  useEffect(() => {
+    if (tripData?.tripName && !tripName) setTripName(tripData.tripName);
+  }, [tripData?.tripName]);
 
   function handleSave() {
     if (user) {
