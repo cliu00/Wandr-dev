@@ -664,6 +664,8 @@ const ACTIVITY_LABEL_TO_VALUE: Record<string, string> = {
   "Markets & Shopping":"markets-shopping",
   "Nightlife":         "nightlife",
   "Art & Culture":     "art-culture",
+  "Beaches & Coastal": "beaches-coastal",
+  "Outdoor Adventure": "outdoor-adventure",
 };
 
 const BUDGET_RANK: Record<string, number> = {

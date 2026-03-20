@@ -417,6 +417,8 @@ export default function SurveyJoin() {
                       { value: "markets-shopping",  label: "Markets & Shopping", sub: "Local markets • boutiques • vintage finds" },
                       { value: "nightlife",         label: "Nightlife",          sub: "Bars • live music • late-night spots" },
                       { value: "art-culture",       label: "Art & Culture",      sub: "Galleries • street art • performances" },
+                      { value: "beaches-coastal",   label: "Beaches & Coastal",  sub: "Beach clubs • coastal walks • seaside spots" },
+                      { value: "outdoor-adventure", label: "Outdoor Adventure",  sub: "Hiking • cycling • watersports • active pursuits" },
                     ].map((opt) => {
                       const active = activityTypes.includes(opt.value);
                       return (

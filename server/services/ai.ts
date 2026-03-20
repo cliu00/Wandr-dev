@@ -108,6 +108,8 @@ const ACTIVITY_LABELS: Record<string, string> = {
   "markets-shopping":  "Markets & Shopping — local markets, boutiques, vintage finds",
   "nightlife":         "Nightlife — bars, live music, late-night spots",
   "art-culture":       "Art & Culture — galleries, street art, performances",
+  "beaches-coastal":   "Beaches & Coastal — beach clubs, coastal walks, seaside spots, water activities",
+  "outdoor-adventure": "Outdoor Adventure — hiking, cycling, watersports, active outdoor pursuits",
 };
 
 // Maps food preference values to their full label + description
