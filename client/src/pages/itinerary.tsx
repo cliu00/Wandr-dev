@@ -22,6 +22,7 @@ export default function ItineraryView() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviterName, setInviterName] = useState("");
   const [updatedBanner, setUpdatedBanner] = useState<string | null>(null);
+  const [weather, setWeather] = useState<{ temp: number; label: string } | null>(null);
   const seenVersionRef = useRef<number | null>(null);
 
   // Pre-fill inviter name from auth once available
@@ -61,12 +62,15 @@ export default function ItineraryView() {
     } else if (version > seenVersionRef.current) {
       seenVersionRef.current = version;
       const contributor: string | null = data?.latestContributorName ?? null;
-      const msg = contributor
+      const isFirstCompanion = (data?.contributorCount ?? 1) === 2;
+      const msg = isFirstCompanion && contributor
+        ? `${contributor} joined — your group is taking shape!`
+        : contributor
         ? `${contributor} added their preferences — itinerary updated`
         : "Itinerary updated with new preferences";
       setUpdatedBanner(msg);
       setRegenerating(false);
-      toast({ title: "Itinerary updated", description: msg });
+      toast({ title: isFirstCompanion ? "Your first wandrer joined 🎉" : "Itinerary updated", description: msg });
     }
     // If the version advanced past the submitted-on version, we're done regenerating
     if (submittedOnVersionRef.current !== null && version > submittedOnVersionRef.current) {
@@ -74,6 +78,36 @@ export default function ItineraryView() {
       submittedOnVersionRef.current = null;
     }
   }, [data?.versionNumber]);
+
+  // Fetch weather for day 1 using Open-Meteo (free, no API key)
+  useEffect(() => {
+    if (!data?.itinerary) return;
+    const day1 = data.itinerary.days?.[0];
+    if (!day1?.date) return;
+    // Use lat/lng from the first activity block
+    const firstBlock = day1.blocks?.find((b: any) => b.primary?.lat && b.primary?.lng);
+    if (!firstBlock) return;
+    const { lat, lng } = firstBlock.primary;
+    const date = day1.date;
+
+    const WMO_LABEL: Record<number, string> = {
+      0: "clear skies", 1: "mainly clear", 2: "partly cloudy", 3: "overcast",
+      45: "foggy", 48: "foggy", 51: "light drizzle", 53: "drizzle", 55: "drizzle",
+      61: "light rain", 63: "rain", 65: "heavy rain", 71: "light snow", 73: "snow", 75: "heavy snow",
+      80: "showers", 81: "showers", 82: "heavy showers", 95: "thunderstorms",
+    };
+
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,weathercode&start_date=${date}&end_date=${date}&timezone=auto`)
+      .then((r) => r.json())
+      .then((d) => {
+        const temp = Math.round(d.daily?.temperature_2m_max?.[0]);
+        const code = d.daily?.weathercode?.[0];
+        if (!isNaN(temp)) {
+          setWeather({ temp, label: WMO_LABEL[code] ?? "variable conditions" });
+        }
+      })
+      .catch(() => {}); // silent fail — weather is non-critical
+  }, [data?.itinerary?.days?.[0]?.date]);
 
   const itinerary = data?.itinerary;
   const tripData = data?.trip;
@@ -183,20 +217,59 @@ export default function ItineraryView() {
 
         {/* Page title hero */}
         <div className="mb-10 pb-8 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
-            Your Wandr Itinerary
-          </p>
+          {/* Label row: "Your Wandr Itinerary" + countdown */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              Your Wandr Itinerary
+            </p>
+            {(() => {
+              const first = itinerary.days[0]?.date;
+              const last = itinerary.days[itinerary.days.length - 1]?.date;
+              if (!first) return null;
+              const today = new Date(); today.setHours(0,0,0,0);
+              const start = new Date(first + "T00:00:00"); start.setHours(0,0,0,0);
+              const end = new Date(last + "T00:00:00"); end.setHours(0,0,0,0);
+              const daysUntil = Math.round((start.getTime() - today.getTime()) / 86400000);
+              if (daysUntil < 0 && today > end) return null; // trip is over
+              if (daysUntil === 0) return <span className="text-xs font-semibold text-primary bg-primary/8 border border-primary/20 px-3 py-1 rounded-full">Today!</span>;
+              if (daysUntil === 1) return <span className="text-xs font-semibold text-primary bg-primary/8 border border-primary/20 px-3 py-1 rounded-full">Tomorrow</span>;
+              if (daysUntil > 0) return <span className="text-xs font-medium text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full">In {daysUntil} days</span>;
+              return <span className="text-xs font-medium text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full">Happening now</span>;
+            })()}
+          </div>
+
+          {/* Personalised destination title */}
           <h1
             className="font-serif text-6xl md:text-7xl font-light text-foreground leading-none mb-1"
             data-testid="text-itinerary-title"
           >
-            {itinerary.destination}
+            {(() => {
+              const name = user?.name || inviterName || null;
+              if (!name) return itinerary.destination;
+              if (urlGroupType === "group") return `The ${itinerary.destination} Crew`;
+              if (urlGroupType === "duo") return `${name} & ${itinerary.destination}`;
+              return `${name}'s ${itinerary.destination}`;
+            })()}
           </h1>
-          <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-5">
+
+          <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
             {itinerary.country ? `${itinerary.country}` : ""}
             {itinerary.country ? <span className="mx-2 opacity-40">·</span> : null}
             <span>{urlGroupType === "solo" ? "Solo" : urlGroupType === "duo" ? "Duo" : urlGroupType === "family" ? "Family" : "Group Trip"}</span>
           </p>
+
+          {/* Trip vibe + weather */}
+          <div className={`flex flex-wrap items-center gap-3 mb-5 ${!itinerary.tripVibe && !weather ? "hidden" : ""}`}>
+            {itinerary.tripVibe && (
+              <p className="text-sm italic text-muted-foreground">{itinerary.tripVibe}</p>
+            )}
+            {itinerary.tripVibe && weather && <span className="text-muted-foreground/40 text-sm">·</span>}
+            {weather && (
+              <p className="text-sm text-muted-foreground">
+                {weather.temp}°C · {weather.label} on Day 1
+              </p>
+            )}
+          </div>
 
           {/* Hero action pills */}
           <div className="flex flex-wrap items-center gap-2">
@@ -268,6 +341,7 @@ export default function ItineraryView() {
                   block={block}
                   index={idx}
                   dayNumber={currentDay.dayNumber}
+                  isGroupTrip={isGroupTrip}
                 />
               ))}
             </div>

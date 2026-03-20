@@ -38,6 +38,8 @@ interface IntakeState {
   // Family-specific
   kidsAges:      string[];
   familyNeeds:   string[];
+  // Universal
+  firstTime:     boolean | null;
 }
 
 // ─── Step sequences per persona ───────────────────────────────────────────────
@@ -50,12 +52,12 @@ interface IntakeState {
 //   5. Activities        (universal, persona-adapted copy)
 //   6. Food & dining     (universal, persona-adapted copy)
 const STEP_SEQUENCES: Record<GroupType, string[]> = {
-  solo:   ["durationDate", "energy", "budget", "activities", "food"],
+  solo:   ["durationDate", "firstTime", "energy", "budget", "activities", "food"],
   // TODO (MVP v2): Duo flow
-  duo:    ["durationDate", "duoStyle",     "energy", "budget", "activities", "food"],
-  group:  ["durationDate", "groupDynamic", "energy", "budget", "activities", "food"],
+  duo:    ["durationDate", "firstTime", "duoStyle",     "energy", "budget", "activities", "food"],
+  group:  ["durationDate", "firstTime", "groupDynamic", "energy", "budget", "activities", "food"],
   // TODO (MVP v2): Family flow (includes kidsAges + familyNeeds steps)
-  family: ["durationDate", "kidsAges",     "energy", "budget", "activities", "food", "familyNeeds"],
+  family: ["durationDate", "firstTime", "kidsAges",     "energy", "budget", "activities", "food", "familyNeeds"],
 };
 
 // Steps where "Skip" is not available
@@ -115,6 +117,7 @@ export default function Intake() {
     groupDynamic:  null,
     kidsAges:      [],
     familyNeeds:   [],
+    firstTime:     null,
   });
 
   const STEPS      = hasNoType
@@ -170,6 +173,7 @@ export default function Intake() {
       groupDynamic:  state.groupDynamic,
       kidsAges:      state.kidsAges,
       familyNeeds:   state.familyNeeds,
+      firstTime:     state.firstTime ?? undefined,
     };
     sessionStorage.setItem("wandr_pending_preferences", JSON.stringify(preferences));
     navigate(`/generating?groupType=${groupType}`);
@@ -238,6 +242,7 @@ export default function Intake() {
             >
               {currentStepKey === "partyType"     && <StepPartyType    groupType={groupType} onSelect={(t) => { setGroupType(t); setPartyTypeSelected(true); }} />}
               {currentStepKey === "durationDate"  && <StepDurationDate state={state} setState={setState} groupType={groupType} />}
+              {currentStepKey === "firstTime"     && <StepFirstTime    state={state} setState={setState} />}
               {currentStepKey === "soloVibe"      && <StepSoloVibe     state={state} setState={setState} />}
               {/* TODO (MVP v2): Duo flow — uncomment when re-enabling duo group type */}
               {/* {currentStepKey === "duoStyle"      && <StepDuoStyle     state={state} setState={setState} />} */}
@@ -565,6 +570,45 @@ function StepDurationDate({
         )}
       </div>
       <p className="mt-2 text-xs text-muted-foreground text-center">Wandr is built for short escapes up to 4 days.</p>
+    </div>
+  );
+}
+
+// ── First time in destination ──────────────────────────────────────────────────
+function StepFirstTime({ state, setState }: { state: IntakeState; setState: any }) {
+  const dest = state.destination || "this destination";
+  return (
+    <div>
+      <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+        First time in {dest}?
+      </h2>
+      <p className="text-muted-foreground mb-8 text-sm">
+        Wandr tailors the mix of iconic spots and hidden gems based on your familiarity.
+      </p>
+      <div className="flex flex-col gap-3">
+        {[
+          { value: true,  label: "Yes, first time",        sub: "I want to see the must-dos alongside the hidden gems." },
+          { value: false, label: "No, I've been before",   sub: "Skip the basics — show me what locals actually do." },
+        ].map((opt) => {
+          const active = state.firstTime === opt.value;
+          return (
+            <button
+              key={String(opt.value)}
+              onClick={() => setState((s: IntakeState) => ({ ...s, firstTime: opt.value }))}
+              className={`w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
+                active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+              }`}
+            >
+              <div>
+                <div className={`font-semibold text-base mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>
+                  {opt.label}
+                </div>
+                <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

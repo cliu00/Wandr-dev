@@ -20,8 +20,7 @@ export interface ActivityBlock {
     whyForYou?: string;
     type?: string;
   };
-  groupAttribution: string[];
-  curatorName?: string;
+  matchedFor?: string[];
 }
 
 export interface ItineraryDay {

@@ -22,6 +22,8 @@ export interface IntakePreferences {
   groupDynamic?: string | null;
   kidsAges?: string[];
   familyNeeds?: string[];
+  participantNames?: string[]; // group trips: names of all participants for matchedFor tagging
+  firstTime?: boolean;        // true = first visit, false = returning — adjusts landmark vs hidden-gem weighting
 }
 
 export interface GeneratedItinerary {
@@ -29,6 +31,7 @@ export interface GeneratedItinerary {
   country: string;
   durationDays: number;
   groupType: string;
+  tripVibe?: string;
   days: ItineraryDay[];
 }
 
@@ -41,6 +44,7 @@ interface ItineraryDay {
 interface ActivityBlock {
   id: string;
   timeSlot: "morning" | "afternoon" | "evening";
+  matchedFor: string[];
   primary: {
     name: string;
     type: string;
@@ -132,9 +136,11 @@ ITINERARY DESIGN PRINCIPLES:
 9. Do not include imageUrl in the output
 10. "address": short street address + neighbourhood (e.g. "123 Main St, Midtown" or "Queen St W, Parkdale") — real, accurate
 11. Temporal awareness: use the travel dates to factor in seasonal highlights, annual festivals, and recurring cultural events (e.g. cherry blossoms in Tokyo in April, Oktoberfest in Munich in October, Christmas markets in December, peak foliage in autumn). If a notable event falls during the trip, incorporate it as a primary or backup activity and mention the timing in the whyForYou field (e.g. "Peak cherry blossom season — perfect timing")
+12. "matchedFor": for group trips only, list the first names of participants whose preferences this activity satisfies (e.g. activityTypes, food preferences). For solo/duo/family trips, always output an empty array [].
+13. "tripVibe": one short evocative line (max 10 words) capturing the overall character of this itinerary — e.g. "A foodie's deep dive with room to wander"
 
 OUTPUT: Return ONLY valid JSON, no markdown, no explanation. Structure:
-{"destination":"...","country":"...","durationDays":N,"groupType":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","address":"...","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;
+{"destination":"...","country":"...","durationDays":N,"groupType":"...","tripVibe":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","matchedFor":[],"primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","address":"...","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;
 
 function buildUserMessage(prefs: IntakePreferences): string {
   const energyLabel = prefs.energy <= 20 ? "very relaxed"
@@ -174,6 +180,11 @@ function buildUserMessage(prefs: IntakePreferences): string {
     prefs.anchorActivity ? `Must-do: "${prefs.anchorActivity}"` : "",
     prefs.activityNotes  ? `Notes: "${prefs.activityNotes}"` : "",
     prefs.dietaryNotes   ? `Dietary: "${prefs.dietaryNotes}"` : "",
+    prefs.participantNames?.length
+      ? `Group members (use for matchedFor tagging): ${prefs.participantNames.join(", ")}`
+      : "",
+    prefs.firstTime === true  ? "First time visiting this destination — include at least one iconic landmark per day; add orientation context in whyForYou" : "",
+    prefs.firstTime === false ? "Returning visitor — skip generic tourist spots entirely; prioritise hyperlocal hidden gems and assume city familiarity" : "",
   ].filter(Boolean).join("\n");
 
   return `Generate a ${prefs.durationDays}-day itinerary for ${prefs.destination}.

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ActivityBlock } from "@/lib/mock-data";
@@ -35,6 +36,36 @@ interface ActivityCardProps {
   block: ActivityBlock;
   index: number;
   dayNumber: number;
+  isGroupTrip?: boolean;
+}
+
+function MatchedForBadges({ names }: { names: string[] }) {
+  if (!names.length) return null;
+
+  // ≤4 people: initials bubbles
+  if (names.length <= 4) {
+    return (
+      <div className="flex items-center gap-1">
+        {names.map((name) => (
+          <span
+            key={name}
+            title={name}
+            className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex items-center justify-center flex-shrink-0 border border-primary/20"
+          >
+            {name.charAt(0).toUpperCase()}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  // 5+ people: count indicator
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+      <Users className="w-3 h-3" />
+      {names.length} wandrers
+    </span>
+  );
 }
 
 const TIME_CONFIG = {
@@ -44,7 +75,7 @@ const TIME_CONFIG = {
   rest:      { label: "Rest",      icon: <Bed className="w-3.5 h-3.5" />,    color: "bg-muted text-muted-foreground" },
 };
 
-export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
+export function ActivityCard({ block, index, dayNumber, isGroupTrip }: ActivityCardProps) {
   const [swapped, setSwapped] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [isRested, setIsRested] = useState(false);
@@ -72,7 +103,7 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
     setTimeout(() => {
       setSwapped((s) => !s);
       setSwapping(false);
-    }, 800);
+    }, 300); // half of flip duration — content switches at peak of rotation
   }
 
   if (isRested) {
@@ -109,19 +140,27 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
   }
 
   return (
-    <div
+    <motion.div
       id={`block-d${dayNumber}-${index}`}
-      className={`rounded-2xl border border-l-4 ${borderColor} overflow-hidden bg-card shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
+      className={`rounded-2xl border border-l-4 ${borderColor} overflow-hidden bg-card shadow-sm hover:shadow-md transition-all duration-200 ${
         isBaseRest ? "border-muted bg-muted/30" : "border-border"
       }`}
+      animate={{ rotateY: swapping ? 90 : 0, y: swapping ? 4 : 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      style={{ transformPerspective: 1000 }}
     >
       <div className="p-5">
-        {/* Header: time badge + type icon */}
+        {/* Header: time badge + matched-for badges + type icon */}
         <div className="flex items-start justify-between gap-2 mb-4">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${timeConfig.color}`}>
-            {timeConfig.icon}
-            {timeConfig.label}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${timeConfig.color}`}>
+              {timeConfig.icon}
+              {timeConfig.label}
+            </span>
+            {isGroupTrip && !isBaseRest && block.matchedFor?.length ? (
+              <MatchedForBadges names={block.matchedFor} />
+            ) : null}
+          </div>
           {!isBaseRest && (
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${typeConfig.fg}`}
@@ -233,6 +272,6 @@ export function ActivityCard({ block, index, dayNumber }: ActivityCardProps) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -47,3 +47,22 @@ After the trip, let users mark what they actually did, rate it, and use that to 
 
 ### Multi-city Itineraries
 Support trips that span more than one city (e.g. Tokyo → Kyoto → Osaka over 7 days).
+
+---
+
+## Delighters (Planned)
+
+### Shareable Trip Card
+Generate a beautifully formatted image — destination, dates, group members — that can be shared to Instagram Stories or WhatsApp. Acts as a visual artefact that makes the planning feel as real as the trip itself.
+- **Implementation**: Server-side image generation using `@vercel/og` or `sharp` + canvas; expose as `GET /api/trips/:id/card.png`
+- **Trigger**: Available from the itinerary page alongside PDF export
+
+### "You've Been Here Before" Memory
+For logged-in users returning to a previously visited destination, acknowledge the repeat visit and avoid recommending activities from their last itinerary.
+- **Implementation**: Store completed trip destinations per user; pass prior activity names to AI as exclusion context in the prompt
+- **Requires**: Saved itineraries feature + auth being central to the flow
+
+### End-of-Trip Prompt
+After the travel dates pass, surface a gentle prompt — *"How was Atlanta?"* — with a 1–5 rating and optional note. Closes the emotional loop and seeds future personalisation.
+- **Implementation**: Date-based trigger on itinerary load (`today > lastDay`); rating stored per trip; feeds into future preference weighting
+- **UI**: Replaces the countdown pill with a *"How was your trip?"* prompt after dates pass

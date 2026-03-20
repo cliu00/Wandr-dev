@@ -500,6 +500,9 @@ export async function registerRoutes(
           freshTrip.preferences as any,
         );
 
+        // Pass all participant names so the AI can tag matchedFor on each activity
+        merged.participantNames = responded.map((p) => p.name);
+
         const nextVersion = freshTrip.currentVersion + 1;
 
         // Always call the AI — skip the hash cache so that merged preferences
