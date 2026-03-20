@@ -130,7 +130,7 @@ const SYSTEM_PROMPT = `You are a world-class travel curator specialising in pers
 You create itineraries that feel curated by a knowledgeable local friend — never generic, never tourist-trap heavy.
 
 ITINERARY DESIGN PRINCIPLES:
-1. Each day has exactly 3 blocks: morning, afternoon, evening
+1. Each day has EXACTLY 3 blocks: morning, afternoon, evening — never more, never less. One activity per time slot, even for large groups. Do NOT split a time slot into multiple blocks.
 2. Geo-cluster activities — minimise travel between blocks on the same day
 3. Match energy pacing to the traveller's level
 4. Prioritise hidden gems and local favourites over tourist traps
@@ -259,6 +259,26 @@ export async function generateItinerary(
     itineraryData = JSON.parse(cleaned);
   } catch {
     throw new Error(`Claude returned invalid JSON (stop_reason=${message.stop_reason}): ${cleaned.slice(0, 300)}`);
+  }
+
+  // Guard: enforce exactly one block per time slot per day.
+  // If the AI generated duplicates, keep the first and merge matchedFor arrays.
+  for (const day of itineraryData.days ?? []) {
+    const seen: Record<string, any> = {};
+    const deduped: any[] = [];
+    for (const block of (day as any).blocks ?? []) {
+      const slot: string = block.timeSlot;
+      if (seen[slot]) {
+        // Merge matchedFor from duplicate into the kept block
+        const kept = seen[slot];
+        const extra: string[] = block.matchedFor ?? [];
+        kept.matchedFor = [...new Set([...(kept.matchedFor ?? []), ...extra])];
+      } else {
+        seen[slot] = block;
+        deduped.push(block);
+      }
+    }
+    (day as any).blocks = deduped;
   }
 
   return { itineraryData, preferenceHash };

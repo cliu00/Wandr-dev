@@ -482,6 +482,7 @@ export async function registerRoutes(
     const parsed = z.object({
       name: z.string().min(1),
       organizerName: z.string().optional(),
+      firstTime: z.boolean().optional(),
       groupDynamic: z.string().nullable().optional(),
       energy: z.number().min(0).max(100).default(50),
       budget: z.enum(["under-100", "100-200", "200-350", "350-plus"]).nullable().optional(),
@@ -599,6 +600,21 @@ export async function registerRoutes(
     })();
   });
 
+  // ── PATCH /api/trips/:id/name ──────────────────────────────────────────────
+  // Trip creator updates the custom trip name shown on the itinerary hero.
+
+  app.patch("/api/trips/:id/name", async (req: Request, res: Response) => {
+    const id = req.params["id"] as string;
+    const parsed = z.object({ tripName: z.string().max(80) }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid name" });
+
+    const trip = await storage.getTrip(id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
+
+    await storage.updateTripName(id, parsed.data.tripName.trim());
+    return res.json({ tripName: parsed.data.tripName.trim() });
+  });
+
   // ── GET /api/trips/:id/pdf ─────────────────────────────────────────────────
   // Returns the itinerary as a downloadable PDF.
 
@@ -708,6 +724,12 @@ function mergeGroupPreferences(
     .filter(Boolean)
     .join("; ");
 
+  // firstTime — true if ANY participant is visiting for the first time
+  const firstTimeValues = responses.map((r) => r.firstTime).filter((v) => v !== undefined && v !== null);
+  const firstTime = firstTimeValues.length
+    ? firstTimeValues.some((v) => v === true)
+    : undefined;
+
   return {
     destination: groupTrip.destination,
     startDate: groupTrip.startDate ?? undefined,
@@ -719,5 +741,6 @@ function mergeGroupPreferences(
     food: Array.from(foodSet),
     groupDynamic,
     dietaryNotes: dietaryNotes || undefined,
+    firstTime,
   };
 }

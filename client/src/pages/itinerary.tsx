@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
-import { Bookmark, Users, RefreshCw, LogIn, UserPlus, X, AlertCircle, Sparkles, Download, Calendar, Link2 } from "lucide-react";
+import { Bookmark, Users, RefreshCw, LogIn, UserPlus, X, AlertCircle, Sparkles, Download, Calendar, Link2, Pencil } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,19 @@ export default function ItineraryView() {
   const [inviterName, setInviterName] = useState("");
   const [updatedBanner, setUpdatedBanner] = useState<string | null>(null);
   const [weather, setWeather] = useState<{ temp: number; label: string } | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [tripName, setTripName] = useState<string>("");
   const seenVersionRef = useRef<number | null>(null);
 
   // Pre-fill inviter name from auth once available
   useEffect(() => {
     if (user?.name && !inviterName) setInviterName(user.name);
   }, [user?.name]);
+
+  // Sync tripName from server (only on first load)
+  useEffect(() => {
+    if (tripData?.tripName && !tripName) setTripName(tripData.tripName);
+  }, [tripData?.tripName]);
 
   // If the companion just submitted preferences, track the version they submitted on
   // so we can show a "regenerating" state until the new version appears.
@@ -130,6 +137,16 @@ export default function ItineraryView() {
 
   function handleInvite() {
     setShowInviteModal(true);
+  }
+
+  async function saveTripName() {
+    setEditingName(false);
+    const name = tripName.trim();
+    await fetch(`/api/trips/${id}/name`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tripName: name }),
+    });
   }
 
   async function copyInviteLink() {
@@ -239,19 +256,37 @@ export default function ItineraryView() {
             })()}
           </div>
 
-          {/* Personalised destination title */}
-          <h1
-            className="font-serif text-6xl md:text-7xl font-light text-foreground leading-none mb-1"
-            data-testid="text-itinerary-title"
-          >
-            {(() => {
-              const name = user?.name || inviterName || null;
-              if (!name) return itinerary.destination;
-              if (urlGroupType === "group") return `The ${itinerary.destination} Crew`;
-              if (urlGroupType === "duo") return `${name} & ${itinerary.destination}`;
-              return `${name}'s ${itinerary.destination}`;
-            })()}
-          </h1>
+          {/* Trip title — editable by creator, read-only for friends */}
+          {isCreator && editingName ? (
+            <input
+              autoFocus
+              value={tripName}
+              onChange={(e) => setTripName(e.target.value)}
+              onBlur={saveTripName}
+              onKeyDown={(e) => { if (e.key === "Enter") saveTripName(); if (e.key === "Escape") setEditingName(false); }}
+              maxLength={80}
+              className="font-serif text-6xl md:text-7xl font-light text-foreground leading-none mb-1 bg-transparent border-b-2 border-primary outline-none w-full"
+              data-testid="input-trip-name"
+            />
+          ) : (
+            <h1
+              className={`font-serif text-6xl md:text-7xl font-light text-foreground leading-none mb-1 ${isCreator ? "cursor-pointer group" : ""}`}
+              onClick={() => { if (isCreator) { if (!tripName) setTripName(tripData?.tripName || (() => { const name = user?.name || inviterName || null; if (!name) return itinerary.destination; if (urlGroupType === "group") return `The ${itinerary.destination} Crew`; return `${name}'s ${itinerary.destination}`; })()); setEditingName(true); } }}
+              title={isCreator ? "Click to rename" : undefined}
+              data-testid="text-itinerary-title"
+            >
+              {tripName || (() => {
+                const name = user?.name || inviterName || null;
+                if (!name) return itinerary.destination;
+                if (urlGroupType === "group") return `The ${itinerary.destination} Crew`;
+                if (urlGroupType === "duo") return `${name} & ${itinerary.destination}`;
+                return `${name}'s ${itinerary.destination}`;
+              })()}
+              {isCreator && (
+                <Pencil className="inline ml-3 w-5 h-5 opacity-0 group-hover:opacity-40 transition-opacity align-middle mb-1" />
+              )}
+            </h1>
+          )}
 
           <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">
             {itinerary.country ? `${itinerary.country}` : ""}

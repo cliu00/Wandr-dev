@@ -44,6 +44,7 @@ export const trips = pgTable("trips", {
   userId: varchar("user_id"),                      // null for anonymous users
   anonymousSessionId: varchar("anonymous_session_id"), // null for auth users
   destination: varchar("destination").notNull(),
+  tripName: varchar("trip_name"),                   // optional custom name set by trip creator
   startDate: varchar("start_date"),
   durationDays: integer("duration_days").notNull(),
   groupType: varchar("group_type").notNull(),       // solo | duo | group | family

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Star, Utensils } from "lucide-react";
 
-type JoinStep = "identity" | "groupDynamic" | "energy" | "budget" | "activities" | "food" | "done";
+type JoinStep = "identity" | "firstTime" | "groupDynamic" | "energy" | "budget" | "activities" | "food" | "done";
 
 const slideVariants = {
   enter: { x: 60, opacity: 0 },
@@ -19,8 +19,8 @@ const slideVariants = {
   exit: { x: -60, opacity: 0 },
 };
 
-const STEPS: JoinStep[] = ["identity", "groupDynamic", "energy", "budget", "activities", "food"];
-const PROGRESS_STEPS: JoinStep[] = ["groupDynamic", "energy", "budget", "activities", "food"];
+const STEPS: JoinStep[] = ["identity", "firstTime", "groupDynamic", "energy", "budget", "activities", "food"];
+const PROGRESS_STEPS: JoinStep[] = ["firstTime", "groupDynamic", "energy", "budget", "activities", "food"];
 
 interface TripContext {
   destination: string;
@@ -61,6 +61,7 @@ export default function SurveyJoin() {
 
   const [step, setStep] = useState<JoinStep>("identity");
   const [selfName, setSelfName] = useState("");
+  const [firstTime, setFirstTime] = useState<boolean | null>(null);
   const [groupDynamic, setGroupDynamic] = useState<string | null>(null);
   const [energy, setEnergy] = useState(50);
   const [budget, setBudget] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export default function SurveyJoin() {
   const progress = progressIndex < 0 ? 0 : ((progressIndex + 1) / PROGRESS_STEPS.length) * 100;
 
   const isLastStep = step === "food";
+  const isSkippable = step === "firstTime" || step === "groupDynamic" || step === "energy" || step === "budget" || step === "activities" || step === "food";
 
   async function submitPreferences() {
     setSubmitting(true);
@@ -84,6 +86,7 @@ export default function SurveyJoin() {
         body: JSON.stringify({
           name: selfName,
           organizerName: invitedBy || undefined,
+          firstTime: firstTime ?? undefined,
           groupDynamic,
           energy,
           budget,
@@ -126,14 +129,13 @@ export default function SurveyJoin() {
 
   function canContinue() {
     if (step === "identity") return selfName.trim().length > 0;
+    if (step === "firstTime") return firstTime !== null;
     if (step === "groupDynamic") return groupDynamic !== null;
     if (step === "budget") return budget !== null;
     if (step === "activities") return activityTypes.length > 0;
     if (step === "food") return food.length > 0;
     return true;
   }
-
-  const isSkippable = step === "groupDynamic" || step === "energy" || step === "budget" || step === "activities" || step === "food";
 
   // ── Error state ─────────────────────────────────────────────────────────
   if (contextError) {
@@ -239,6 +241,41 @@ export default function SurveyJoin() {
                       autoFocus
                       onKeyDown={(e) => e.key === "Enter" && canContinue() && goNext()}
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* ── First Time ── */}
+              {step === "firstTime" && (
+                <div>
+                  <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
+                    First time in {destination || "this destination"}?
+                  </h2>
+                  <p className="text-muted-foreground mb-8 text-sm">
+                    Wandr tailors the mix of iconic spots and hidden gems based on your familiarity.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { value: true,  label: "Yes, first time",      sub: "I want to see the must-dos alongside the hidden gems." },
+                      { value: false, label: "No, I've been before",  sub: "Skip the basics — show me what locals actually do." },
+                    ].map((opt) => {
+                      const active = firstTime === opt.value;
+                      return (
+                        <button
+                          key={String(opt.value)}
+                          onClick={() => setFirstTime(opt.value)}
+                          className={`w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+                          }`}
+                          data-testid={`button-firsttime-${opt.value}`}
+                        >
+                          <div>
+                            <div className={`font-semibold text-base mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
+                            <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
