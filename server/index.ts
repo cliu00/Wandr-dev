@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 import { registerRoutes } from "./routes";
 import { registerAuthRoutes } from "./auth";
 import { serveStatic } from "./static";
@@ -33,7 +34,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: new PgStore({
-    conString: process.env.DATABASE_URL,
+    pool,
     tableName: "sessions",
     createTableIfMissing: true,
   }),
