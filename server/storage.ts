@@ -184,6 +184,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrip(id: string): Promise<void> {
+    // Delete child rows first to satisfy FK constraints
+    await db.delete(itineraryVersions).where(eq(itineraryVersions.tripId, id));
+    await db.update(groupTrips).set({ tripId: null }).where(eq(groupTrips.tripId, id));
     await db.delete(trips).where(eq(trips.id, id));
   }
 
