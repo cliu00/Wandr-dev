@@ -131,7 +131,8 @@ export default function ItineraryView() {
     if (saved) return;
     setSaved(true);
     try {
-      await fetch(`/api/trips/${id}/save`, { method: "POST" });
+      const res = await fetch(`/api/trips/${id}/save`, { method: "POST" });
+      if (!res.ok) throw new Error(`${res.status}`);
       toast({ title: "Itinerary saved", description: "Added to your trips." });
     } catch {
       setSaved(false);

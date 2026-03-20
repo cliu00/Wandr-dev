@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { registerAuthRoutes } from "./auth";
 import { serveStatic } from "./static";
@@ -26,14 +26,17 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-// Session middleware — gives every visitor a unique session ID
-// Uses in-memory store for dev; swap for connect-pg-simple in production
-const MStore = MemoryStore(session);
+// Session middleware — persists sessions in Postgres so they survive server restarts
+const PgStore = connectPgSimple(session);
 app.use(session({
   secret: process.env.SESSION_SECRET ?? "wandr-dev-secret",
   resave: false,
-  saveUninitialized: true,
-  store: new MStore({ checkPeriod: 24 * 60 * 60 * 1000 }),
+  saveUninitialized: false,
+  store: new PgStore({
+    conString: process.env.DATABASE_URL,
+    tableName: "sessions",
+    createTableIfMissing: true,
+  }),
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
