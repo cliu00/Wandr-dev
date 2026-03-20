@@ -10,6 +10,7 @@ export interface ActivityBlock {
     imageUrl: string;
     lat: number;
     lng: number;
+    address?: string;
   };
   backup: {
     name: string;

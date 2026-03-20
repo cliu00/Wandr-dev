@@ -50,6 +50,7 @@ interface ActivityBlock {
     imageUrl: string;
     lat: number;
     lng: number;
+    address: string;
   };
   backup: {
     name: string;
@@ -128,10 +129,11 @@ ITINERARY DESIGN PRINCIPLES:
 6. "description": 1 sentence — specific and vivid
 7. Each block needs a backup option
 8. Cost estimates must be realistic for the destination and budget
-9. Image URLs: https://images.unsplash.com/photo-[ID]?w=800&q=80
+9. Do not include imageUrl in the output
+10. "address": short street address + neighbourhood (e.g. "123 Main St, Midtown" or "Queen St W, Parkdale") — real, accurate
 
 OUTPUT: Return ONLY valid JSON, no markdown, no explanation. Structure:
-{"destination":"...","country":"...","durationDays":N,"groupType":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","imageUrl":"https://images.unsplash.com/photo-ID?w=800&q=80","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;
+{"destination":"...","country":"...","durationDays":N,"groupType":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","address":"...","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;
 
 function buildUserMessage(prefs: IntakePreferences): string {
   const energyLabel = prefs.energy <= 20 ? "very relaxed"

@@ -177,62 +177,39 @@ export default function ItineraryView() {
           <FlowHeader onBack={() => navigate("/")} />
         </div>
 
-        {/* Day tab selector */}
-        {itinerary.days.length > 1 && (
-          <div className="border-t border-border/40">
-            <div className="max-w-4xl mx-auto px-4">
-              <div
-                className="flex gap-1 py-2 overflow-x-auto"
-                role="tablist"
-                aria-label="Itinerary days"
-              >
-                {itinerary.days.map((day: any) => (
-                  <button
-                    key={day.dayNumber}
-                    role="tab"
-                    aria-selected={activeDay === day.dayNumber}
-                    onClick={() => setActiveDay(day.dayNumber)}
-                    className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      activeDay === day.dayNumber
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    }`}
-                    data-testid={`button-day-${day.dayNumber}`}
-                  >
-                    Day {day.dayNumber}
-                    <span className={`text-[10px] font-normal ${activeDay === day.dayNumber ? "opacity-70" : "opacity-50"}`}>
-                      {day.date}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-8">
 
         {/* Page title hero */}
-        <div className="mb-8 pb-6 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+        <div className="mb-10 pb-8 border-b border-border">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
             Your Wandr Itinerary
           </p>
           <h1
-            className="font-serif text-5xl md:text-6xl font-light text-foreground leading-none mb-4"
+            className="font-serif text-6xl md:text-7xl font-light text-foreground leading-none mb-1"
             data-testid="text-itinerary-title"
           >
             {itinerary.destination}
           </h1>
+          {itinerary.country && (
+            <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-5">
+              {itinerary.country}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border">
               {itinerary.durationDays} {itinerary.durationDays === 1 ? "day" : "days"}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
-              {itinerary.days[0]?.date}
-              {itinerary.days.length > 1 && ` – ${itinerary.days[itinerary.days.length - 1]?.date}`}
+            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border">
+              {(() => {
+                const fmt = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+                const first = itinerary.days[0]?.date;
+                const last = itinerary.days[itinerary.days.length - 1]?.date;
+                return itinerary.days.length > 1 ? `${fmt(first)} — ${fmt(last)}` : fmt(first);
+              })()}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border capitalize">
+            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border capitalize">
               {urlGroupType === "solo" ? "Solo" : urlGroupType === "duo" ? "Duo" : urlGroupType === "family" ? "Family" : "Group trip"}
             </span>
           </div>
@@ -241,42 +218,53 @@ export default function ItineraryView() {
         {/* Active day content */}
         <div className="mb-10">
 
-          <div className="flex flex-col gap-4">
-            {currentDay.blocks.map((block: any, idx: number) => (
-              <ActivityCard
-                key={block.id}
-                block={block}
-                index={idx}
-                dayNumber={currentDay.dayNumber}
-              />
-            ))}
+          {/* Day tab selector — sits right above the cards */}
+          {itinerary.days.length > 1 && (
+            <div
+              className="flex gap-1 mb-6 overflow-x-auto"
+              role="tablist"
+              aria-label="Itinerary days"
+            >
+              {itinerary.days.map((day: any) => (
+                <button
+                  key={day.dayNumber}
+                  role="tab"
+                  aria-selected={activeDay === day.dayNumber}
+                  onClick={() => setActiveDay(day.dayNumber)}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    activeDay === day.dayNumber
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-border"
+                  }`}
+                  data-testid={`button-day-${day.dayNumber}`}
+                >
+                  Day {day.dayNumber}
+                  <span className={`text-[10px] font-normal ${activeDay === day.dayNumber ? "opacity-80" : "text-foreground/50"}`}>
+                    {day.date}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Cards with connector lines */}
+          <div className="relative flex flex-col">
+            {/* Vertical connector line behind cards */}
+            <div className="absolute left-6 top-10 bottom-10 w-px bg-border/50 pointer-events-none" aria-hidden="true" />
+
+            <div className="flex flex-col gap-4">
+              {currentDay.blocks.map((block: any, idx: number) => (
+                <ActivityCard
+                  key={block.id}
+                  block={block}
+                  index={idx}
+                  dayNumber={currentDay.dayNumber}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Day navigation footer */}
-        {itinerary.days.length > 1 && (
-          <div className="flex items-center justify-between mb-10">
-            <button
-              onClick={() => setActiveDay((d) => Math.max(1, d - 1))}
-              disabled={activeDay === 1}
-              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              data-testid="button-prev-day"
-            >
-              ← Day {activeDay - 1}
-            </button>
-            <span className="text-xs text-muted-foreground">
-              {activeDay} / {itinerary.days.length}
-            </span>
-            <button
-              onClick={() => setActiveDay((d) => Math.min(itinerary.days.length, d + 1))}
-              disabled={activeDay === itinerary.days.length}
-              className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              data-testid="button-next-day"
-            >
-              Day {activeDay + 1} →
-            </button>
-          </div>
-        )}
 
         {/* Group trip — contributor status + "Add my preferences" prompt */}
         {isGroupTrip && (
