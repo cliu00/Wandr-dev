@@ -164,7 +164,7 @@ export default function Intake() {
       durationDays,
       groupType,
       energy:        state.energy,
-      budget:        state.budget,
+      budget:        state.budget || undefined,
       activityTypes: state.activityTypes,
       food:          state.food,
       anchorActivity: state.anchorActivity || undefined,

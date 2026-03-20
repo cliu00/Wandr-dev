@@ -88,7 +88,7 @@ export default function SurveyJoin() {
           firstTime: firstTime ?? undefined,
           groupDynamic,
           energy,
-          budget,
+          budget: budget ?? undefined,
           activityTypes,
           food,
           activityNotes,
