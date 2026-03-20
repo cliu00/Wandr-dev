@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import {
-  ArrowRight, Plus, Compass, Loader2, Calendar, Clock, Users, User,
+  ArrowRight, Plus, Compass, Loader2, Calendar, Clock, Users, User, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { useAuth } from "@/lib/auth-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface TripSummary {
   id: string;
@@ -51,47 +52,46 @@ function formatDateRange(startDate: string | null, endDate: string | null): stri
 
 function TripCard({ trip }: { trip: TripSummary }) {
   const [, navigate] = useLocation();
-  const status = tripStatus(trip.startDate, trip.endDate);
+  const queryClient = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
   const title = trip.tripName || trip.destination;
 
-  const statusBadge = status === "upcoming"
-    ? "bg-primary/10 text-primary border border-primary/20"
-    : "bg-muted text-muted-foreground border border-border";
-  const statusLabel = status === "upcoming" ? "Upcoming" : "Past adventure";
+  async function handleDelete() {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/trips/${trip.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      queryClient.invalidateQueries({ queryKey: ["user-trips"] });
+    } catch {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   return (
     <div
-      className="flex flex-col gap-0 rounded-2xl border border-border bg-card overflow-hidden"
+      className="rounded-2xl border border-border bg-card overflow-hidden"
       data-testid={`card-trip-${trip.id}`}
     >
-      <div className="flex flex-col sm:flex-row">
-        {/* Destination initial block */}
-        <div className="sm:w-52 h-32 sm:h-auto flex-shrink-0 bg-primary/8 flex items-center justify-center">
-          <span className="font-serif text-5xl font-light text-primary/40 select-none">
-            {trip.destination.charAt(0)}
-          </span>
-        </div>
-
-        <div className="flex flex-col justify-between flex-1 p-5">
-          <div>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${statusBadge}`}>
-                {statusLabel}
-              </span>
+      <div className="flex flex-col justify-between p-5 gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                 {trip.groupType === "group" ? <Users className="w-3 h-3" /> : <User className="w-3 h-3" />}
                 {GROUP_TYPE_LABEL[trip.groupType] ?? trip.groupType}
               </span>
             </div>
-
             <h3 className="font-serif text-xl font-semibold text-foreground leading-tight">
               {title}
             </h3>
             {trip.tripVibe && (
-              <p className="text-sm text-muted-foreground mt-0.5 mb-3 italic">{trip.tripVibe}</p>
+              <p className="text-sm text-muted-foreground mt-0.5 italic">{trip.tripVibe}</p>
             )}
-
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
               {dateRange && (
                 <span className="flex items-center gap-1">
@@ -106,17 +106,49 @@ function TripCard({ trip }: { trip: TripSummary }) {
             </div>
           </div>
 
-          <div className="mt-4">
-            <Button
-              size="sm"
-              className="rounded-full gap-1.5 text-xs"
-              onClick={() => navigate(`/itinerary/${trip.id}`)}
-              data-testid={`button-view-trip-${trip.id}`}
+          {/* Delete button */}
+          {confirmDelete ? (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="rounded-full text-xs h-7 px-3 gap-1"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                Delete
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-destructive hover:bg-destructive/8 transition-colors flex-shrink-0"
+              aria-label="Delete trip"
+              data-testid={`button-delete-trip-${trip.id}`}
             >
-              View itinerary
-              <ArrowRight className="w-3 h-3" />
-            </Button>
-          </div>
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div>
+          <Button
+            size="sm"
+            className="rounded-full gap-1.5 text-xs"
+            onClick={() => navigate(`/itinerary/${trip.id}`)}
+            data-testid={`button-view-trip-${trip.id}`}
+          >
+            View itinerary
+            <ArrowRight className="w-3 h-3" />
+          </Button>
         </div>
       </div>
     </div>
@@ -132,9 +164,12 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
+type Tab = "upcoming" | "past";
+
 export default function Trips() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>("upcoming");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-trips"],
@@ -147,11 +182,22 @@ export default function Trips() {
   });
 
   const allTrips: TripSummary[] = data?.trips ?? [];
-  const upcoming = allTrips.filter((t) => tripStatus(t.startDate, t.endDate) === "upcoming");
+  const upcoming = allTrips.filter((t) => tripStatus(t.startDate, t.endDate) !== "past");
   const past = allTrips.filter((t) => tripStatus(t.startDate, t.endDate) === "past");
-  const noDate = allTrips.filter((t) => !t.startDate);
 
   const firstName = user?.name?.split(" ")[0] ?? "Wanderer";
+
+  const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: "upcoming", label: "Upcoming", count: upcoming.length },
+    { key: "past",     label: "Past",     count: past.length },
+  ];
+
+  const visibleTrips = activeTab === "upcoming" ? upcoming : past;
+
+  const emptyLabels: Record<Tab, string> = {
+    upcoming: "No upcoming trips. Plan one now.",
+    past: "No past adventures yet.",
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,7 +212,6 @@ export default function Trips() {
             {!isLoading && (
               <p className="text-sm text-muted-foreground mt-1">
                 {allTrips.length} saved {allTrips.length === 1 ? "itinerary" : "itineraries"}
-                {upcoming.length > 0 && ` · ${upcoming.length} upcoming`}
               </p>
             )}
           </div>
@@ -198,32 +243,42 @@ export default function Trips() {
         )}
 
         {!isLoading && !isError && allTrips.length > 0 && (
-          <div className="flex flex-col gap-8">
-            {upcoming.length > 0 && (
-              <section>
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Upcoming</h2>
-                <div className="flex flex-col gap-4">
-                  {upcoming.map((t) => <TripCard key={t.id} trip={t} />)}
-                </div>
-              </section>
+          <>
+            {/* Tabs */}
+            <div className="flex gap-1 mb-6 border-b border-border">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-1.5 px-3 pb-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                    activeTab === tab.key
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold ${
+                      activeTab === tab.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            {visibleTrips.length === 0 ? (
+              <EmptyState label={emptyLabels[activeTab]} />
+            ) : (
+              <div className="flex flex-col gap-4">
+                {visibleTrips.map((t) => <TripCard key={t.id} trip={t} />)}
+              </div>
             )}
-            {noDate.length > 0 && (
-              <section>
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Recent</h2>
-                <div className="flex flex-col gap-4">
-                  {noDate.map((t) => <TripCard key={t.id} trip={t} />)}
-                </div>
-              </section>
-            )}
-            {past.length > 0 && (
-              <section>
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Past adventures</h2>
-                <div className="flex flex-col gap-4">
-                  {past.map((t) => <TripCard key={t.id} trip={t} />)}
-                </div>
-              </section>
-            )}
-          </div>
+          </>
         )}
 
         {allTrips.length > 0 && (

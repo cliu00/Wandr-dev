@@ -681,6 +681,25 @@ export async function registerRoutes(
     return res.json({ ok: true });
   });
 
+  // ── DELETE /api/trips/:id ──────────────────────────────────────────────────
+  // Permanently deletes a trip. Only the owner (authenticated user) can delete.
+
+  app.delete("/api/trips/:id", async (req: Request, res: Response) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+    const id = req.params["id"] as string;
+    const trip = await storage.getTrip(id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
+
+    if (trip.userId !== userId) {
+      return res.status(403).json({ message: "Not authorised to delete this trip" });
+    }
+
+    await storage.deleteTrip(id);
+    return res.json({ ok: true });
+  });
+
   // ── GET /api/trips/:id/pdf ─────────────────────────────────────────────────
   // Returns the itinerary as a downloadable PDF.
 

@@ -45,6 +45,7 @@ export interface IStorage {
   updateTripGroupType(id: string, groupType: string): Promise<void>;
   updateTripName(id: string, tripName: string): Promise<void>;
   claimTrip(id: string, userId: string): Promise<void>;
+  deleteTrip(id: string): Promise<void>;
 
   // Itinerary versions
   createItineraryVersion(version: InsertItineraryVersion): Promise<ItineraryVersion>;
@@ -180,6 +181,10 @@ export class DatabaseStorage implements IStorage {
       .update(trips)
       .set({ userId, anonymousSessionId: null, updatedAt: new Date() })
       .where(eq(trips.id, id));
+  }
+
+  async deleteTrip(id: string): Promise<void> {
+    await db.delete(trips).where(eq(trips.id, id));
   }
 
   // ── Itinerary Versions ─────────────────────────────────────────────────────
