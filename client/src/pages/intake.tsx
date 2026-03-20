@@ -480,7 +480,7 @@ function StepDurationDate({
       const duration = differenceInDays(capped.to!, capped.from!) + 1;
       setState((s: IntakeState) => ({ ...s, startDate: capped.from, endDate: capped.to, duration }));
     } else if (range.from) {
-      setState((s: IntakeState) => ({ ...s, startDate: range.from, endDate: undefined, duration: null }));
+      setState((s: IntakeState) => ({ ...s, startDate: range.from, endDate: undefined, duration: 1 }));
     }
   }
 
