@@ -42,24 +42,23 @@ interface ActivityCardProps {
 function MatchedForBadges({ names }: { names: string[] }) {
   if (!names.length) return null;
 
-  // ≤4 people: initials bubbles
+  // ≤4 people: full name pills
   if (names.length <= 4) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap">
         {names.map((name) => (
           <span
             key={name}
-            title={name}
-            className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex items-center justify-center flex-shrink-0 border border-primary/20"
+            className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold border border-primary/20 leading-tight"
           >
-            {name.charAt(0).toUpperCase()}
+            {name}
           </span>
         ))}
       </div>
     );
   }
 
-  // 5+ people: count indicator
+  // 5+ people: count indicator with initials
   return (
     <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
       <Users className="w-3 h-3" />

@@ -34,6 +34,7 @@ interface IntakeState {
   // Duo-specific
   duoStyle:      string | null;
   // Group-specific
+  organizerName: string;
   groupDynamic:  string | null;
   // Family-specific
   kidsAges:      string[];
@@ -114,6 +115,7 @@ export default function Intake() {
     dietaryNotes:  "",
     soloVibe:      null,
     duoStyle:      null,
+    organizerName: "",
     groupDynamic:  null,
     kidsAges:      [],
     familyNeeds:   [],

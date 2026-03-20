@@ -83,6 +83,7 @@ export default function SurveyJoin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: selfName,
+          organizerName: invitedBy || undefined,
           groupDynamic,
           energy,
           budget,

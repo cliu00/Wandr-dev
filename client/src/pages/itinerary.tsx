@@ -46,10 +46,11 @@ export default function ItineraryView() {
       return res.json();
     },
     enabled: !!id,
-    // Poll every 3s for group trips so both people see updates quickly
+    // Poll every 3s for group trips (or trips that could become group when a friend joins)
     refetchInterval: (query) => {
       const d = query.state.data as any;
-      return d?.trip?.groupType === "group" ? 3000 : false;
+      const type = d?.trip?.groupType;
+      return type === "group" || type === "solo" ? 3000 : false;
     },
   });
 
@@ -349,42 +350,6 @@ export default function ItineraryView() {
         </div>
 
 
-        {/* Group trip — "Add my preferences" prompt — hidden for the creator */}
-        {isGroupTrip && !isCreator && (
-          <div className="mb-6 p-5 rounded-2xl border border-primary/25 bg-primary/5">
-            <div className="flex items-start gap-3">
-              <Users className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground mb-0.5">Group trip</p>
-                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                  Built from {contributorCount} {contributorCount === 1 ? "person's" : "people's"} preferences (v{currentVersionNumber}).
-                  Haven't added yours yet? Answer 5 quick questions and it updates automatically.
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    className="rounded-full gap-2"
-                    onClick={() => navigate(`/survey/join?tripId=${id}`)}
-                    data-testid="button-add-preferences"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Add my preferences
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full gap-2"
-                    onClick={handleInvite}
-                    data-testid="button-copy-link"
-                  >
-                    <Users className="w-3.5 h-3.5" />
-                    Copy invite link
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Export strip */}
         <div className="flex items-center gap-3 py-4 border-t border-border">
@@ -476,29 +441,27 @@ export default function ItineraryView() {
               </button>
             </div>
             <div className="mb-4">
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Your name</label>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Your name <span className="text-destructive">*</span>
+              </label>
               <Input
                 value={inviterName}
                 onChange={(e) => setInviterName(e.target.value)}
                 placeholder="e.g. Sarah"
                 className="rounded-xl h-11"
                 autoFocus
-                onKeyDown={(e) => e.key === "Enter" && copyInviteLink()}
+                onKeyDown={(e) => e.key === "Enter" && inviterName.trim() && copyInviteLink()}
               />
+              <p className="text-xs text-muted-foreground mt-1.5">So your friends know who invited them.</p>
             </div>
             <Button
               className="w-full rounded-full gap-2"
               onClick={copyInviteLink}
+              disabled={!inviterName.trim()}
             >
               <Link2 className="w-4 h-4" />
               Copy invite link
             </Button>
-            <button
-              onClick={copyInviteLink}
-              className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-            >
-              Skip — copy without my name
-            </button>
           </div>
         </div>
       )}

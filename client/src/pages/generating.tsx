@@ -204,7 +204,11 @@ export default function Generating() {
   const [stuck, setStuck] = useState(false);
   const [tripId, setTripId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [preferences, setPreferences] = useState<Preferences>({});
+  const [preferences, setPreferences] = useState<Preferences>(() => {
+    const raw = sessionStorage.getItem("wandr_pending_preferences");
+    if (raw) try { return JSON.parse(raw); } catch { /* ignore */ }
+    return {};
+  });
 
   // Cycle status messages only during Phase 1
   useEffect(() => {
@@ -364,7 +368,7 @@ export default function Generating() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black">
       <AnimatePresence mode="wait">
 
         {phase === 1 && (
@@ -379,7 +383,7 @@ export default function Generating() {
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${HERO_IMAGE})` }}
             />
-            <div className="absolute inset-0 bg-black/62" />
+            <div className="absolute inset-0 bg-black/60" />
 
             <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-lg gap-10">
               <WandrRouteAnimation />

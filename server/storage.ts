@@ -41,6 +41,7 @@ export interface IStorage {
   createTrip(trip: InsertTrip): Promise<Trip>;
   getTrip(id: string): Promise<Trip | undefined>;
   markTripFailed(id: string): Promise<void>;
+  updateTripGroupType(id: string, groupType: string): Promise<void>;
 
   // Itinerary versions
   createItineraryVersion(version: InsertItineraryVersion): Promise<ItineraryVersion>;
@@ -146,6 +147,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(trips)
       .set({ generationFailed: true, updatedAt: new Date() })
+      .where(eq(trips.id, id));
+  }
+
+  async updateTripGroupType(id: string, groupType: string): Promise<void> {
+    await db
+      .update(trips)
+      .set({ groupType: groupType as any, updatedAt: new Date() })
       .where(eq(trips.id, id));
   }
 

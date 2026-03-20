@@ -23,6 +23,11 @@ export interface IntakePreferences {
   kidsAges?: string[];
   familyNeeds?: string[];
   participantNames?: string[]; // group trips: names of all participants for matchedFor tagging
+  participantPreferences?: Array<{  // per-person preferences for selective matchedFor tagging
+    name: string;
+    activityTypes: string[];
+    food: string[];
+  }>;
   firstTime?: boolean;        // true = first visit, false = returning — adjusts landmark vs hidden-gem weighting
 }
 
@@ -136,7 +141,7 @@ ITINERARY DESIGN PRINCIPLES:
 9. Do not include imageUrl in the output
 10. "address": short street address + neighbourhood (e.g. "123 Main St, Midtown" or "Queen St W, Parkdale") — real, accurate
 11. Temporal awareness: use the travel dates to factor in seasonal highlights, annual festivals, and recurring cultural events (e.g. cherry blossoms in Tokyo in April, Oktoberfest in Munich in October, Christmas markets in December, peak foliage in autumn). If a notable event falls during the trip, incorporate it as a primary or backup activity and mention the timing in the whyForYou field (e.g. "Peak cherry blossom season — perfect timing")
-12. "matchedFor": for group trips only, list the first names of participants whose preferences this activity satisfies (e.g. activityTypes, food preferences). For solo/duo/family trips, always output an empty array [].
+12. "matchedFor": for group trips only, tag each activity with the names of participants whose stated preferences align with it. Use the "Participant preferences" section in the user message to determine who selected which activity types and food styles. Example: if 3 of 5 people selected "nature-parks", a national park activity should have those 3 names. If an activity serves the whole group equally (e.g. a shared dinner), include everyone. If no participant-level breakdown is available, include all names. For solo/duo/family trips, always output an empty array [].
 13. "tripVibe": one short evocative line (max 10 words) capturing the overall character of this itinerary — e.g. "A foodie's deep dive with room to wander"
 
 OUTPUT: Return ONLY valid JSON, no markdown, no explanation. Structure:
@@ -175,12 +180,23 @@ function buildUserMessage(prefs: IntakePreferences): string {
 
   const startDate = prefs.startDate ?? new Date().toISOString().split("T")[0];
 
+  // Build per-participant preference breakdown for selective matchedFor tagging
+  const participantBreakdown = prefs.participantPreferences?.length
+    ? "Participant preferences (for matchedFor tagging):\n" +
+      prefs.participantPreferences.map((p) => {
+        const acts = p.activityTypes.map((a) => ACTIVITY_LABELS[a] ?? a).join(", ") || "open";
+        const foods = p.food.map((f) => FOOD_LABELS[f] ?? f).join(", ") || "any";
+        return `- ${p.name}: activities=[${acts}], food=[${foods}]`;
+      }).join("\n")
+    : "";
+
   const extras = [
     personaContext,
     prefs.anchorActivity ? `Must-do: "${prefs.anchorActivity}"` : "",
     prefs.activityNotes  ? `Notes: "${prefs.activityNotes}"` : "",
     prefs.dietaryNotes   ? `Dietary: "${prefs.dietaryNotes}"` : "",
-    prefs.participantNames?.length
+    participantBreakdown,
+    !participantBreakdown && prefs.participantNames?.length
       ? `Group members (use for matchedFor tagging): ${prefs.participantNames.join(", ")}`
       : "",
     prefs.firstTime === true  ? "First time visiting this destination — include at least one iconic landmark per day; add orientation context in whyForYou" : "",

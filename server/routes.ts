@@ -23,6 +23,7 @@ const createTripSchema = z.object({
   dietaryNotes: z.string().optional(),
   soloVibe: z.string().nullable().optional(),
   duoStyle: z.string().nullable().optional(),
+  organizerName: z.string().optional(),
   groupDynamic: z.string().nullable().optional(),
   kidsAges: z.array(z.string()).default([]),
   familyNeeds: z.array(z.string()).default([]),
@@ -63,6 +64,10 @@ export async function registerRoutes(
     }
 
     const preferences: IntakePreferences = parsed.data;
+    // For group trips with an organizer name, seed participantNames so v1 has matchedFor tags
+    if (preferences.groupType === "group" && (parsed.data as any).organizerName) {
+      preferences.participantNames = [(parsed.data as any).organizerName];
+    }
     const sessionId = getSessionId(req);
     const isAuthenticated = !!(req.session as any)?.userId;
 
@@ -386,6 +391,24 @@ export async function registerRoutes(
     // Merge participant preferences into one set of IntakePreferences
     const merged = mergeGroupPreferences(responded.map((p) => p.preferences as any), groupTrip);
 
+    // Tag all names + per-person prefs so the AI can selectively tag matchedFor
+    merged.participantNames = [
+      ...(groupTrip.organizerName && groupTrip.organizerName !== "Organizer" ? [groupTrip.organizerName] : []),
+      ...responded.map((p) => p.name),
+    ];
+
+    // Per-person preference breakdown for selective matchedFor tagging
+    const groupParticipantPrefs: Array<{ name: string; activityTypes: string[]; food: string[] }> = [];
+    if (groupTrip.organizerName && groupTrip.organizerName !== "Organizer" && groupTrip.organizerPreferences) {
+      const op = groupTrip.organizerPreferences as any;
+      groupParticipantPrefs.push({ name: groupTrip.organizerName, activityTypes: op.activityTypes ?? [], food: op.food ?? [] });
+    }
+    for (const p of responded) {
+      const prefs = p.preferences as any;
+      groupParticipantPrefs.push({ name: p.name, activityTypes: prefs?.activityTypes ?? [], food: prefs?.food ?? [] });
+    }
+    if (groupParticipantPrefs.length) merged.participantPreferences = groupParticipantPrefs;
+
     // Create the trip row immediately and return
     const sessionId = (req.session as any)?.id ?? "anonymous";
     const trip = await storage.createTrip({
@@ -411,6 +434,17 @@ export async function registerRoutes(
         const itineraryData = existingVersion
           ? existingVersion.itineraryData
           : (await generateItinerary(merged)).itineraryData;
+
+        // Safety net: fill matchedFor with all participant names on any block the AI left empty
+        if (merged.participantNames?.length) {
+          for (const day of (itineraryData as any).days ?? []) {
+            for (const block of day.blocks ?? []) {
+              if (!block.matchedFor?.length) {
+                block.matchedFor = merged.participantNames;
+              }
+            }
+          }
+        }
 
         await storage.createItineraryVersion({
           tripId: trip.id,
@@ -439,10 +473,15 @@ export async function registerRoutes(
 
     const trip = await storage.getTrip(tripId);
     if (!trip) return res.status(404).json({ message: "Trip not found" });
-    if (trip.groupType !== "group") return res.status(400).json({ message: "Not a group trip" });
+
+    // Upgrade solo trips to group when a friend joins
+    if (trip.groupType !== "group") {
+      await storage.updateTripGroupType(tripId, "group");
+    }
 
     const parsed = z.object({
       name: z.string().min(1),
+      organizerName: z.string().optional(),
       groupDynamic: z.string().nullable().optional(),
       energy: z.number().min(0).max(100).default(50),
       budget: z.enum(["under-100", "100-200", "200-350", "350-plus"]).nullable().optional(),
@@ -461,7 +500,7 @@ export async function registerRoutes(
     if (!groupTrip) {
       groupTrip = await storage.createGroupTrip({
         tripId,
-        organizerName: "Organizer",
+        organizerName: parsed.data.organizerName || (trip.preferences as any)?.organizerName || "Organizer",
         destination: trip.destination,
         startDate: trip.startDate,
         durationDays: trip.durationDays,
@@ -500,8 +539,34 @@ export async function registerRoutes(
           freshTrip.preferences as any,
         );
 
-        // Pass all participant names so the AI can tag matchedFor on each activity
-        merged.participantNames = responded.map((p) => p.name);
+        // Pass all participant names + per-person prefs so the AI can selectively tag matchedFor
+        const freshGroupTrip = await storage.getGroupTripByTripId(tripId);
+        const organizerName = freshGroupTrip?.organizerName;
+        const organizerPrefs = freshTrip.preferences as any;
+        const allNames = [
+          ...(organizerName && organizerName !== "Organizer" ? [organizerName] : []),
+          ...responded.map((p) => p.name),
+        ];
+        merged.participantNames = allNames;
+
+        // Build per-person preference breakdown for selective matchedFor tagging
+        const participantPreferences: Array<{ name: string; activityTypes: string[]; food: string[] }> = [];
+        if (organizerName && organizerName !== "Organizer" && organizerPrefs) {
+          participantPreferences.push({
+            name: organizerName,
+            activityTypes: organizerPrefs.activityTypes ?? [],
+            food: organizerPrefs.food ?? [],
+          });
+        }
+        for (const p of responded) {
+          const prefs = p.preferences as any;
+          participantPreferences.push({
+            name: p.name,
+            activityTypes: prefs?.activityTypes ?? prefs?.activities ?? [],
+            food: prefs?.food ?? [],
+          });
+        }
+        if (participantPreferences.length) merged.participantPreferences = participantPreferences;
 
         const nextVersion = freshTrip.currentVersion + 1;
 
@@ -509,6 +574,17 @@ export async function registerRoutes(
         // always produce a fresh itinerary reflecting everyone's input.
         const { itineraryData } = await generateItinerary(merged);
         const preferenceHash = hashPreferences(merged);
+
+        // Safety net: ensure all participant names appear on every block's matchedFor
+        if (merged.participantNames?.length) {
+          for (const day of (itineraryData as any).days ?? []) {
+            for (const block of day.blocks ?? []) {
+              if (!block.matchedFor?.length) {
+                block.matchedFor = merged.participantNames;
+              }
+            }
+          }
+        }
 
         await storage.createItineraryVersion({
           tripId,
