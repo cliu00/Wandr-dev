@@ -131,6 +131,7 @@ ITINERARY DESIGN PRINCIPLES:
 8. Cost estimates must be realistic for the destination and budget
 9. Do not include imageUrl in the output
 10. "address": short street address + neighbourhood (e.g. "123 Main St, Midtown" or "Queen St W, Parkdale") — real, accurate
+11. Temporal awareness: use the travel dates to factor in seasonal highlights, annual festivals, and recurring cultural events (e.g. cherry blossoms in Tokyo in April, Oktoberfest in Munich in October, Christmas markets in December, peak foliage in autumn). If a notable event falls during the trip, incorporate it as a primary or backup activity and mention the timing in the whyForYou field (e.g. "Peak cherry blossom season — perfect timing")
 
 OUTPUT: Return ONLY valid JSON, no markdown, no explanation. Structure:
 {"destination":"...","country":"...","durationDays":N,"groupType":"...","days":[{"dayNumber":1,"date":"YYYY-MM-DD","blocks":[{"id":"day1-morning","timeSlot":"morning","primary":{"name":"...","type":"cafe|restaurant|attraction|park|market|museum|bar|activity","description":"...","whyForYou":"...","costRange":"...","address":"...","lat":0.0,"lng":0.0},"backup":{"name":"...","type":"...","description":"...","costRange":"..."}}]}]}`;

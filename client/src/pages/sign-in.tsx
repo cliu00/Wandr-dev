@@ -34,34 +34,28 @@ export default function SignIn() {
     return e;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    setTimeout(() => {
-      login(email, password);
+    try {
+      await login(email, password);
       toast({ title: "Welcome back.", description: "You're now signed in." });
       navigate("/");
-    }, 700);
+    } catch (err: any) {
+      toast({ title: "Sign in failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleGoogle() {
-    setLoading(true);
-    setTimeout(() => {
-      login("alex@example.com", "");
-      toast({ title: "Signed in with Google.", description: "Welcome to Wandr." });
-      navigate("/");
-    }, 800);
+    toast({ title: "Coming soon", description: "Google sign-in will be available in a future update." });
   }
 
   function handleApple() {
-    setLoading(true);
-    setTimeout(() => {
-      login("alex@icloud.com", "");
-      toast({ title: "Signed in with Apple.", description: "Welcome to Wandr." });
-      navigate("/");
-    }, 800);
+    toast({ title: "Coming soon", description: "Apple sign-in will be available in a future update." });
   }
 
   const inputBase =

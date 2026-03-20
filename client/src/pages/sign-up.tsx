@@ -44,26 +44,25 @@ export default function SignUp() {
     return e;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTouched(true);
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    setTimeout(() => {
-      signup(name.trim(), email, password);
+    try {
+      await signup(name.trim(), email, password);
       toast({ title: `Welcome to Wandr, ${name.split(" ")[0]}.`, description: "Your account is ready." });
       navigate("/");
-    }, 800);
+    } catch (err: any) {
+      toast({ title: "Sign up failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleGoogle() {
-    setLoading(true);
-    setTimeout(() => {
-      signup("Alex", "alex@example.com", "");
-      toast({ title: "Signed up with Google.", description: "Welcome to Wandr." });
-      navigate("/");
-    }, 800);
+    toast({ title: "Coming soon", description: "Google sign-up will be available in a future update." });
   }
 
   const inputBase =

@@ -239,8 +239,9 @@ export default function ItineraryView() {
                   data-testid={`button-day-${day.dayNumber}`}
                 >
                   Day {day.dayNumber}
-                  <span className={`text-[10px] font-normal ${activeDay === day.dayNumber ? "opacity-80" : "text-foreground/50"}`}>
-                    {day.date}
+                  <span className={`font-normal ${activeDay === day.dayNumber ? "opacity-80" : "opacity-60"}`}>·</span>
+                  <span className={`text-xs font-normal ${activeDay === day.dayNumber ? "opacity-80" : "opacity-60"}`}>
+                    {new Date(day.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                   </span>
                 </button>
               ))}
