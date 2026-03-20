@@ -146,15 +146,22 @@ export async function registerRoutes(
       return res.status(404).json({ message: "Trip not found" });
     }
 
+    // Determine if this requester is the trip creator
+    const sessionId = getSessionId(req);
+    const isAuthenticated = !!(req.session as any)?.userId;
+    const isCreator = isAuthenticated
+      ? (req.session as any).userId === trip.userId
+      : !!(trip.anonymousSessionId && trip.anonymousSessionId === sessionId);
+
     // Trip was marked as failed during background generation
     if (trip.generationFailed) {
-      return res.json({ status: "failed", trip });
+      return res.json({ status: "failed", trip, isCreator });
     }
 
     const version = await storage.getLatestItineraryVersion(id);
     if (!version) {
       // Trip exists but no itinerary yet — generation is in progress
-      return res.json({ status: "generating", trip });
+      return res.json({ status: "generating", trip, isCreator });
     }
 
     // For group trips, include how many companions have added preferences
@@ -179,6 +186,7 @@ export async function registerRoutes(
     return res.json({
       status: "ready",
       trip,
+      isCreator,
       itinerary: version.itineraryData,
       versionNumber: version.versionNumber,
       generatedAt: version.createdAt,

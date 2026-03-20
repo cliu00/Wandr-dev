@@ -107,7 +107,7 @@ export default function SurveyStatus() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <FlowHeader onBack={() => navigate("/survey/invite")} />
+      <FlowHeader onBack={() => navigate("/")} />
 
       <main className="flex-1 max-w-xl mx-auto w-full px-6 py-8">
         <div className="mb-6">
@@ -187,7 +187,7 @@ export default function SurveyStatus() {
         </Button>
 
         <button
-          onClick={() => navigate("/survey/invite")}
+          onClick={() => navigate("/")}
           className="w-full flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors py-2 mb-8"
           data-testid="button-invite-more"
         >

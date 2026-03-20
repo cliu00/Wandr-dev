@@ -115,7 +115,7 @@ export default function ItineraryView() {
   const itinerary = data?.itinerary;
   const tripData = data?.trip;
   const isGroupTrip = tripData?.groupType === "group";
-  const isCreator = !!sessionStorage.getItem(`wandr_created_${id}`);
+  const isCreator = !!(data?.isCreator ?? sessionStorage.getItem(`wandr_created_${id}`));
   const urlGroupType = itinerary?.groupType || tripData?.groupType || "solo";
   const contributorCount: number = data?.contributorCount ?? 1;
   const currentVersionNumber: number = data?.versionNumber ?? 1;
@@ -178,6 +178,20 @@ export default function ItineraryView() {
               <Skeleton className="h-4 w-3/4" />
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (data?.status === "failed") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <AlertCircle className="w-10 h-10 text-destructive/60" />
+        <h2 className="font-serif text-2xl font-light">Something went wrong</h2>
+        <p className="text-sm text-muted-foreground">We couldn't generate your itinerary. Please try again.</p>
+        <div className="flex gap-3 mt-2">
+          <Button onClick={() => navigate("/intake")} className="rounded-full">Try again</Button>
+          <Button variant="outline" onClick={() => navigate("/")} className="rounded-full">Back to home</Button>
         </div>
       </div>
     );
