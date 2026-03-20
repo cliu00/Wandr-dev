@@ -27,6 +27,7 @@ const createTripSchema = z.object({
   groupDynamic: z.string().nullable().optional(),
   kidsAges: z.array(z.string()).default([]),
   familyNeeds: z.array(z.string()).default([]),
+  firstTime: z.boolean().optional(),
 });
 
 // ─── Helper: get session ID from request ──────────────────────────────────────
