@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { MapPin, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby, ImageOff } from "lucide-react";
+import { MapPin, Plane, Users, User, Handshake, Sparkles, Compass, ArrowRight, Share2, Baby, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav } from "@/components/nav";
 import { CURATED_ESCAPES, type CuratedEscape } from "@/lib/mock-data";
@@ -9,11 +9,11 @@ type TripType = "solo" | "duo" | "group" | "family";
 
 function EscapeCard({
   escape,
-  distanceLabel,
+  distanceInfo,
   onClick,
 }: {
   escape: CuratedEscape;
-  distanceLabel: string;
+  distanceInfo: { label: string; flight: boolean };
   onClick: () => void;
 }) {
   const [imgError, setImgError] = useState(false);
@@ -41,8 +41,8 @@ function EscapeCard({
 
         <div className="absolute top-3 right-3">
           <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {distanceLabel}
+            {distanceInfo.flight ? <Plane className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
+            {distanceInfo.label}
           </span>
         </div>
 
@@ -182,14 +182,20 @@ export default function Home() {
     }
   }, []);
 
-  function distanceLabel(escapeLat: number, escapeLng: number): string {
+  function distanceLabel(escapeLat: number, escapeLng: number): { label: string; flight: boolean } {
     const ref = userLocation ?? VANCOUVER;
     const km = haversineKm(ref.lat, ref.lng, escapeLat, escapeLng);
-    if (km < 20) return "Local";
-    const hours = km / 90; // ~90 km/h average drive speed
-    if (hours < 1) return `${Math.round(hours * 60)} min drive`;
-    const rounded = Math.round(hours * 2) / 2; // round to nearest 0.5
-    return `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} hr drive`;
+    if (km < 20) return { label: "Local", flight: false };
+    const driveHours = km / 90; // ~90 km/h average drive speed
+    if (driveHours > 6) {
+      // Show flight time: ~800 km/h cruise + 45 min airport overhead
+      const flightHours = km / 800 + 0.75;
+      const rounded = Math.round(flightHours * 2) / 2;
+      return { label: `~${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} hr flight`, flight: true };
+    }
+    if (driveHours < 1) return { label: `${Math.round(driveHours * 60)} min drive`, flight: false };
+    const rounded = Math.round(driveHours * 2) / 2;
+    return { label: `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} hr drive`, flight: false };
   }
 
   function handleCurate() {
@@ -405,7 +411,7 @@ export default function Home() {
               <EscapeCard
                 key={escape.id}
                 escape={escape}
-                distanceLabel={distanceLabel(escape.lat, escape.lng)}
+                distanceInfo={distanceLabel(escape.lat, escape.lng)}
                 onClick={() => handleEscapeClick(escape)}
               />
             ))}
