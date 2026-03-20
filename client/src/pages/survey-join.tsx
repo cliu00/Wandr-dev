@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { Star, Utensils } from "lucide-react";
 
 type JoinStep = "identity" | "firstTime" | "groupDynamic" | "energy" | "budget" | "activities" | "food" | "done";
@@ -340,24 +339,32 @@ export default function SurveyJoin() {
               {step === "energy" && (
                 <div>
                   <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-                    {selfName ? `What's your energy, ${selfName}?` : "What's your energy for this trip?"}
+                    How physical do you want to get?
                   </h2>
-                  <p className="text-muted-foreground mb-12 text-sm">Share yours — Wandr blends everyone's input.</p>
-                  <div className="px-2">
-                    <Slider
-                      value={[energy]}
-                      onValueChange={([v]) => setEnergy(v)}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="mb-6"
-                      data-testid="slider-energy"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Relaxed pace</span>
-                      <span>Some of both</span>
-                      <span>Action-packed</span>
-                    </div>
+                  <p className="text-muted-foreground mb-8 text-sm">We'll match activities to what you're up for.</p>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { label: "Keep it gentle",    sub: "Easy on the body — accessible spots, minimal exertion.", value: 0   },
+                      { label: "Moderately active", sub: "Some activity, nothing too demanding.",                   value: 50  },
+                      { label: "Bring it on",       sub: "Physically engaged days — keep everyone moving.",         value: 100 },
+                    ].map((opt) => {
+                      const active = energy === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setEnergy(opt.value)}
+                          className={`w-full flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all ${
+                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40"
+                          }`}
+                          data-testid={`button-energy-${opt.value}`}
+                        >
+                          <div>
+                            <div className={`font-semibold text-base mb-0.5 ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</div>
+                            <div className="text-sm text-muted-foreground leading-snug">{opt.sub}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
