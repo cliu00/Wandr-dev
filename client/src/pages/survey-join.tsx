@@ -34,6 +34,7 @@ export default function SurveyJoin() {
 
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const tripId = params.get("tripId") || "";
+  const invitedBy = params.get("from") || "";
 
   const [tripContext, setTripContext] = useState<TripContext | null>(null);
   const [contextError, setContextError] = useState(false);
@@ -77,7 +78,7 @@ export default function SurveyJoin() {
   async function submitPreferences() {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/survey/${tripId}/respond`, {
+      await fetch(`/api/survey/${tripId}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,16 +92,19 @@ export default function SurveyJoin() {
           dietaryNotes,
         }),
       });
-      // Store the current version number so the itinerary page knows regeneration is in progress
-      if (res.ok) {
-        const tripRes = await fetch(`/api/trips/${tripId}`);
-        if (tripRes.ok) {
-          const tripData = await tripRes.json();
-          sessionStorage.setItem(`wandr_submitted_on_${tripId}`, String(tripData.versionNumber ?? 1));
-        }
-      }
-      setStep("done");
+      // Store preferences so the generating page can show Phase 1.5 chips
+      sessionStorage.setItem("wandr_pending_preferences", JSON.stringify({
+        destination,
+        durationDays,
+        groupType: tripContext?.groupType ?? "group",
+        activityTypes,
+        food,
+        budget,
+      }));
+      sessionStorage.setItem("wandr_group_pending_trip_id", tripId);
+      navigate(`/generating?mode=join`);
     } catch {
+      // Fall back to done screen if navigation fails
       setStep("done");
     } finally {
       setSubmitting(false);
@@ -212,13 +216,18 @@ export default function SurveyJoin() {
               {/* ── Identity ── */}
               {step === "identity" && (
                 <div>
-                  <h2 className="font-serif text-3xl font-bold mb-2">Add your preferences</h2>
-                  <p className="text-muted-foreground mb-8">
-                    Your answers shape the itinerary for {destination || "this trip"}. Takes under 2 minutes.
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+                    {invitedBy ? `${invitedBy} invited you` : "You've been invited"}
+                  </p>
+                  <h2 className="font-serif text-5xl font-light text-foreground leading-none mb-2">
+                    {destination || "Join the trip"}
+                  </h2>
+                  <p className="text-muted-foreground text-sm mb-10 leading-relaxed">
+                    Answer a few quick questions and Wandr will blend your preferences into the itinerary. Takes under 2 minutes.
                   </p>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">
-                      Your name <span className="text-destructive">*</span>
+                      What's your name?
                     </label>
                     <Input
                       value={selfName}
@@ -226,6 +235,7 @@ export default function SurveyJoin() {
                       placeholder="e.g. Sarah"
                       className="rounded-xl h-12"
                       data-testid="input-name"
+                      autoFocus
                       onKeyDown={(e) => e.key === "Enter" && canContinue() && goNext()}
                     />
                   </div>

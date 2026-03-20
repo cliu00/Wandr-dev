@@ -187,7 +187,9 @@ function PhaseCrafting({ preferences }: { preferences: Preferences }) {
 export default function Generating() {
   const [, navigate] = useLocation();
   const search = useSearch();
-  const groupType = new URLSearchParams(search).get("groupType") || "solo";
+  const searchParams = new URLSearchParams(search);
+  const groupType = searchParams.get("groupType") || "solo";
+  const isJoinMode = searchParams.get("mode") === "join";
 
   // Use a ref so polling callbacks always see the latest phase without stale closures
   const phaseRef = useRef<1 | 1.5 | 2>(1);
@@ -230,20 +232,24 @@ export default function Generating() {
     readyIdRef.current = id;
     setProgress(100);
 
+    function markAndNavigate() {
+      if (!isJoinMode) sessionStorage.setItem(`wandr_created_${id}`, "1");
+      navigate(`/itinerary/${id}`);
+    }
+
     if (phaseRef.current === 1) {
       // Trip ready before Phase 1 even ended — Phase 1.5 will handle it on mount
       return;
     }
     if (phaseRef.current === 1.5) {
-      // Ensure Phase 1.5 shows for at least 2s before moving to Phase 2
       const elapsed = phase15StartRef.current ? Date.now() - phase15StartRef.current : 2000;
       const wait = Math.max(0, 2000 - elapsed);
       setTimeout(() => setPhase(2), wait);
-      setTimeout(() => navigate(`/itinerary/${id}`), wait + 1500);
+      setTimeout(markAndNavigate, wait + 1500);
       return;
     }
     // Already in Phase 2
-    setTimeout(() => navigate(`/itinerary/${id}`), 1500);
+    setTimeout(markAndNavigate, 1500);
   }
 
   // Phase 1 → 1.5 after 7s (hard cap so cinematic never overstays)
@@ -255,7 +261,10 @@ export default function Generating() {
       if (readyIdRef.current) {
         const id = readyIdRef.current;
         setTimeout(() => setPhase(2), 2000);
-        setTimeout(() => navigate(`/itinerary/${id}`), 3500);
+        setTimeout(() => {
+          if (!isJoinMode) sessionStorage.setItem(`wandr_created_${id}`, "1");
+          navigate(`/itinerary/${id}`);
+        }, 3500);
       }
     }, 7000);
     return () => clearTimeout(t);

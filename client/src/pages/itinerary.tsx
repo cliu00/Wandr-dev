@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle, Sparkles, Download, Calendar } from "lucide-react";
+import { Bookmark, Users, RefreshCw, LogIn, UserPlus, X, AlertCircle, Sparkles, Download, Calendar, Link2 } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 export default function ItineraryView() {
   const [, navigate] = useLocation();
@@ -18,8 +19,15 @@ export default function ItineraryView() {
   const [saved, setSaved] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [updatedBanner, setUpdatedBanner] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviterName, setInviterName] = useState("");
+  const [updatedBanner, setUpdatedBanner] = useState<string | null>(null);
   const seenVersionRef = useRef<number | null>(null);
+
+  // Pre-fill inviter name from auth once available
+  useEffect(() => {
+    if (user?.name && !inviterName) setInviterName(user.name);
+  }, [user?.name]);
 
   // If the companion just submitted preferences, track the version they submitted on
   // so we can show a "regenerating" state until the new version appears.
@@ -44,7 +52,7 @@ export default function ItineraryView() {
     },
   });
 
-  // Show banner when a new version is detected; clear "regenerating" state
+  // Show banner + toast when a new version is detected; clear "regenerating" state
   useEffect(() => {
     const version = data?.versionNumber;
     if (version == null) return;
@@ -52,10 +60,13 @@ export default function ItineraryView() {
       seenVersionRef.current = version;
     } else if (version > seenVersionRef.current) {
       seenVersionRef.current = version;
-      setUpdatedBanner(true);
+      const contributor: string | null = data?.latestContributorName ?? null;
+      const msg = contributor
+        ? `${contributor} added their preferences — itinerary updated`
+        : "Itinerary updated with new preferences";
+      setUpdatedBanner(msg);
       setRegenerating(false);
-      const t = setTimeout(() => setUpdatedBanner(false), 6000);
-      return () => clearTimeout(t);
+      toast({ title: "Itinerary updated", description: msg });
     }
     // If the version advanced past the submitted-on version, we're done regenerating
     if (submittedOnVersionRef.current !== null && version > submittedOnVersionRef.current) {
@@ -67,6 +78,7 @@ export default function ItineraryView() {
   const itinerary = data?.itinerary;
   const tripData = data?.trip;
   const isGroupTrip = tripData?.groupType === "group";
+  const isCreator = !!sessionStorage.getItem(`wandr_created_${id}`);
   const urlGroupType = itinerary?.groupType || tripData?.groupType || "solo";
   const contributorCount: number = data?.contributorCount ?? 1;
   const currentVersionNumber: number = data?.versionNumber ?? 1;
@@ -81,40 +93,21 @@ export default function ItineraryView() {
     }
   }
 
-  async function handleShare() {
-    const shareUrl = `${window.location.origin}/itinerary/${id}`;
-    const ok = await copyToClipboard(shareUrl);
+  function handleInvite() {
+    setShowInviteModal(true);
+  }
+
+  async function copyInviteLink() {
+    const params = new URLSearchParams({ tripId: id! });
+    if (inviterName.trim()) params.set("from", inviterName.trim());
+    const inviteUrl = `${window.location.origin}/survey/join?${params.toString()}`;
+    const ok = await copyToClipboard(inviteUrl);
+    setShowInviteModal(false);
     if (ok) {
-      toast({ title: "Link copied", description: "Share this link with your companions." });
+      toast({ title: "Invite link copied", description: "Send it to your friends — they'll add their preferences and the itinerary updates." });
     } else {
-      toast({
-        title: "Couldn't copy automatically",
-        description: `Copy this link manually: ${shareUrl}`,
-        variant: "destructive",
-      });
+      toast({ title: "Couldn't copy automatically", description: `Copy manually: ${inviteUrl}`, variant: "destructive" });
     }
-  }
-
-  async function handleInvite() {
-    if (isGroupTrip) {
-      // Copy the trip URL — companions open it and click "Add my preferences"
-      const shareUrl = `${window.location.origin}/itinerary/${id}`;
-      const ok = await copyToClipboard(shareUrl);
-      if (ok) {
-        toast({ title: "Link copied", description: "Share this link — companions can add their preferences." });
-      } else {
-        toast({ title: "Couldn't copy automatically", description: `Copy manually: ${shareUrl}`, variant: "destructive" });
-      }
-    } else {
-      navigate("/survey/invite");
-    }
-  }
-
-  function handleRegenerate() {
-    const params = new URLSearchParams();
-    params.set("destination", itinerary.destination);
-    params.set("tripType", urlGroupType);
-    navigate(`/intake?${params.toString()}`);
   }
 
   if (isLoading) {
@@ -165,8 +158,15 @@ export default function ItineraryView() {
       {updatedBanner && (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <div className="mt-4 px-5 py-2.5 bg-primary text-primary-foreground rounded-full shadow-lg text-sm font-medium flex items-center gap-2 pointer-events-auto">
-            <Sparkles className="w-4 h-4" />
-            Itinerary updated with new preferences
+            <Sparkles className="w-4 h-4 flex-shrink-0" />
+            <span>{updatedBanner}</span>
+            <button
+              onClick={() => setUpdatedBanner(null)}
+              className="ml-1 opacity-70 hover:opacity-100 transition-opacity"
+              aria-label="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}
@@ -192,26 +192,34 @@ export default function ItineraryView() {
           >
             {itinerary.destination}
           </h1>
-          {itinerary.country && (
-            <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-5">
-              {itinerary.country}
-            </p>
-          )}
+          <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-5">
+            {itinerary.country ? `${itinerary.country}` : ""}
+            {itinerary.country ? <span className="mx-2 opacity-40">·</span> : null}
+            <span>{urlGroupType === "solo" ? "Solo" : urlGroupType === "duo" ? "Duo" : urlGroupType === "family" ? "Family" : "Group Trip"}</span>
+          </p>
+
+          {/* Hero action pills */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border">
-              {itinerary.durationDays} {itinerary.durationDays === 1 ? "day" : "days"}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border">
-              {(() => {
-                const fmt = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-                const first = itinerary.days[0]?.date;
-                const last = itinerary.days[itinerary.days.length - 1]?.date;
-                return itinerary.days.length > 1 ? `${fmt(first)} — ${fmt(last)}` : fmt(first);
-              })()}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm text-foreground/75 bg-muted px-3 py-1 rounded-full border border-border capitalize">
-              {urlGroupType === "solo" ? "Solo" : urlGroupType === "duo" ? "Duo" : urlGroupType === "family" ? "Family" : "Group trip"}
-            </span>
+            <button
+              onClick={handleSave}
+              className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border transition-colors ${
+                saved
+                  ? "border-primary/50 bg-primary/8 text-primary"
+                  : "border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-foreground/80"
+              }`}
+              data-testid="button-save-hero"
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-primary" : ""}`} />
+              {saved ? "Saved" : "Save"}
+            </button>
+            <button
+              onClick={handleInvite}
+              className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-foreground/80 transition-colors"
+              data-testid="button-invite-hero"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Invite friends
+            </button>
           </div>
         </div>
 
@@ -267,8 +275,8 @@ export default function ItineraryView() {
         </div>
 
 
-        {/* Group trip — contributor status + "Add my preferences" prompt */}
-        {isGroupTrip && (
+        {/* Group trip — "Add my preferences" prompt — hidden for the creator */}
+        {isGroupTrip && !isCreator && (
           <div className="mb-6 p-5 rounded-2xl border border-primary/25 bg-primary/5">
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -295,7 +303,7 @@ export default function ItineraryView() {
                     onClick={handleInvite}
                     data-testid="button-copy-link"
                   >
-                    <Share2 className="w-3.5 h-3.5" />
+                    <Users className="w-3.5 h-3.5" />
                     Copy invite link
                   </Button>
                 </div>
@@ -304,100 +312,38 @@ export default function ItineraryView() {
           </div>
         )}
 
-        {/* End of itinerary CTA */}
-        {activeDay === itinerary.days.length && (
-          <div className="border border-border rounded-3xl p-6 md:p-8">
-            <h3 className="font-serif text-2xl font-light text-foreground mb-1">
-              Your adventure is ready.
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              What would you like to do next?
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {/* 1 — Save */}
-              <button
-                onClick={handleSave}
-                className={`flex flex-col items-start gap-3 p-4 rounded-2xl border text-left transition-colors ${
-                  saved ? "border-primary/40 bg-primary/5" : "border-border bg-card hover:border-primary/40"
-                }`}
-                data-testid="button-save-cta"
-              >
-                <Bookmark className={`w-5 h-5 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">{saved ? "Saved to your trips" : "Save this itinerary"}</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Keep it in your account so you can come back any time.</p>
-                </div>
-              </button>
+        {/* Export strip */}
+        <div className="flex items-center gap-3 py-4 border-t border-border">
+          <a
+            href={`/api/trips/${id}/pdf`}
+            download
+            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-foreground/80 transition-colors"
+            data-testid="button-pdf-strip"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export PDF
+          </a>
+          <a
+            href={`/api/trips/${id}/ical`}
+            download
+            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 text-foreground/80 transition-colors"
+            data-testid="button-ical-strip"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Add to calendar
+          </a>
+        </div>
 
-              {/* 2 — Share */}
-              <button
-                onClick={handleShare}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-share-cta"
-              >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Share a link</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Copy a read-only link — send it to anyone to view the itinerary.</p>
-                </div>
-              </button>
-
-              {/* 3 — Invite */}
-              <button
-                onClick={handleInvite}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-invite-cta"
-              >
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">{isGroupTrip ? "Share with your group" : "Invite another wandrer"}</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{isGroupTrip ? "Copy this itinerary link — companions can add their preferences and it updates automatically." : "Send a personal link — they answer 5 quick questions. Wandr blends everyone's input and refines this itinerary."}</p>
-                </div>
-              </button>
-
-              {/* 4 — Export PDF */}
-              <a
-                href={`/api/trips/${id}/pdf`}
-                download
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-pdf-cta"
-              >
-                <Download className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Export as PDF</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Download a beautifully formatted PDF to save or print.</p>
-                </div>
-              </a>
-
-              {/* 5 — Add to calendar */}
-              <a
-                href={`/api/trips/${id}/ical`}
-                download
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
-                data-testid="button-ical-cta"
-              >
-                <Calendar className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Add to calendar</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Import all activities into Google, Apple, or Outlook calendar.</p>
-                </div>
-              </a>
-
-              {/* 6 — Start over */}
-              <button
-                onClick={handleRegenerate}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors col-span-2"
-                data-testid="button-regenerate-cta"
-              >
-                <RotateCcw className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground leading-snug">Start over</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Go back to the beginning and plan a different trip.</p>
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Start over */}
+        <div className="py-4 text-center">
+          <button
+            onClick={() => navigate("/")}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+            data-testid="button-start-over"
+          >
+            Start over
+          </button>
+        </div>
       </div>
 
       {/* Mobile sticky action bar */}
@@ -414,14 +360,6 @@ export default function ItineraryView() {
             {saved ? "Saved" : "Save"}
           </button>
           <button
-            onClick={handleShare}
-            className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
-            data-testid="button-share-action-mobile"
-          >
-            <Share2 className="w-5 h-5" />
-            Share
-          </button>
-          <button
             onClick={handleInvite}
             className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
             data-testid="button-invite-mobile"
@@ -429,16 +367,67 @@ export default function ItineraryView() {
             <Users className="w-5 h-5" />
             Invite
           </button>
-          <button
-            onClick={handleRegenerate}
+          <a
+            href={`/api/trips/${id}/pdf`}
+            download
             className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
-            data-testid="button-regenerate-mobile"
+            data-testid="button-pdf-mobile"
           >
-            <RefreshCw className="w-5 h-5" />
-            Start over
-          </button>
+            <Download className="w-5 h-5" />
+            PDF
+          </a>
         </div>
       </div>
+
+      {/* Invite modal */}
+      {showInviteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowInviteModal(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-background rounded-3xl border border-border p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-foreground">Invite friends</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Your name appears on their invite screen.</p>
+              </div>
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Your name</label>
+              <Input
+                value={inviterName}
+                onChange={(e) => setInviterName(e.target.value)}
+                placeholder="e.g. Sarah"
+                className="rounded-xl h-11"
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && copyInviteLink()}
+              />
+            </div>
+            <Button
+              className="w-full rounded-full gap-2"
+              onClick={copyInviteLink}
+            >
+              <Link2 className="w-4 h-4" />
+              Copy invite link
+            </Button>
+            <button
+              onClick={copyInviteLink}
+              className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+            >
+              Skip — copy without my name
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Auth modal */}
       {showAuthModal && (

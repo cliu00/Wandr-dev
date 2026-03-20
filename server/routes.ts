@@ -154,11 +154,20 @@ export async function registerRoutes(
 
     // For group trips, include how many companions have added preferences
     let contributorCount = 1; // organizer is always 1
+    let latestContributorName: string | null = null;
     if (trip.groupType === "group") {
       const groupTrip = await storage.getGroupTripByTripId(id);
       if (groupTrip) {
         const participants = await storage.getParticipantsByGroup(groupTrip.id);
-        contributorCount = 1 + participants.filter((p) => p.responded).length;
+        const responded = participants.filter((p) => p.responded);
+        contributorCount = 1 + responded.length;
+        // Most recently created responded participant
+        if (responded.length > 0) {
+          const latest = responded.reduce((a, b) =>
+            new Date(a.createdAt) > new Date(b.createdAt) ? a : b
+          );
+          latestContributorName = latest.name;
+        }
       }
     }
 
@@ -169,6 +178,7 @@ export async function registerRoutes(
       versionNumber: version.versionNumber,
       generatedAt: version.createdAt,
       contributorCount,
+      latestContributorName,
       generatedBy: version.generatedBy,
     });
   });
