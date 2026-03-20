@@ -40,9 +40,11 @@ export interface IStorage {
   // Trips
   createTrip(trip: InsertTrip): Promise<Trip>;
   getTrip(id: string): Promise<Trip | undefined>;
+  getTripsByUser(userId: string): Promise<Trip[]>;
   markTripFailed(id: string): Promise<void>;
   updateTripGroupType(id: string, groupType: string): Promise<void>;
   updateTripName(id: string, tripName: string): Promise<void>;
+  claimTrip(id: string, userId: string): Promise<void>;
 
   // Itinerary versions
   createItineraryVersion(version: InsertItineraryVersion): Promise<ItineraryVersion>;
@@ -144,6 +146,14 @@ export class DatabaseStorage implements IStorage {
     return trip;
   }
 
+  async getTripsByUser(userId: string): Promise<Trip[]> {
+    return db
+      .select()
+      .from(trips)
+      .where(and(eq(trips.userId, userId), eq(trips.generationFailed, false)))
+      .orderBy(desc(trips.createdAt));
+  }
+
   async markTripFailed(id: string): Promise<void> {
     await db
       .update(trips)
@@ -162,6 +172,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(trips)
       .set({ tripName, updatedAt: new Date() })
+      .where(eq(trips.id, id));
+  }
+
+  async claimTrip(id: string, userId: string): Promise<void> {
+    await db
+      .update(trips)
+      .set({ userId, anonymousSessionId: null, updatedAt: new Date() })
       .where(eq(trips.id, id));
   }
 

@@ -7,7 +7,8 @@ Future ideas and planned improvements. Items are roughly ordered by impact vs. e
 ## Near-term
 
 ### Temporal Awareness — Layer 2 (Real-time Events)
-Before calling Claude, query an events API for the destination + date range and inject the top 3–5 results as context into the prompt. Claude then decides whether to incorporate them.
+Before calling Claude, query an events API for the destination + date range and inject the top 3–5 results as context into the prompt. Claude then dec
+ides whether to incorporate them.
 
 - **API options**: PredictHQ (demand intelligence), Ticketmaster Discovery, Eventbrite
 - **Implementation**: new `fetchEvents(destination, startDate, endDate)` function in `server/services/ai.ts`, runs in parallel with prompt build, 1s timeout with silent fallback

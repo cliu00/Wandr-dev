@@ -126,12 +126,16 @@ export default function ItineraryView() {
     if (tripData?.tripName && !tripName) setTripName(tripData.tripName);
   }, [tripData?.tripName]);
 
-  function handleSave() {
-    if (user) {
-      setSaved(true);
+  async function handleSave() {
+    if (!user) { setShowAuthModal(true); return; }
+    if (saved) return;
+    setSaved(true);
+    try {
+      await fetch(`/api/trips/${id}/save`, { method: "POST" });
       toast({ title: "Itinerary saved", description: "Added to your trips." });
-    } else {
-      setShowAuthModal(true);
+    } catch {
+      setSaved(false);
+      toast({ title: "Couldn't save", description: "Please try again.", variant: "destructive" });
     }
   }
 

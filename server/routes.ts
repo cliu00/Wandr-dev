@@ -133,6 +133,38 @@ export async function registerRoutes(
     })();
   });
 
+  // ── GET /api/trips ─────────────────────────────────────────────────────────
+  // Returns all ready trips for the authenticated user.
+
+  app.get("/api/trips", async (req: Request, res: Response) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+    const userTrips = await storage.getTripsByUser(userId);
+
+    // For each trip, attach the latest itinerary version data
+    const results = await Promise.all(
+      userTrips.map(async (trip) => {
+        const version = await storage.getLatestItineraryVersion(trip.id);
+        if (!version) return null; // still generating or failed — skip
+        const itinerary = version.itineraryData as any;
+        return {
+          id: trip.id,
+          destination: trip.destination,
+          tripName: trip.tripName,
+          groupType: trip.groupType,
+          durationDays: trip.durationDays,
+          startDate: itinerary?.days?.[0]?.date ?? null,
+          endDate: itinerary?.days?.[itinerary.days.length - 1]?.date ?? null,
+          tripVibe: itinerary?.tripVibe ?? null,
+          createdAt: trip.createdAt,
+        };
+      })
+    );
+
+    return res.json({ trips: results.filter(Boolean) });
+  });
+
   // ── GET /api/trips/:id ─────────────────────────────────────────────────────
   // Returns the trip with its latest itinerary version.
   // While generation is in progress, returns { status: "generating" }.
@@ -621,6 +653,31 @@ export async function registerRoutes(
 
     await storage.updateTripName(id, parsed.data.tripName.trim());
     return res.json({ tripName: parsed.data.tripName.trim() });
+  });
+
+  // ── POST /api/trips/:id/save ───────────────────────────────────────────────
+  // Claims a trip for the authenticated user — links it to their account so it
+  // appears in their My Trips page. Works whether the trip was created while
+  // anonymous or already belongs to this user.
+
+  app.post("/api/trips/:id/save", async (req: Request, res: Response) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+    const id = req.params["id"] as string;
+    const trip = await storage.getTrip(id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
+
+    // Already belongs to this user — nothing to do
+    if (trip.userId === userId) return res.json({ ok: true });
+
+    // Don't allow claiming a trip that belongs to a different user
+    if (trip.userId && trip.userId !== userId) {
+      return res.status(403).json({ message: "Trip belongs to another account" });
+    }
+
+    await storage.claimTrip(id, userId);
+    return res.json({ ok: true });
   });
 
   // ── GET /api/trips/:id/pdf ─────────────────────────────────────────────────
