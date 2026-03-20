@@ -24,13 +24,10 @@ c
 
 ### Saved Itineraries
 
+
 ### Itinerary Regeneration / Refinement
 Allow users to give feedback on individual cards ("too touristy", "I've been here before") and regenerate just that block without regenerating the full itinerary.
 
-### Export / Share
-- PDF export of the full itinerary
-- Calendar export (`.ics`) so users can add activities to their calendar
-- Read-only public share link (already partially built)
 
 ### Budget Breakdown
 Show an estimated total trip cost based on the per-activity cost ranges, broken down by category (food, activities, transport).

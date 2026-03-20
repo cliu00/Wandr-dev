@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
-import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle, Sparkles } from "lucide-react";
+import { Share2, Bookmark, Users, RefreshCw, LogIn, UserPlus, RotateCcw, X, AlertCircle, Sparkles, Download, Calendar } from "lucide-react";
 import { FlowHeader } from "@/components/flow-header";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -355,10 +355,38 @@ export default function ItineraryView() {
                 </div>
               </button>
 
-              {/* 4 — Start over */}
+              {/* 4 — Export PDF */}
+              <a
+                href={`/api/trips/${id}/pdf`}
+                download
+                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
+                data-testid="button-pdf-cta"
+              >
+                <Download className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground leading-snug">Export as PDF</p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Download a beautifully formatted PDF to save or print.</p>
+                </div>
+              </a>
+
+              {/* 5 — Add to calendar */}
+              <a
+                href={`/api/trips/${id}/ical`}
+                download
+                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
+                data-testid="button-ical-cta"
+              >
+                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground leading-snug">Add to calendar</p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Import all activities into Google, Apple, or Outlook calendar.</p>
+                </div>
+              </a>
+
+              {/* 6 — Start over */}
               <button
                 onClick={handleRegenerate}
-                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors"
+                className="flex flex-col items-start gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 text-left transition-colors col-span-2"
                 data-testid="button-regenerate-cta"
               >
                 <RotateCcw className="w-5 h-5 text-muted-foreground" />

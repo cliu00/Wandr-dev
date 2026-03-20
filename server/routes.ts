@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { randomBytes } from "crypto";
 import { storage } from "./storage";
 import { generateItinerary, hashPreferences, type IntakePreferences } from "./services/ai";
+import { generatePDF } from "./services/pdf";
+import { generateIcal } from "./services/ical";
 import { z } from "zod";
 
 // ─── Validation Schema ────────────────────────────────────────────────────────
@@ -506,6 +508,41 @@ export async function registerRoutes(
         console.error("Background regeneration failed for trip", tripId, ":", err?.message ?? err);
       }
     })();
+  });
+
+  // ── GET /api/trips/:id/pdf ─────────────────────────────────────────────────
+  // Returns the itinerary as a downloadable PDF.
+
+  app.get("/api/trips/:id/pdf", async (req: Request, res: Response) => {
+    const id = req.params["id"] as string;
+    const version = await storage.getLatestItineraryVersion(id);
+    if (!version) return res.status(404).json({ message: "Itinerary not found" });
+    try {
+      const itinerary = version.itineraryData as any;
+      const pdfBuffer = await generatePDF(itinerary);
+      const filename = `wandr-${itinerary.destination.toLowerCase().replace(/\s+/g, "-")}.pdf`;
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(pdfBuffer);
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // ── GET /api/trips/:id/ical ────────────────────────────────────────────────
+  // Returns the itinerary as a downloadable .ics calendar file.
+
+  app.get("/api/trips/:id/ical", async (req: Request, res: Response) => {
+    const id = req.params["id"] as string;
+    const version = await storage.getLatestItineraryVersion(id);
+    if (!version) return res.status(404).json({ message: "Itinerary not found" });
+    const itinerary = version.itineraryData as any;
+    const icsContent = generateIcal(itinerary);
+    const filename = `wandr-${itinerary.destination.toLowerCase().replace(/\s+/g, "-")}.ics`;
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(icsContent);
   });
 
   return httpServer;
