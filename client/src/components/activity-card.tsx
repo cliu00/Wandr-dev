@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles, Users, SkipForward } from "lucide-react";
+import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles, Users, Armchair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ActivityBlock } from "@/lib/mock-data";
@@ -264,7 +264,7 @@ export function ActivityCard({ block, index, dayNumber, isGroupTrip }: ActivityC
                 className="gap-1.5 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 data-testid={`button-rest-d${dayNumber}-${index}`}
               >
-                <SkipForward className="w-3 h-3" />
+                <Armchair className="w-3 h-3" />
                 Skip
               </Button>
             </div>
