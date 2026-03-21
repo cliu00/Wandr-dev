@@ -22,7 +22,7 @@ interface IntakeState {
   endDate:       Date | undefined;
   groupType:     GroupType;
   // Universal
-  energy:        number;
+  energy:        number | null;
   budget:        string;
   activityTypes: string[];
   food:          string[];
@@ -106,7 +106,7 @@ export default function Intake() {
     startDate:     undefined,
     endDate:       undefined,
     groupType:     initialGroupType,
-    energy:        50,
+    energy:        null,
     budget:        "",
     activityTypes: [],
     food:          [],

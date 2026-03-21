@@ -62,7 +62,7 @@ export default function SurveyJoin() {
   const [selfName, setSelfName] = useState("");
   const [firstTime, setFirstTime] = useState<boolean | null>(null);
   const [groupDynamic, setGroupDynamic] = useState<string | null>(null);
-  const [energy, setEnergy] = useState(50);
+  const [energy, setEnergy] = useState<number | null>(null);
   const [budget, setBudget] = useState<string | null>(null);
   const [activityTypes, setActivityTypes] = useState<string[]>([]);
   const [activityNotes, setActivityNotes] = useState("");
@@ -130,6 +130,7 @@ export default function SurveyJoin() {
     if (step === "identity") return selfName.trim().length > 0;
     if (step === "firstTime") return firstTime !== null;
     if (step === "groupDynamic") return groupDynamic !== null;
+    if (step === "energy") return energy !== null;
     if (step === "budget") return budget !== null;
     if (step === "activities") return activityTypes.length > 0;
     if (step === "food") return food.length > 0;

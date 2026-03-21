@@ -405,6 +405,20 @@ export default function ItineraryView() {
 
 
 
+        {/* Invite friends CTA for group trips */}
+        {isGroupTrip && (
+          <div className="py-4 mb-4">
+            <button
+              onClick={handleInvite}
+              className="w-full inline-flex items-center justify-center gap-2 text-sm font-medium px-4 py-3 rounded-full border border-primary bg-primary/8 hover:bg-primary/15 text-primary transition-colors"
+              data-testid="button-invite-bottom"
+            >
+              <UserPlus className="w-4 h-4" />
+              Invite friends to join
+            </button>
+          </div>
+        )}
+
         {/* Export strip */}
         <div className="flex items-center gap-3 py-4 border-t border-border">
           <a

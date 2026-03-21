@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles, Users } from "lucide-react";
+import { Sun, Sunset, Moon, Bed, RefreshCw, Coffee, Utensils, Wine, TreePine, Landmark, ShoppingBag, Camera, Zap, MapPin, Sparkles, Users, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ActivityBlock } from "@/lib/mock-data";
@@ -68,10 +68,10 @@ function MatchedForBadges({ names }: { names: string[] }) {
 }
 
 const TIME_CONFIG = {
-  morning:   { label: "Morning",   icon: <Sun className="w-3.5 h-3.5" />,    color: "bg-amber-50 text-amber-700" },
-  afternoon: { label: "Afternoon", icon: <Sunset className="w-3.5 h-3.5" />, color: "bg-orange-50 text-orange-700" },
-  evening:   { label: "Evening",   icon: <Moon className="w-3.5 h-3.5" />,   color: "bg-indigo-50 text-indigo-700" },
-  rest:      { label: "Rest",      icon: <Bed className="w-3.5 h-3.5" />,    color: "bg-muted text-muted-foreground" },
+  morning:   { label: "Morning",   icon: <Sun className="w-3.5 h-3.5" />,    color: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200" },
+  afternoon: { label: "Afternoon", icon: <Sunset className="w-3.5 h-3.5" />, color: "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-200" },
+  evening:   { label: "Evening",   icon: <Moon className="w-3.5 h-3.5" />,   color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-200" },
+  rest:      { label: "Rest",      icon: <Bed className="w-3.5 h-3.5" />,    color: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground" },
 };
 
 export function ActivityCard({ block, index, dayNumber, isGroupTrip }: ActivityCardProps) {
@@ -264,7 +264,7 @@ export function ActivityCard({ block, index, dayNumber, isGroupTrip }: ActivityC
                 className="gap-1.5 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 data-testid={`button-rest-d${dayNumber}-${index}`}
               >
-                <Coffee className="w-3 h-3" />
+                <SkipForward className="w-3 h-3" />
                 Skip
               </Button>
             </div>
