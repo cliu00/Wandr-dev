@@ -230,19 +230,19 @@ export default function Home() {
       icon: <Compass className="w-6 h-6" />,
       step: "01",
       title: "Tell us your style",
-      desc: "Answer a few quick questions — who's coming, your energy level, and how you like to spend.",
+      desc: "Answer a few quick questions — your activity level, budget, and the kinds of experiences you're after.",
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
       step: "02",
       title: "Your itinerary, instantly",
-      desc: "Wandr builds a day-by-day plan tailored to you — then tweak any detail until it's exactly right.",
+      desc: "Wandr builds a day-by-day plan tailored to you — tweak any suggestion until the trip feels right.",
     },
     {
       icon: <Share2 className="w-6 h-6" />,
       step: "03",
       title: "Save or share",
-      desc: "Keep it for yourself or share it with your companions — your Wandr itinerary, ready to go.",
+      desc: "Export your itinerary or invite your travel companions directly — everything in one place, ready to go.",
     },
   ];
 
@@ -276,6 +276,10 @@ export default function Home() {
             Masterfully Planned.
           </h1>
 
+          <p className="text-white/70 text-lg max-w-xl leading-relaxed">
+            Tell us how you like to travel. Wandr generates a personalized 1–4 day itinerary in under 2 minutes — for solo trips or the whole group.
+          </p>
+
           {/* Tab selector + byline */}
           <div className="flex flex-col items-center gap-2">
             <div
@@ -301,7 +305,6 @@ export default function Home() {
               ))}
             </div>
             <p className="text-white/55 text-sm tracking-wide min-h-[1.25rem] transition-all duration-300">
-              {tripType === "solo" && "Built around your pace, no compromises."}
               {tripType === "duo" && "Balanced for two people who want different things."}
               {tripType === "group" && "One plan everyone actually agrees on."}
               {tripType === "family" && "Activities for everyone — including the adults."}
@@ -360,6 +363,15 @@ export default function Home() {
             )}
           </div>
 
+          {/* Trust signals */}
+          <div className="flex items-center gap-3 text-white/50 text-xs tracking-wide flex-wrap justify-center">
+            <span>1–4 day trips</span>
+            <span className="opacity-40">·</span>
+            <span>Personalized itinerary</span>
+            <span className="opacity-40">·</span>
+            <span>Free to try</span>
+          </div>
+
         </div>
       </section>
 
@@ -386,6 +398,31 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Works For tiles */}
+          <div className="mt-16 max-w-3xl mx-auto w-full">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 text-left">Works for</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-start gap-4 bg-foreground/5 border border-border rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-base mb-1">Solo trips</h3>
+                  <p className="text-muted-foreground text-sm leading-snug">A day-by-day itinerary shaped entirely around your pace, interests, and travel style.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 bg-foreground/5 border border-border rounded-2xl p-5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-base mb-1">Group trips</h3>
+                  <p className="text-muted-foreground text-sm leading-snug">Everyone's preferences are collected and blended into one itinerary the whole group will love.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -234,7 +234,7 @@ export default function Intake() {
         <div className="flex-1 max-w-2xl w-full mx-auto px-6 py-8 overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
-              key={`${groupType}-${step}`}
+              key={currentStepKey}
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -751,7 +751,7 @@ function StepGroupDynamic({ state, setState }: { state: IntakeState; setState: a
   return (
     <div>
       <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-        How does your group like to travel?
+        How do you like to travel with your group?
       </h2>
       <p className="text-muted-foreground mb-8 text-sm">
         We'll structure the itinerary around your group's natural rhythm.

@@ -192,7 +192,7 @@ function ItineraryPDF({ itinerary }: { itinerary: ItineraryData }) {
                 : null,
               // Address
               block.primary.address
-                ? React.createElement(Text, { style: s.activityAddress }, `📍 ${block.primary.address}`)
+                ? React.createElement(Text, { style: s.activityAddress }, block.primary.address)
                 : null,
               // Description
               block.primary.description

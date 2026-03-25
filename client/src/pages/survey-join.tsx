@@ -284,7 +284,7 @@ export default function SurveyJoin() {
               {step === "groupDynamic" && (
                 <div>
                   <h2 className="font-serif text-4xl font-light text-foreground mb-1 leading-tight">
-                    How does your group like to travel?
+                    How do you like to travel with your group?
                   </h2>
                   <p className="text-muted-foreground mb-8 text-sm">
                     Wandr will structure the itinerary around your group's natural rhythm.

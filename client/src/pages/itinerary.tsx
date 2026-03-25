@@ -22,7 +22,7 @@ export default function ItineraryView() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviterName, setInviterName] = useState("");
   const [updatedBanner, setUpdatedBanner] = useState<string | null>(null);
-  const [weather, setWeather] = useState<{ temp: number; label: string } | null>(null);
+  const [weatherByDay, setWeatherByDay] = useState<Record<number, { temp: number; label: string }>>({});
   const [editingName, setEditingName] = useState(false);
   const [tripName, setTripName] = useState<string>("");
   const seenVersionRef = useRef<number | null>(null);
@@ -82,16 +82,17 @@ export default function ItineraryView() {
     }
   }, [data?.versionNumber]);
 
-  // Fetch weather for day 1 using Open-Meteo (free, no API key)
+  // Fetch weather for all days using Open-Meteo (free, no API key)
   useEffect(() => {
     if (!data?.itinerary) return;
-    const day1 = data.itinerary.days?.[0];
-    if (!day1?.date) return;
-    // Use lat/lng from the first activity block
-    const firstBlock = day1.blocks?.find((b: any) => b.primary?.lat && b.primary?.lng);
+    const days = data.itinerary.days;
+    if (!days?.length) return;
+    // Use lat/lng from the first available activity block
+    const firstBlock = days[0]?.blocks?.find((b: any) => b.primary?.lat && b.primary?.lng);
     if (!firstBlock) return;
     const { lat, lng } = firstBlock.primary;
-    const date = day1.date;
+    const startDate = days[0].date;
+    const endDate = days[days.length - 1].date;
 
     const WMO_LABEL: Record<number, string> = {
       0: "clear skies", 1: "mainly clear", 2: "partly cloudy", 3: "overcast",
@@ -100,14 +101,20 @@ export default function ItineraryView() {
       80: "showers", 81: "showers", 82: "heavy showers", 95: "thunderstorms",
     };
 
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,weathercode&start_date=${date}&end_date=${date}&timezone=auto`)
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,weathercode&start_date=${startDate}&end_date=${endDate}&timezone=auto`)
       .then((r) => r.json())
       .then((d) => {
-        const temp = Math.round(d.daily?.temperature_2m_max?.[0]);
-        const code = d.daily?.weathercode?.[0];
-        if (!isNaN(temp)) {
-          setWeather({ temp, label: WMO_LABEL[code] ?? "variable conditions" });
-        }
+        const temps: number[] = d.daily?.temperature_2m_max ?? [];
+        const codes: number[] = d.daily?.weathercode ?? [];
+        const result: Record<number, { temp: number; label: string }> = {};
+        days.forEach((day: any, i: number) => {
+          const temp = Math.round(temps[i]);
+          const code = codes[i];
+          if (!isNaN(temp)) {
+            result[day.dayNumber] = { temp, label: WMO_LABEL[code] ?? "variable conditions" };
+          }
+        });
+        setWeatherByDay(result);
       })
       .catch(() => {}); // silent fail — weather is non-critical
   }, [data?.itinerary?.days?.[0]?.date]);
@@ -314,14 +321,14 @@ export default function ItineraryView() {
           </p>
 
           {/* Trip vibe + weather */}
-          <div className={`flex flex-wrap items-center gap-3 mb-5 ${!itinerary.tripVibe && !weather ? "hidden" : ""}`}>
+          <div className={`flex flex-wrap items-center gap-3 mb-5 ${!itinerary.tripVibe && !weatherByDay[activeDay] ? "hidden" : ""}`}>
             {itinerary.tripVibe && (
               <p className="text-sm italic text-muted-foreground">{itinerary.tripVibe}</p>
             )}
-            {itinerary.tripVibe && weather && <span className="text-muted-foreground/40 text-sm">·</span>}
-            {weather && (
+            {itinerary.tripVibe && weatherByDay[activeDay] && <span className="text-muted-foreground/40 text-sm">·</span>}
+            {weatherByDay[activeDay] && (
               <p className="text-sm text-muted-foreground">
-                {weather.temp}°C · {weather.label} on Day 1
+                {weatherByDay[activeDay].temp}°C · {weatherByDay[activeDay].label}
               </p>
             )}
           </div>
