@@ -23,6 +23,7 @@ Wandr is a group trip planning app that helps friends plan the perfect trip, all
 ## 🖼️ Demo / Screenshots
 
 Link to pitch deck: https://prezi.com/view/wIZRMhmGYQgQQoEtt9F9/
+
 Link to demo video: https://drive.google.com/file/d/141BrpCM0tdHXHd8_qumjI-JDe1jJyCri/view?usp=sharing 
 
 ## 🛠️ Tech Stack
